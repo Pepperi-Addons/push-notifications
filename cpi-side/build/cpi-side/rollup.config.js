@@ -26,7 +26,7 @@ exports.default = addon_config_json_1.default.PublishConfig.CPISide.map(endpoint
                         declaration: false,
                     }
                 },
-                include: ['**/*.ts']
+                include: ['**/*.ts', '../shared/**/*.ts']
             }),
             plugin_node_resolve_1.default(),
             plugin_commonjs_1.default(),

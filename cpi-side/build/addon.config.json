@@ -1,6 +1,6 @@
 {
-    "AddonUUID": "",
-    "AddonVersion": "0.0.0",
+    "AddonUUID": "95025423-9096-4a4f-a8cd-d0a17548e42e",
+    "AddonVersion": "0.0.10",
     "DebugPort": 4500,
     "WebappBaseUrl": "https://app.sandbox.pepperi.com",
     "DefaultEditor": "main",
@@ -15,9 +15,9 @@
         "ClientStack": "ng10",
         "Editors": [
             {
-                "ParentPackageName": "CHANGE_TO_ADDON_CONTAINER_NAME",
-                "PackageName": "CHANGE_TO_ADDON_PATH",
-                "Description": "CHANGE_TO_ADDON_DESCRIPTION"
+                "ParentPackageName": "Push Notifications",
+                "PackageName": "Push Notifications",
+                "Description": "Push Notifications"
             }
         ],
         "Dependencies": {},
