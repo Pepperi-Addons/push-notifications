@@ -11,7 +11,7 @@ import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/ico
 
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
-import { AddonService } from './addon.service';
+import { AddonService } from '../../services/addon.service';
 import { AddonComponent } from './index';
 
 const pepIcons = [
