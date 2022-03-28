@@ -14,7 +14,7 @@ export class NotificationBlockComponent implements OnInit {
   constructor(
     private translate: TranslateService,
     private notificationsService: NotificationsService,
-    private addonService: AddonService
+    private addonService: AddonService,
     ){
       this.addonService.addonUUID = "95025423-9096-4a4f-a8cd-d0a17548e42e"
      }
@@ -126,8 +126,7 @@ export class NotificationBlockComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Mark_As_Read"),
           handler: async (data) => {
-            //TODO: Check what the data contains
-              this.markNotificationsAsRead(data);
+              this.markNotificationsAsRead(data.rows);
           }
         });
       }
@@ -135,8 +134,8 @@ export class NotificationBlockComponent implements OnInit {
     }
   }
 
-  markNotificationsAsRead(notifications) {
-    this.notificationsService.markNotificationsAsRead(notifications);
+  async markNotificationsAsRead(notifications) {
+    await this.notificationsService.markNotificationsAsRead(notifications);
+     this.dataSource = this.getDataSource();
   }
-
 }

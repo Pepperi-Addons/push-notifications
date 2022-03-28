@@ -47,9 +47,9 @@ class NotificationsService {
         for (const notification of body) {
             //Protection against change of properties. The only property that can change is Read
             try {
-                let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification.Key).get();
+                let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification).get();
                 currentNotification.Read = true;
-                return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
+                this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
             }
             catch {
                 console.log("Notification with key ${notification.Key} does not exist")
