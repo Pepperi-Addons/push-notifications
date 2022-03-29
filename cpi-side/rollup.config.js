@@ -23,7 +23,7 @@ export default config.PublishConfig.CPISide.map(endpoint => {
                      declaration: false,
                  }
              },
-             include: ['**/*.ts']
+             include: ['**/*.ts', '../shared/**/*.ts']
           }),
           resolve(),
           commonjs(),
