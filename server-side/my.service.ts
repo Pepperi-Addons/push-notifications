@@ -24,6 +24,34 @@ class MyService {
         this.sns = new AWS.SNS()
     }
 
+    async getNotifications(query) {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query.options)
+    }
+
+    async upsertNotifications(body) {
+        if (body.UserUUID) {
+            body.Key = uuid();
+            return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
+        }
+        else {
+            throw new Error(`UserUUID is required`);
+        }
+    }
+
+    async markNotificationsAsRead(notifications) {
+        for (const notification of notifications) {
+            //Protection against change of properties. The only property that can change is Read
+            try {
+                let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification.Key).get();
+                currentNotification.Read = true;
+                return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
+            }
+            catch {
+                console.log("Notification with key ${notification.Key} does not exist")
+            }
+        }
+    }
+
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
     createPlatformApplication(body) {
