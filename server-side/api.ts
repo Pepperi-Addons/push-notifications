@@ -76,18 +76,3 @@ export async function subscribe_device_to_topic(client: Client, request:Request)
         throw new Error(`Method ${request.method} not supported`);
     }
 }
-export async function EmitEvent(webAPIBaseURL: string, accessToken: string, options) {
-    //webapi.sandbox.pepperi.com/16.80.3/webapi/Service1.svc/v1/
-    const URL = `${webAPIBaseURL}/Service1.svc/v1/EmitEvent`;
-    const EmitEvent = await (
-      await fetch(URL, {
-        method: "POST",
-        body: JSON.stringify(options),
-        headers: {
-          PepperiSessionToken: accessToken,
-          "Content-Type": "application/json",
-        },
-      })
-    ).json();
-    return EmitEvent;
-  }
