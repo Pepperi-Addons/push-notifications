@@ -11,7 +11,8 @@ The error Message is importent! it will be written in the audit log and help the
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
 import {NOTIFICATIONS_TABLE_NAME} from '../shared/entities'
-import MyService from './my.service';
+import { Relation } from '@pepperi-addons/papi-sdk'
+import NotificationsService from './notifications.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const papiClient = new PapiClient({
@@ -22,11 +23,13 @@ export async function install(client: Client, request: Request): Promise<any> {
         actionUUID: client["ActionUUID"]
     }); 
 
-    createNotificationsResource(papiClient)
-    // For page block template uncomment this.
-    // const res = await createPageBlockRelation(client);
-    // return res;
-    return {success:true,resultObject:{}}
+    const resourceRes = await createNotificationsResource(papiClient)
+     const relationsRes = await createPageBlockRelation(client);
+
+     return {
+        success: resourceRes.success && relationsRes.success,
+        errorMessage: `adalRes: ${resourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}`
+    };
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
@@ -39,6 +42,33 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return {success:true,resultObject:{}}
+}
+
+async function createPageBlockRelation(client: Client): Promise<any> {
+    try {
+        const blockName = 'Notifications';
+        const filename = 'notifications';
+
+        const pageComponentRelation: Relation = {
+            RelationName: "PageBlock",
+            Name: blockName,
+            Description: `${blockName} block`,
+            Type: "NgComponent",
+            SubType: "NG11",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: filename,
+            ComponentName: `NotificationBlockComponent`, 
+            ModuleName: `NotificationBlockModule`,
+            EditorComponentName: `NotificationBlockEditorComponent`, 
+            EditorModuleName: `NotificationBlockEditorModule`
+        };
+
+        const service = new NotificationsService(client);
+        const result = await service.upsertRelation(pageComponentRelation);
+        return { success:true, resultObject: result };
+    } catch(err) {
+        return { success: false, resultObject: err , errorMessage: `Error in upsert relation. error - ${err}`};
+    }
 }
 
 async function createNotificationsResource(papiClient: PapiClient) {

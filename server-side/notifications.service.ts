@@ -4,7 +4,7 @@ import { NOTIFICATIONS_TABLE_NAME} from '../shared/entities'
 import { v4 as uuid } from 'uuid';
 const AWS = require('aws-sdk');
 
-class MyService {
+class NotificationsService {
     sns: any;
     papiClient: PapiClient
     addonUUID: string;
@@ -23,6 +23,11 @@ class MyService {
         AWS.config.region = 'us-west-2';
         this.sns = new AWS.SNS()
     }
+
+        // For page block template
+        upsertRelation(relation): Promise<any> {
+            return this.papiClient.post('/addons/data/relations', relation);
+        }
 
     async getNotifications(query) {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query.options)
@@ -113,4 +118,4 @@ class MyService {
     }
 }
 
-export default MyService;
+export default NotificationsService;

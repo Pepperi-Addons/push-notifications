@@ -75,7 +75,7 @@ An addon API is a javascript file that exports functions that can be called thro
 For example in `server-side/api.ts` we export a function `foo` like so:
 ``` typescript
 export async function foo(client: Client, request: Request) {
-    const service = new MyService(client)
+    const service = new NotoficationsService(client)
     const res = await service.getAddons()
     return res
 };

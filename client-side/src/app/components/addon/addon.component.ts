@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { AddonService } from "./addon.service";
+import { AddonService } from "../../services/addon.service";
 
 @Component({
     selector: 'addon-module',
