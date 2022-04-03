@@ -20,6 +20,10 @@ export class NotificationsService {
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
 
+    upsertNotification(notifications) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/notifications`, notifications).toPromise()
+    }
+
     markNotificationsAsRead(notifications) {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/mark_notifications_as_read`, notifications).toPromise()
     }
