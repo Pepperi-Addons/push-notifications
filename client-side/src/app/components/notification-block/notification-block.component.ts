@@ -4,7 +4,6 @@ import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { AddonService } from '../../services/addon.service';
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { NotificationFormComponent, NotificationsFormData } from "../notification-form";
 import { FormDataView } from "@pepperi-addons/papi-sdk";
 import { ObjectsDataRowCell } from '@pepperi-addons/ngx-lib';
 import { Notification } from '../../../../../shared/entities';
@@ -31,6 +30,9 @@ export class NotificationBlockComponent implements OnInit {
 
   noDataMessage: string;
   dataSource: IPepGenericListDataSource = this.getDataSource();
+  isFormView: boolean = false;
+  notification = {};
+  dataView = {};
 
   getDataSource() {
     return {
@@ -62,6 +64,13 @@ export class NotificationBlockComponent implements OnInit {
                 FieldID: 'CreatorUUID',
                 Type: 'TextBox',
                 Title: this.translate.instant("Creator_UUID"),
+                Mandatory: false,
+                ReadOnly: true
+              },
+              {
+                FieldID: 'CreationDateTime',
+                Type: 'TextBox',
+                Title: this.translate.instant("Creation_Date"),
                 Mandatory: false,
                 ReadOnly: true
               },
@@ -98,10 +107,13 @@ export class NotificationBlockComponent implements OnInit {
                 Width: 20
               },
               {
-                Width: 20
+                Width: 15
               },
               {
                 Width: 20
+              },
+              {
+                Width: 5
               }
             ],
 
@@ -155,27 +167,17 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   navigateToNotificationsForm(notificationKey: string) {
+    this.isFormView = true;
     const listNotification = this.genericListService.getItemById(notificationKey);
-    let notification = {};
     if (listNotification) {
-      notification['Key'] = notificationKey;
+      this.notification['Key'] = notificationKey;
       listNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
-        notification[rowItem.ApiName] = rowItem.Value;
+        this.notification[rowItem.ApiName] = rowItem.Value;
         });
     }
 
-    const formData: NotificationsFormData = {
-      Notification: notification,
-      DataView: this.getFormDataView(),
-    }
-    const config = this.dialogService.getDialogConfig({}, 'inline');
-    config.data = new PepDialogData({
-      content: NotificationFormComponent
-    })
-    this.dialogService.openDialog(NotificationFormComponent, formData, config).afterClosed().subscribe(() => {
-      this.markNotificationsAsRead([notificationKey]);
-    });
-    
+    this.dataView = this.getFormDataView();
+    this.markNotificationsAsRead([notificationKey]);
   }
 
   getFormDataView(): FormDataView {
@@ -196,13 +198,27 @@ export class NotificationBlockComponent implements OnInit {
           Mandatory: true,
           ReadOnly: true
          },
-      //   {
-      //   'FieldID': 'Linked object',
-      //   'Type': 'Link',
-      //   'Title': "Linked object",
-      //   'Mandatory': true,
-      //   'ReadOnly': true
-      // }
+        {
+         FieldID: 'CreatorUUID',
+         Type: 'TextArea',
+         Title: "Creator",
+         Mandatory: true,
+         ReadOnly: true
+        },
+        {
+          FieldID: 'CreationDateTime',
+          Type: 'TextArea',
+          Title: "Creation date",
+          Mandatory: true,
+          ReadOnly: true
+         },
+        {
+        FieldID: 'Read',
+        Type: 'Boolean',
+        Title: "Read",
+        Mandatory: true,
+        ReadOnly: true
+      }
       ],
       Context: {
         Name: "",
@@ -211,5 +227,14 @@ export class NotificationBlockComponent implements OnInit {
       }
     };
     return dataView;
+  }
+
+
+  onValueChanged(event) {
+    console.log(event);
+  }
+
+  close() {
+    this.isFormView = false;
   }
 }

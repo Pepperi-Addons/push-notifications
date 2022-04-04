@@ -1,5 +1,6 @@
-export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 import { Schema } from 'jsonschema';
+
+export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 
 export interface Notification {
     Title: string,

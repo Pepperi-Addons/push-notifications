@@ -16,7 +16,7 @@ class NotificationsService {
             token: client.OAuthAccessToken,
             addonUUID: client.AddonUUID,
             addonSecretKey: client.AddonSecretKey,
-            actionUUID: client.AddonUUID
+            actionUUID: client.ActionUUID
         });
 
         this.addonUUID = client.AddonUUID;

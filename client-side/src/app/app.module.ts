@@ -4,7 +4,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NotificationBlockModule } from './components/notification-block';
 import { NotificationBlockEditorModule } from './components/notification-block-editor'
-import { NotificationFormModule } from './components/notification-form'
 import { PepAddonService } from '@pepperi-addons/ngx-lib';
 
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
@@ -25,7 +24,6 @@ import { AppComponent } from './app.component';
         AppRoutingModule,
         NotificationBlockModule,
         NotificationBlockEditorModule,
-        NotificationFormModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,

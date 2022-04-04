@@ -1,8 +1,9 @@
 {
-    "Title_Addon": "Title of the addon",
+    "Title_Addon": "Notifications",
     "No_Notifications_Error": "No Notifications Assigned ",
     "User_UUID": "User ID",
     "Creator_UUID": "Creator ID",
+    "Creation_Date": "Creation Date",
     "Title": "Title",
     "Body": "Body",
     "Read": "Read",

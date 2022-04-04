@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@pepperi-addons/scripts": "^2.0.4",
 		"aws-sdk": "^2.1092.0",
+		"json-schema": "^0.4.0",
 		"json-scheme": "^0.4.8",
 		"jsonschema": "^1.4.0"
 	}

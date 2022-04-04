@@ -6,6 +6,7 @@ import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-
 import { NotificationBlockComponent } from './notification-block.component'
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { PepAddonService, PepFileService, PepHttpService } from '@pepperi-addons/ngx-lib';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { config } from '../../addon.config';
 
@@ -22,6 +23,8 @@ export const routes: Routes = [
         CommonModule,
         PepButtonModule,
         PepGenericListModule,
+        PepGenericFormModule,
+        PepButtonModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
