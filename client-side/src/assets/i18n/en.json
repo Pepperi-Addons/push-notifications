@@ -8,5 +8,8 @@
     "Body": "Body",
     "Read": "Read",
     "Mark_As_Read": "Mark as read",
-    "Notifications_Form_Title": "Notifications form"
+    "Notifications_Form_Title": "Notifications form",
+    "To": "To",
+    "Subject": "Subject",
+    "Send": "Send"
 }

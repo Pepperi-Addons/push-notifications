@@ -43,6 +43,9 @@ export const notificationSchema: Schema = {
         ModificationDateTime: {
             type: "string",
             format: "date-time",
+        },
+        EmailsList: {
+            type: "string[]"
         }
     }
 }

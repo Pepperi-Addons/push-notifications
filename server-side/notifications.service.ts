@@ -1,6 +1,6 @@
 import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, notificationSchema} from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, notificationSchema } from '../shared/entities'
 import { Schema, Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 const AWS = require('aws-sdk');
@@ -25,10 +25,10 @@ class NotificationsService {
         this.sns = new AWS.SNS()
     }
 
-        // For page block template
-        upsertRelation(relation): Promise<any> {
-            return this.papiClient.post('/addons/data/relations', relation);
-        }
+    // For page block template
+    upsertRelation(relation): Promise<any> {
+        return this.papiClient.post('/addons/data/relations', relation);
+    }
 
     async getNotifications(query) {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query.options)
@@ -36,7 +36,7 @@ class NotificationsService {
 
     async upsertNotification(body) {
         let validation = this.validateNotifocation(body);
-        if (validation.valid){
+        if (validation.valid) {
             if (body.UserUUID) {
                 body.Key = uuid();
                 return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
@@ -52,29 +52,30 @@ class NotificationsService {
     }
 
     // createas notifications by list of user emails, Subject and Body
-    async createNotifications(body){
+    async createNotifications(body) {
         let createdNotifications: AddonData[] = [];
         let faildNotifications: AddonData[] = [];
 
-        for (var user of body) {
-            let validation = this.validateNotifocation(user);
-            if (validation.valid){
+        let validation = this.validateNotifocation(body);
+
+        if (validation.valid) {
+            for (var user of body.EmailsList) {
                 //let query = { where: `'Email=${user.Email}'` }
                 const users = await this.papiClient.users.find();
-                user.UserUUID = users.find(u => u.Email == user.Email)?.UUID
-                if (user.UserUUID) {
-                    createdNotifications.push(await this.upsertNotification(user));
+                body.UserUUID = users.find(u => u.Email == user)?.UUID
+                if (body.UserUUID) {
+                    createdNotifications.push(await this.upsertNotification(body));
                 }
                 else {
                     faildNotifications.push(user);
-                   // throw new Error(`User with Email: ${user.Email} does not exist`);
+                    // throw new Error(`User with Email: ${user.Email} does not exist`);
                 }
             }
-            else {
-                faildNotifications.push(user);
-            }
         }
-        return {'Successed': createdNotifications, 'Faliure': faildNotifications};
+        else {
+            return validation.errors.map(error => error.stack.replace("instance.", ""));
+        }
+        return { 'Successed': createdNotifications, 'Faliure': faildNotifications };
     }
 
     async markNotificationsAsRead(body) {
