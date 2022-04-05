@@ -3,10 +3,9 @@ import { NotificationsService } from '../../services/notifications.services';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { AddonService } from '../../services/addon.service';
-import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { FormDataView } from "@pepperi-addons/papi-sdk";
 import { ObjectsDataRowCell } from '@pepperi-addons/ngx-lib';
-import { Notification } from '../../../../../shared/entities';
+import { config } from '../../addon.config';
 
 @Component({
   selector: 'app-notification-block',
@@ -19,10 +18,9 @@ export class NotificationBlockComponent implements OnInit {
     private translate: TranslateService,
     private notificationsService: NotificationsService,
     private addonService: AddonService,
-    private dialogService: PepDialogService,
     private genericListService: PepGenericListService
   ) {
-    this.addonService.addonUUID = "95025423-9096-4a4f-a8cd-d0a17548e42e"
+    this.addonService.addonUUID = config.AddonUUID;
   }
 
   ngOnInit() {
@@ -143,7 +141,7 @@ export class NotificationBlockComponent implements OnInit {
 
       if (data.rows.length === 1 && data?.selectionType != 0) {
         actions.push({
-          title: this.translate.instant('Edit'),
+          title: this.translate.instant("View"),
           handler: async (objs) => {
               this.navigateToNotificationsForm(objs.rows[0]);
           }
