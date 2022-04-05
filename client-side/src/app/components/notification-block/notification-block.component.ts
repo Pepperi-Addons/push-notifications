@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import {NotificationsService} from '../../services/notifications.services';
+import { NotificationsService } from '../../services/notifications.services';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { AddonService } from '../../services/addon.service';
+import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
+import { NotificationFormComponent, NotificationsFormData } from "../notification-form";
+import { FormDataView } from "@pepperi-addons/papi-sdk";
+import { ObjectsDataRowCell } from '@pepperi-addons/ngx-lib';
+import { Notification } from '../../../../../shared/entities';
 
 @Component({
   selector: 'app-notification-block',
@@ -15,9 +20,11 @@ export class NotificationBlockComponent implements OnInit {
     private translate: TranslateService,
     private notificationsService: NotificationsService,
     private addonService: AddonService,
-    ){
-      this.addonService.addonUUID = "95025423-9096-4a4f-a8cd-d0a17548e42e"
-     }
+    private dialogService: PepDialogService,
+    private genericListService: PepGenericListService
+  ) {
+    this.addonService.addonUUID = "95025423-9096-4a4f-a8cd-d0a17548e42e"
+  }
 
   ngOnInit() {
   }
@@ -73,12 +80,12 @@ export class NotificationBlockComponent implements OnInit {
                 ReadOnly: true
               },
               {
-              FieldID: 'Read',
-              Type: 'Boolean',
-              Title: this.translate.instant("Read"),
-              Mandatory: false,
-              ReadOnly: true
-            }
+                FieldID: 'Read',
+                Type: 'Boolean',
+                Title: this.translate.instant("Read"),
+                Mandatory: false,
+                ReadOnly: true
+              }
             ],
             Columns: [
               {
@@ -122,11 +129,19 @@ export class NotificationBlockComponent implements OnInit {
     get: async (data) => {
       const actions = [];
 
+      if (data.rows.length === 1 && data?.selectionType != 0) {
+        actions.push({
+          title: this.translate.instant('Edit'),
+          handler: async (objs) => {
+              this.navigateToNotificationsForm(objs.rows[0]);
+          }
+      });
+      }
       if (data.rows.length >= 1 || data?.selectionType === 0) {
         actions.push({
           title: this.translate.instant("Mark_As_Read"),
           handler: async (data) => {
-              this.markNotificationsAsRead(data.rows);
+            this.markNotificationsAsRead(data.rows);
           }
         });
       }
@@ -136,6 +151,65 @@ export class NotificationBlockComponent implements OnInit {
 
   async markNotificationsAsRead(notifications) {
     await this.notificationsService.markNotificationsAsRead(notifications);
-     this.dataSource = this.getDataSource();
+    this.dataSource = this.getDataSource();
+  }
+
+  navigateToNotificationsForm(notificationKey: string) {
+    const listNotification = this.genericListService.getItemById(notificationKey);
+    let notification = {};
+    if (listNotification) {
+      notification['Key'] = notificationKey;
+      listNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
+        notification[rowItem.ApiName] = rowItem.Value;
+        });
+    }
+
+    const formData: NotificationsFormData = {
+      Notification: notification,
+      DataView: this.getFormDataView(),
+    }
+    const config = this.dialogService.getDialogConfig({}, 'inline');
+    config.data = new PepDialogData({
+      content: NotificationFormComponent
+    })
+    this.dialogService.openDialog(NotificationFormComponent, formData, config).afterClosed().subscribe(() => {
+      this.markNotificationsAsRead([notificationKey]);
+    });
+    
+  }
+
+  getFormDataView(): FormDataView {
+    let dataView: FormDataView = {
+      Type: "Form",
+      Fields: [
+        {
+          FieldID: 'Title',
+          Type: 'TextArea',
+          Title: "Title",
+          Mandatory: true,
+          ReadOnly: true
+        },
+        {
+          FieldID: 'Body',
+          Type: 'TextArea',
+          Title: "Body",
+          Mandatory: true,
+          ReadOnly: true
+         },
+      //   {
+      //   'FieldID': 'Linked object',
+      //   'Type': 'Link',
+      //   'Title': "Linked object",
+      //   'Mandatory': true,
+      //   'ReadOnly': true
+      // }
+      ],
+      Context: {
+        Name: "",
+        Profile: {},
+        ScreenSize: 'Tablet'
+      }
+    };
+    return dataView;
   }
 }

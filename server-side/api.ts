@@ -8,7 +8,18 @@ export async function notifications(client: Client, request: Request) {
         return service.getNotifications(request.query);
     }
     if (request.method === 'POST') {
-        return service.upsertNotifications(request.body);
+        return service.upsertNotification(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function create_notifications(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'POST') {
+        return service.createNotifications(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);

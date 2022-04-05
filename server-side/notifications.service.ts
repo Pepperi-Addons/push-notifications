@@ -1,6 +1,7 @@
-import { PapiClient, InstalledAddon } from '@pepperi-addons/papi-sdk'
+import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME} from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, notificationSchema} from '../shared/entities'
+import { Schema, Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 const AWS = require('aws-sdk');
 
@@ -33,28 +34,72 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query.options)
     }
 
-    async upsertNotifications(body) {
-        if (body.UserUUID) {
-            body.Key = uuid();
-            return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
+    async upsertNotification(body) {
+        let validation = this.validateNotifocation(body);
+        if (validation.valid){
+            if (body.UserUUID) {
+                body.Key = uuid();
+                return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
+            }
+            else {
+                throw new Error(`UserUUID is required`);
+            }
         }
         else {
-            throw new Error(`UserUUID is required`);
+            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+            throw new Error(errors.join("\n"));
         }
     }
 
-    async markNotificationsAsRead(notifications) {
-        for (const notification of notifications) {
+    // createas notifications by list of user emails, Subject and Body
+    async createNotifications(body){
+        let createdNotifications: AddonData[] = [];
+        let faildNotifications: AddonData[] = [];
+
+        for (var user of body) {
+            let validation = this.validateNotifocation(user);
+            if (validation.valid){
+                //let query = { where: `'Email=${user.Email}'` }
+                const users = await this.papiClient.users.find();
+                user.UserUUID = users.find(u => u.Email == user.Email)?.UUID
+                if (user.UserUUID) {
+                    createdNotifications.push(await this.upsertNotification(user));
+                }
+                else {
+                    faildNotifications.push(user);
+                   // throw new Error(`User with Email: ${user.Email} does not exist`);
+                }
+            }
+            else {
+                faildNotifications.push(user);
+            }
+        }
+        return {'Successed': createdNotifications, 'Faliure': faildNotifications};
+    }
+
+    async markNotificationsAsRead(body) {
+        let readNotifications: AddonData[] = [];
+        for (const notification of body) {
             //Protection against change of properties. The only property that can change is Read
             try {
                 let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification).get();
                 currentNotification.Read = true;
-                this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
+                let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
+                readNotifications.push(ans);
             }
             catch {
                 console.log("Notification with key ${notification.Key} does not exist")
             }
         }
+        return readNotifications;
+    }
+
+    //MARK: API Validation
+    validateNotifocation(body: any) {
+        console.log('notification schema:', notificationSchema);
+        const validator = new Validator();
+        const result = validator.validate(body, notificationSchema);
+        return result;
     }
 
     // MARK: AWS endpoints
