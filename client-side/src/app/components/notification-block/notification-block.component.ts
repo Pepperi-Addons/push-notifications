@@ -160,22 +160,24 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   async markNotificationsAsRead(notifications) {
-    await this.notificationsService.markNotificationsAsRead(notifications);
+    await this.notificationsService.markNotificationsAsRead(
+      {
+      "Keys": notifications
+    });
     this.dataSource = this.getDataSource();
   }
 
-  navigateToNotificationsForm(notificationKey: string) {
+  async navigateToNotificationsForm(notificationKey: string) {
     this.isFormView = true;
-    const listNotification = this.genericListService.getItemById(notificationKey);
-    if (listNotification) {
+    const selectedNotification = this.genericListService.getItemById(notificationKey);
+    if (selectedNotification) {
+      await this.markNotificationsAsRead([notificationKey]);
+      this.dataSource = this.getDataSource();
       this.notification['Key'] = notificationKey;
-      listNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
+      selectedNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
         this.notification[rowItem.ApiName] = rowItem.Value;
         });
     }
-
-    this.dataView = this.getFormDataView();
-    this.markNotificationsAsRead([notificationKey]);
   }
 
   getFormDataView(): FormDataView {
