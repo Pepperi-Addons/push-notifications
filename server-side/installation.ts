@@ -10,7 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import {NOTIFICATIONS_TABLE_NAME} from '../shared/entities'
+import {NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME} from '../shared/entities'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
@@ -23,12 +23,13 @@ export async function install(client: Client, request: Request): Promise<any> {
         actionUUID: client["ActionUUID"]
     }); 
 
-    const resourceRes = await createNotificationsResource(papiClient)
-     const relationsRes = await createPageBlockRelation(client);
+    const notificationsResourceRes = await createNotificationsResource(papiClient)
+    const userDeviceResourceRes = await createUserDeviceResource(papiClient);
+    const relationsRes = await createPageBlockRelation(client);
 
      return {
-        success: resourceRes.success && relationsRes.success,
-        errorMessage: `adalRes: ${resourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}`
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success,
+        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}`
     };
 }
 
@@ -96,6 +97,51 @@ async function createNotificationsResource(papiClient: PapiClient) {
 
     try {
         await papiClient.addons.data.schemes.post(notificationsScheme);
+
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+
+async function createUserDeviceResource(papiClient: PapiClient) {
+    var userDeviceScheme: AddonDataScheme = {
+        Name: USER_DEVICE_TABLE_NAME,
+        Type: 'meta_data',
+        Fields: {
+            UserID: {
+                Type: 'String'
+            },
+            DeviceID: {
+                Type: 'String'
+            },
+            DeviceName: {
+                Type: 'String'
+            },
+            DeviceType: {
+                Type: 'String'
+            },
+            AppID: {
+                Type: 'String'
+            },
+            Token: {
+                Type: 'String'
+            },
+            EndpointsARN: {
+                Type: 'Array'
+            }
+        }
+    };
+
+    try {
+        await papiClient.addons.data.schemes.post(userDeviceScheme);
 
         return {
             success: true,

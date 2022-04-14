@@ -1,6 +1,7 @@
 import { Schema } from 'jsonschema';
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
+export const USER_DEVICE_TABLE_NAME = 'UserDevice';
 
 export interface Notification {
     Title: string,
@@ -9,6 +10,17 @@ export interface Notification {
     Hidden?: boolean,
     UserUUID: string,
     CreatorUserUUID: string
+}
+
+export interface UserDevice {
+    UserID: string,
+    DeviceID: string,
+    DeviceName: string,
+    DeviceType: string,
+    AppID: string,
+    Token: string,
+    EndpointsARN: Array<string>,
+    Key: string
 }
 
 export const notificationSchema: Schema = {
@@ -60,6 +72,37 @@ export const messageSchema: Schema = {
             required: true
         },
         Body: {
+            type: "string",
+            required: true
+        }
+    }
+}
+
+export const userDeviceSchema: Schema = {
+    $id: "/UserDevice",
+    type: "object",
+    properties: {
+        UserID: {
+            type: "string",
+            required: true
+        },
+        AppID: {
+            type: "string",
+            required: true
+        },
+        DeviceID: {
+            type: "string",
+            required: true
+        },
+        DeviceName: {
+            type: "string",
+            required: true
+        },
+        DeviceType: {
+            type: "string",
+            required: true
+        },
+        Token: {
             type: "string",
             required: true
         }

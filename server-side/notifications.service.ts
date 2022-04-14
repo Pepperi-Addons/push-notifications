@@ -1,6 +1,6 @@
 import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, notificationSchema, messageSchema } from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, messageSchema, userDeviceSchema, UserDevice } from '../shared/entities'
 import { Schema, Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -47,7 +47,7 @@ class NotificationsService {
             throw new Error(`Key is read-only property`);
         }
         // Schema validation
-        let validation = this.validateNotifocation(body, notificationSchema);
+        let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
             // Check that the use sent UserUUID in the body
             if (body.UserUUID) {
@@ -75,11 +75,10 @@ class NotificationsService {
         let createdNotifications: AddonData[] = [];
         let faildNotifications: AddonData[] = [];
 
-        let validation = this.validateNotifocation(body, messageSchema);
+        let validation = this.validateSchema(body, messageSchema);
 
         if (validation.valid) {
             for (var user of body.EmailsList) {
-                //let query = { where: `'Email=${user.Email}'` }
                 const users = await this.papiClient.users.find();
                 let userUUID = users.find(u => u.Email == user)?.UUID
                 if (userUUID) {
@@ -98,13 +97,17 @@ class NotificationsService {
         else {
             return validation.errors.map(error => error.stack.replace("instance.", ""));
         }
-        return { 'Successed': createdNotifications, 'Faliure': faildNotifications };
+        return { 'Success': createdNotifications, 'Failure': faildNotifications };
     }
 
     // create a single notification after all conditions have been checked
     async createNotification(body) {
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
+        body.ExpirationDateTime = expirationDateTime;
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -132,8 +135,56 @@ class NotificationsService {
         return readNotifications;
     }
 
+    //MARK: UserDevice handling
+    async registerUserDevice(body) {
+        // Schema validation
+        let validation = this.validateSchema(body, userDeviceSchema);
+        if (validation.valid) {
+            const appARN: string = await this.getPlatformApplicationARN(body.AppID);
+            let endpointARN = await this.createApplicationEndpoint({
+                PlatformApplicationArn: appARN,
+                DeviceToken: body.Token
+            });
+
+            if (endpointARN.EndpointArn != undefined) {
+                return await this.upsertUserDeviceResource(body, endpointARN);
+            }
+            else {
+                throw new Error("Register user device faild");
+            }
+        }
+        else {
+            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+            throw new Error(errors.join("\n"));
+        }
+    }
+
+    async upsertUserDeviceResource(body, endpointARN) {
+        let userDevice: UserDevice;
+        // if the user has registered devices, only add the new device to the list and create endpoint for the new device
+        try {
+            userDevice = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).key(body.UserID).get() as any;
+            userDevice.EndpointsARN.push(endpointARN);
+        }
+        catch {
+            userDevice = {
+                "Key": body.UserID,
+                "UserID": body.UserID,
+                "AppID": body.AppID,
+                "DeviceID": body.DeviceID,
+                "DeviceName": body.DeviceName,
+                "DeviceType": body.DeviceType,
+                "Token": body.Token,
+                "EndpointsARN": []
+            };
+            userDevice.EndpointsARN.push(endpointARN);
+        }
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
+    }
+
+
     //MARK: API Validation
-    validateNotifocation(body: any, schema: any) {
+    validateSchema(body: any, schema: any) {
         console.log('schema:', schema);
         const validator = new Validator();
         const result = validator.validate(body, schema);
@@ -145,12 +196,21 @@ class NotificationsService {
     createPlatformApplication(body) {
         const params = {
             Name: body.Name,
-            Platform: body.Platform,//or APNS (Apple ) or ADM (Amazon)
+            Platform: body.Platform,
             Attributes: {
-                PlatformCredential: body.Credential// .p8
+                'PlatformCredential': body.Credential,// .p8
+                'PlatformPrincipal': body.SigningKeyID,
+                'ApplePlatformTeamID': body.TeamID,
+                'ApplePlatformBundleID': body.BundleID
             }
         };
         return this.sns.createPlatformApplication(params).promise()
+    }
+
+    async getPlatformApplicationARN(appID) {
+        const list = await this.sns.listPlatformApplications({}).promise();
+        const currentApp = list.PlatformApplications.find(app => app.Attributes.ApplePlatformBundleID === appID);
+        return currentApp.PlatformApplicationArn;
     }
 
     /*
@@ -160,7 +220,7 @@ class NotificationsService {
     */
     createApplicationEndpoint(body) {
         const params = {
-            PlatformApplicationArn: body.ApplicationARN,
+            PlatformApplicationArn: body.PlatformApplicationArn,
             Token: body.DeviceToken
         };
         return this.sns.createPlatformEndpoint(params).promise();

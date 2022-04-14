@@ -48,6 +48,17 @@ export async function create_platform_application(client: Client, request:Reques
     }
 }
 
+export async function user_device(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'POST') {
+        return service.registerUserDevice(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function create_application_endpoint(client: Client, request:Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
