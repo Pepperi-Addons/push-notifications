@@ -37,6 +37,12 @@ export async function mark_notifications_as_read(client: Client, request: Reques
     }
 }
 
+export async function user_device_removed(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    await service.removeUserDeviceEndpoint(request.body);
+}
+
 // AWS endpoints
 export async function create_platform_application(client: Client, request:Request) {
     const service = new NotificationsService(client)

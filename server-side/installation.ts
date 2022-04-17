@@ -15,6 +15,7 @@ import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
+    const service = new NotificationsService(client)
     const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -26,6 +27,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsResourceRes = await createNotificationsResource(papiClient)
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
+    await service.createPNSSubscription();
 
      return {
         success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success,
