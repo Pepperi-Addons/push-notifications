@@ -29,9 +29,6 @@ class NotificationsService {
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
 
-        var credentials = new AWS.SharedIniFileCredentials({profile: 'Noam'});
-         AWS.config.credentials = credentials;
-         AWS.config.region = 'us-west-2';
         this.sns = new AWS.SNS()
     }
 
@@ -122,6 +119,7 @@ class NotificationsService {
     async createNotification(body) {
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
+        this.sendPushNotification(body);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -206,6 +204,30 @@ class NotificationsService {
         }
     }
 
+    async sendPushNotification(notification) {
+        //get user devices by user uuid
+        const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
+        // for each user device send push notification
+        for (const device of userDevicesList) {
+            let pushNotification = {
+                Message: notification.Body,
+                Subject: notification.Subject,
+                TargetArn: device.EndpointArn
+            }
+            const ans = await this.publish(pushNotification);
+            console.log(ans);
+        }
+    }
+
+    async getUserDevicesByUserUUID(userUUID) {
+        try {
+            const userDeviceResource = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(userUUID);
+            return userDeviceResource.EndpointsARN;
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
 
     //MARK: API Validation
     validateSchema(body: any, schema: any) {
@@ -250,38 +272,15 @@ class NotificationsService {
         return this.sns.createPlatformEndpoint(params).promise();
     }
 
-    //creates topics where users can subscribe to the topics
-    createTopic(body) {
-        const params = {
-            Name: body.Name
-        }
-        return this.sns.createTopic(params).promise()
-    }
-
     // publish to particular topic ARN or to endpoint ARN
     publish(body) {
         const params = {
             Message: body.Message,
-            MessageAttributes: {
-                someKey: {
-                    DataType: body.DataType,
-                },
-            },
             MessageStructure: 'STRING_VALUE',
             Subject: body.Subject,
-            TargetArn: body.TargetArn,
-            TopicArn: body.TopicARN
+            TargetArn: body.TargetArn
         };
         return this.sns.publish(params).promise();
-    }
-
-    subscribeDeviceToTopic(body) {
-        const params = {
-            Protocol: "application",
-            TopicArn: body.TopicARN,
-            Endpoint: body.EndpointArn
-        };
-        return this.sns.subscribe(params).promise();
     }
 }
 
