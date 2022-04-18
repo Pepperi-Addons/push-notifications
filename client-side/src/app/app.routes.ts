@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { MessageCreatorComponent } from './components/message-creator/message-creator.component';
+import { DeviceManagmentComponent } from './components/device-managment/device-managment.component';
 
 // Important for single spa
 @Component({
@@ -17,6 +18,10 @@ const routes: Routes = [
             {
                 path: 'message_creator',
                 component: MessageCreatorComponent
+            },
+            {
+                path: 'device_managment',
+                component: DeviceManagmentComponent
             }
         ]
     },
