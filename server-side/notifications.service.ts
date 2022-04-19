@@ -129,7 +129,7 @@ class NotificationsService {
             //Protection against change of properties. The only property that can change is Read
             try {
                 let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification).get();
-                if (this.currentUserUUID === currentNotification.CreatorUUID) {
+                if (this.currentUserUUID === currentNotification.UserUUID) {
                     currentNotification.Read = true;
                     let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
                     readNotifications.push(ans);
@@ -185,6 +185,7 @@ class NotificationsService {
             "Key": `${body.UserID}_${body.DeviceID}`,
             "UserID": body.UserID,
             "AppID": body.AppID,
+            "AppName": body.AppName,
             "DeviceID": body.DeviceID,
             "DeviceName": body.DeviceName,
             "DeviceType": body.DeviceType,
@@ -195,14 +196,24 @@ class NotificationsService {
         userDevice.Endpoint = endpointARN;
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
     }
-
+    // remove devices both from ADAL and SNS
     async removeDevices(body) {
         for (const device of body.Devices) {
-            const deviceToRemove = {
-                "Key": device,
-                "Hidden": true
-            };
-            await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
+            try {
+                const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
+                const params = {
+                    EndpointArn: deviceToRemove.Endpoint.EndpointArn
+                  };
+                let ans = await this.sns.deleteEndpoint(params).promise();
+                  if (ans) {
+                    deviceToRemove.Hidden = true;
+                    await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
+    
+                  }
+            }
+            catch {
+
+            }
         }
     }
 
@@ -284,7 +295,10 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
-            await this.sns.DeleteEndpoint(object.EndpointARN);
+            const params = {
+                EndpointArn: object.EndpointARN
+              };
+            await this.sns.deleteEndpoint(params).promise();
         }
     }
 

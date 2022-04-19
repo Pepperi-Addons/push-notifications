@@ -51,7 +51,7 @@ export class DeviceManagmentComponent implements OnInit {
                 ReadOnly: true
               },
               {
-                FieldID: 'AppID',
+                FieldID: 'AppName',
                 Type: 'TextBox',
                 Title: this.translate.instant("App_Name"),
                 Mandatory: false,
@@ -104,6 +104,7 @@ export class DeviceManagmentComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Delete"),
           handler: async (objs) => {
+            debugger
            await this.userDevicesService.removeUserDevices({"Devices": objs.rows});
            this.dataSource = this.getDataSource();
           }

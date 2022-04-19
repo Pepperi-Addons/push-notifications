@@ -133,6 +133,9 @@ async function createUserDeviceResource(papiClient: PapiClient) {
             AppID: {
                 Type: 'String'
             },
+            AppName: {
+                Type: 'String'
+            },
             Token: {
                 Type: 'String'
             },

@@ -18,6 +18,7 @@ export interface UserDevice {
     DeviceName: string,
     DeviceType: string,
     AppID: string,
+    AppName: string,
     Token: string,
     Endpoint: string,
     Key: string,
@@ -88,6 +89,10 @@ export const userDeviceSchema: Schema = {
             required: true
         },
         AppID: {
+            type: "string",
+            required: true
+        },
+        AppName: {
             type: "string",
             required: true
         },
