@@ -9,6 +9,7 @@ export interface Notification {
     Key?: string,
     Hidden?: boolean,
     UserUUID: string,
+    Email?: string,
     CreatorUserUUID: string
 }
 
@@ -39,6 +40,9 @@ export const notificationSchema: Schema = {
             type: "string"
         },
         UserUUID: {
+            type: "string"
+        },
+        Email: {
             type: "string"
         },
         CreatorUserUUID: {

@@ -47,6 +47,12 @@ class NotificationsService {
         });
     }
 
+    async getUserUUIDByEmail(userEmail) {
+        const users = await this.papiClient.users.find();
+        let userUUID = users.find(u => u.Email == userEmail)?.UUID
+        return userUUID;
+    }
+
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
@@ -61,11 +67,28 @@ class NotificationsService {
         if (body.Key != undefined) {
             throw new Error(`Key is read-only property`);
         }
+        if (body.Title === undefined) {
+            throw new Error(`Title is a mandatory property`);
+        }
         // Schema validation
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
-            // Check that the use sent UserUUID in the body
-            if (body.UserUUID) {
+            // The user must provide UserUUID or Email
+            if (body.UserUUID !== undefined || body.Email !== undefined) {
+                if (body.Email !== undefined) {
+                    // Email or UserUUID are mutually exclusive 
+                    if (body.UserUUID !== undefined) {
+                        throw new Error('Email or UserUUID are mutually exclusive ');
+                    }
+                    const userUUID = await this.getUserUUIDByEmail(body.Email)
+                    if (userUUID != undefined) {
+                        body.UserUUID = userUUID;
+                        delete body.Email;
+                    }
+                    else {
+                        throw new Error(`User with Email: ${body.Email} does not exist`);
+                    }
+                }
                 // Check that the UserUUID exists in the users list
                 try {
                     await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
@@ -76,43 +99,13 @@ class NotificationsService {
                 }
             }
             else {
-                throw new Error(`UserUUID is required`);
+                throw new Error(`UserUUID or Email required`);
             }
         }
         else {
             const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
         }
-    }
-
-    // creates notifications by list of user emails, Subject and Body
-    async createNotifications(body) {
-        let createdNotifications: AddonData[] = [];
-        let faildNotifications: AddonData[] = [];
-
-        let validation = this.validateSchema(body, messageSchema);
-
-        if (validation.valid) {
-            for (var user of body.EmailsList) {
-                const users = await this.papiClient.users.find();
-                let userUUID = users.find(u => u.Email == user)?.UUID
-                if (userUUID) {
-                    createdNotifications.push(await this.upsertNotification({
-                        "UserUUID": userUUID,
-                        "Title": body.Title,
-                        "Body": body.Body
-                    }));
-                }
-                else {
-                    faildNotifications.push(user);
-                    // throw new Error(`User with Email: ${user.Email} does not exist`);
-                }
-            }
-        }
-        else {
-            return validation.errors.map(error => error.stack.replace("instance.", ""));
-        }
-        return { 'Success': createdNotifications, 'Failure': faildNotifications };
     }
 
     // create a single notification after all conditions have been checked
@@ -203,13 +196,13 @@ class NotificationsService {
                 const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
                 const params = {
                     EndpointArn: deviceToRemove.Endpoint.EndpointArn
-                  };
+                };
                 let ans = await this.sns.deleteEndpoint(params).promise();
-                  if (ans) {
+                if (ans) {
                     deviceToRemove.Hidden = true;
                     await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
-    
-                  }
+
+                }
             }
             catch {
 
@@ -297,9 +290,36 @@ class NotificationsService {
         for (const object of body.Message.ModifiedObjects) {
             const params = {
                 EndpointArn: object.EndpointARN
-              };
+            };
             await this.sns.deleteEndpoint(params).promise();
         }
+    }
+
+    //DIMX 
+    async importNotificationsSource(body) {
+        for (var dimxObj of body.DIMXObjects) {
+            // Upsert not support. only create.
+            if (dimxObj.Object.Key != undefined) {
+                throw new Error(`Key is read-only property`);
+            }
+            // only one of these properties can be provided
+            if (dimxObj.Object.Email !== undefined && dimxObj.Object.USERUUID !== undefined) {
+                // TODO: save the notifications that failed
+            }
+            //Email or USERUUID must be provided
+            else if (dimxObj.Object.Email === undefined && dimxObj.Object.USERUUID === undefined) {
+                // TODO: save the notifications that failed
+            }
+            // find user uuid by Email
+            else if (dimxObj.Object.Email !== undefined) {
+                const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
+                if (userUUID !== undefined) {
+                    delete dimxObj.Object.Email;
+                    dimxObj.Object.UserUUID = userUUID;
+                }
+            }
+        }
+        return body;
     }
 
 }

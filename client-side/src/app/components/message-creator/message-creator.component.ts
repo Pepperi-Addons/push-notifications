@@ -28,7 +28,7 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   async sendNotifications() {
-    await this.notificationsService.createNotificationsByEmails(this.message);
+    // await this.notificationsService.createNotificationsByEmails(this.message);
   }
 
   onValueChanged(element, $event) {

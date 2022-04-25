@@ -10,7 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import {NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME} from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME } from '../shared/entities'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
@@ -22,29 +22,38 @@ export async function install(client: Client, request: Request): Promise<any> {
         addonUUID: client.AddonUUID,
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
-    }); 
+    });
 
     const notificationsResourceRes = await createNotificationsResource(papiClient)
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     await service.createPNSSubscription();
+    await createRelations(papiClient);
 
-     return {
+    return {
         success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}`
     };
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
+    return { success: true, resultObject: {} }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
+    const papiClient = new PapiClient({
+        baseURL: client.BaseURL,
+        token: client.OAuthAccessToken,
+        addonUUID: client.AddonUUID,
+        addonSecretKey: client.AddonSecretKey,
+        actionUUID: client["ActionUUID"]
+    });
+    await createRelations(papiClient);
+    return { success: true, resultObject: {} }
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
+    return { success: true, resultObject: {} }
 }
 
 async function createPageBlockRelation(client: Client): Promise<any> {
@@ -60,17 +69,17 @@ async function createPageBlockRelation(client: Client): Promise<any> {
             SubType: "NG11",
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: filename,
-            ComponentName: `NotificationBlockComponent`, 
+            ComponentName: `NotificationBlockComponent`,
             ModuleName: `NotificationBlockModule`,
-            EditorComponentName: `NotificationBlockEditorComponent`, 
+            EditorComponentName: `NotificationBlockEditorComponent`,
             EditorModuleName: `NotificationBlockEditorModule`
         };
 
         const service = new NotificationsService(client);
         const result = await service.upsertRelation(pageComponentRelation);
-        return { success:true, resultObject: result };
-    } catch(err) {
-        return { success: false, resultObject: err , errorMessage: `Error in upsert relation. error - ${err}`};
+        return { success: true, resultObject: result };
+    } catch (err) {
+        return { success: false, resultObject: err, errorMessage: `Error in upsert relation. error - ${err}` };
     }
 }
 
@@ -148,6 +157,35 @@ async function createUserDeviceResource(papiClient: PapiClient) {
     try {
         await papiClient.addons.data.schemes.post(userDeviceScheme);
 
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+
+async function createRelations(papiClient: PapiClient) {
+    let relations: Relation[] = [
+        //DIMX import
+        {
+            RelationName: "NotificationsImportResource",
+            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
+            Name: NOTIFICATIONS_TABLE_NAME,
+            Description: "Notifications Import Relation",
+            Type: "AddonAPI",
+            AddonRelativeURL: "/api/import_notifications_source"
+        }
+    ]
+    try {
+        relations.forEach(async (singleRelation) => {
+            await papiClient.post('/addons/data/relations', singleRelation);
+        });
         return {
             success: true,
             errorMessage: ""
