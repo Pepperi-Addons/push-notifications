@@ -21,7 +21,17 @@ export class NotificationsService {
     }
 
     upsertNotification(notifications) {
-        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/notifications`, notifications).toPromise()
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/notifications`, notifications).toPromise();
+    }
+
+    createNotificationsByEmails(message) {
+        let emailsList: string[] = message.Recipients.split(";");
+        let body = {
+            "EmailsList": emailsList,
+            "Title": message.Subject,
+            "Body": message.Body
+        }
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/create_notifications`, body).toPromise();
     }
 
     markNotificationsAsRead(notifications) {

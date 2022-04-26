@@ -1,5 +1,6 @@
-export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 import { Schema } from 'jsonschema';
+
+export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 
 export interface Notification {
     Title: string,
@@ -42,6 +43,25 @@ export const notificationSchema: Schema = {
         ModificationDateTime: {
             type: "string",
             format: "date-time",
+        }
+    }
+}
+
+export const messageSchema: Schema = {
+    $id: "/Message",
+    type: "object",
+    properties: {
+        EmailsList: {
+            type: "string[]",
+            required: true
+        },
+        Title: {
+            type: "string",
+            required: true
+        },
+        Body: {
+            type: "string",
+            required: true
         }
     }
 }

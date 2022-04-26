@@ -1,11 +1,16 @@
 {
-    "Title_Addon": "Title of the addon",
+    "Title_Addon": "Notifications",
     "No_Notifications_Error": "No Notifications Assigned ",
     "User_UUID": "User ID",
     "Creator_UUID": "Creator ID",
+    "Creation_Date": "Creation Date",
     "Title": "Title",
     "Body": "Body",
     "Read": "Read",
     "Mark_As_Read": "Mark as read",
-    "Notifications_Form_Title": "Notifications form"
+    "Notifications_Form_Title": "Notifications form",
+    "To": "To",
+    "Subject": "Subject",
+    "Send": "Send",
+    "View": "View"
 }

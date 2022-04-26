@@ -3,11 +3,9 @@ import { NotificationsService } from '../../services/notifications.services';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { AddonService } from '../../services/addon.service';
-import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { NotificationFormComponent, NotificationsFormData } from "../notification-form";
 import { FormDataView } from "@pepperi-addons/papi-sdk";
 import { ObjectsDataRowCell } from '@pepperi-addons/ngx-lib';
-import { Notification } from '../../../../../shared/entities';
+import { config } from '../../addon.config';
 
 @Component({
   selector: 'app-notification-block',
@@ -20,10 +18,9 @@ export class NotificationBlockComponent implements OnInit {
     private translate: TranslateService,
     private notificationsService: NotificationsService,
     private addonService: AddonService,
-    private dialogService: PepDialogService,
     private genericListService: PepGenericListService
   ) {
-    this.addonService.addonUUID = "95025423-9096-4a4f-a8cd-d0a17548e42e"
+    this.addonService.addonUUID = config.AddonUUID;
   }
 
   ngOnInit() {
@@ -31,6 +28,9 @@ export class NotificationBlockComponent implements OnInit {
 
   noDataMessage: string;
   dataSource: IPepGenericListDataSource = this.getDataSource();
+  isFormView: boolean = false;
+  notification = {};
+  dataView = {};
 
   getDataSource() {
     return {
@@ -62,6 +62,13 @@ export class NotificationBlockComponent implements OnInit {
                 FieldID: 'CreatorUUID',
                 Type: 'TextBox',
                 Title: this.translate.instant("Creator_UUID"),
+                Mandatory: false,
+                ReadOnly: true
+              },
+              {
+                FieldID: 'CreationDateTime',
+                Type: 'TextBox',
+                Title: this.translate.instant("Creation_Date"),
                 Mandatory: false,
                 ReadOnly: true
               },
@@ -98,10 +105,13 @@ export class NotificationBlockComponent implements OnInit {
                 Width: 20
               },
               {
-                Width: 20
+                Width: 15
               },
               {
                 Width: 20
+              },
+              {
+                Width: 5
               }
             ],
 
@@ -131,7 +141,7 @@ export class NotificationBlockComponent implements OnInit {
 
       if (data.rows.length === 1 && data?.selectionType != 0) {
         actions.push({
-          title: this.translate.instant('Edit'),
+          title: this.translate.instant("View"),
           handler: async (objs) => {
               this.navigateToNotificationsForm(objs.rows[0]);
           }
@@ -150,32 +160,24 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   async markNotificationsAsRead(notifications) {
-    await this.notificationsService.markNotificationsAsRead(notifications);
+    await this.notificationsService.markNotificationsAsRead(
+      {
+      "Keys": notifications
+    });
     this.dataSource = this.getDataSource();
   }
 
-  navigateToNotificationsForm(notificationKey: string) {
-    const listNotification = this.genericListService.getItemById(notificationKey);
-    let notification = {};
-    if (listNotification) {
-      notification['Key'] = notificationKey;
-      listNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
-        notification[rowItem.ApiName] = rowItem.Value;
+  async navigateToNotificationsForm(notificationKey: string) {
+    this.isFormView = true;
+    const selectedNotification = this.genericListService.getItemById(notificationKey);
+    if (selectedNotification) {
+      await this.markNotificationsAsRead([notificationKey]);
+      this.dataSource = this.getDataSource();
+      this.notification['Key'] = notificationKey;
+      selectedNotification?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
+        this.notification[rowItem.ApiName] = rowItem.Value;
         });
     }
-
-    const formData: NotificationsFormData = {
-      Notification: notification,
-      DataView: this.getFormDataView(),
-    }
-    const config = this.dialogService.getDialogConfig({}, 'inline');
-    config.data = new PepDialogData({
-      content: NotificationFormComponent
-    })
-    this.dialogService.openDialog(NotificationFormComponent, formData, config).afterClosed().subscribe(() => {
-      this.markNotificationsAsRead([notificationKey]);
-    });
-    
   }
 
   getFormDataView(): FormDataView {
@@ -196,13 +198,27 @@ export class NotificationBlockComponent implements OnInit {
           Mandatory: true,
           ReadOnly: true
          },
-      //   {
-      //   'FieldID': 'Linked object',
-      //   'Type': 'Link',
-      //   'Title': "Linked object",
-      //   'Mandatory': true,
-      //   'ReadOnly': true
-      // }
+        {
+         FieldID: 'CreatorUUID',
+         Type: 'TextArea',
+         Title: "Creator",
+         Mandatory: true,
+         ReadOnly: true
+        },
+        {
+          FieldID: 'CreationDateTime',
+          Type: 'TextArea',
+          Title: "Creation date",
+          Mandatory: true,
+          ReadOnly: true
+         },
+        {
+        FieldID: 'Read',
+        Type: 'Boolean',
+        Title: "Read",
+        Mandatory: true,
+        ReadOnly: true
+      }
       ],
       Context: {
         Name: "",
@@ -211,5 +227,14 @@ export class NotificationBlockComponent implements OnInit {
       }
     };
     return dataView;
+  }
+
+
+  onValueChanged(event) {
+    console.log(event);
+  }
+
+  close() {
+    this.isFormView = false;
   }
 }
