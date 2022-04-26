@@ -136,7 +136,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
             Token: {
                 Type: 'String'
             },
-            EndpointsARN: {
+            Endpoint: {
                 Type: 'Array'
             }
         }

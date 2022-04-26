@@ -53,7 +53,7 @@ class NotificationsService {
     }
 
     async getNotifications(query) {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query)
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query);
     }
 
     async upsertNotification(body) {
@@ -148,6 +148,11 @@ class NotificationsService {
     }
 
     //MARK: UserDevice handling
+
+    async getUserDevices(query) {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query)
+    }
+
     async registerUserDevice(body) {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
@@ -173,60 +178,53 @@ class NotificationsService {
 
     async upsertUserDeviceResource(body, endpointARN) {
         let userDevice: UserDevice;
-        // if the user has registered devices, only add the new device to the list and create endpoint for the new device
-        try {
-            userDevice = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).key(body.UserID).get() as any;
-            userDevice.EndpointsARN.push(endpointARN);
-        }
-        catch {
-            let expirationDateTime = new Date();
-            expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
 
-            userDevice = {
-                "Key": body.UserID,
-                "UserID": body.UserID,
-                "AppID": body.AppID,
-                "DeviceID": body.DeviceID,
-                "DeviceName": body.DeviceName,
-                "DeviceType": body.DeviceType,
-                "Token": body.Token,
-                "EndpointsARN": [],
-                "ExpirationDateTime": expirationDateTime
-            };
-            userDevice.EndpointsARN.push(endpointARN);
-        }
+        userDevice = {
+            "Key": `${body.UserID}_${body.DeviceID}`,
+            "UserID": body.UserID,
+            "AppID": body.AppID,
+            "DeviceID": body.DeviceID,
+            "DeviceName": body.DeviceName,
+            "DeviceType": body.DeviceType,
+            "Token": body.Token,
+            "Endpoint": "",
+            "ExpirationDateTime": expirationDateTime
+        };
+        userDevice.Endpoint = endpointARN;
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
     }
 
-    async removeUserDeviceEndpoint(body) {
-        for (const object of body.Message.ModifiedObjects) {
-            await this.sns.DeleteEndpoint(object.EndpointARN);
+    async removeDevices(body) {
+        for (const device of body.Devices) {
+            const deviceToRemove = {
+                "Key": device,
+                "Hidden": true
+            };
+            await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
         }
     }
 
     async sendPushNotification(notification) {
         //get user devices by user uuid
         const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
-        // for each user device send push notification
-        for (const device of userDevicesList) {
-            let pushNotification = {
-                Message: notification.Body,
-                Subject: notification.Subject,
-                TargetArn: device.EndpointArn
+        if (userDevicesList != undefined) {
+            // for each user device send push notification
+            for (const device of userDevicesList) {
+                let pushNotification = {
+                    Message: notification.Body,
+                    Subject: notification.Subject,
+                    TargetArn: device.Endpoint.EndpointArn
+                }
+                const ans = await this.publish(pushNotification);
+                console.log(ans);
             }
-            const ans = await this.publish(pushNotification);
-            console.log(ans);
         }
     }
 
     async getUserDevicesByUserUUID(userUUID) {
-        try {
-            const userDeviceResource = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(userUUID);
-            return userDeviceResource.EndpointsARN;
-        }
-        catch (err) {
-            console.log(err);
-        }
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `UserID='${userUUID}'` });
     }
 
     //MARK: API Validation
@@ -282,6 +280,14 @@ class NotificationsService {
         };
         return this.sns.publish(params).promise();
     }
+
+    //remove endpoint ARN
+    async removeUserDeviceEndpoint(body) {
+        for (const object of body.Message.ModifiedObjects) {
+            await this.sns.DeleteEndpoint(object.EndpointARN);
+        }
+    }
+
 }
 
 export default NotificationsService;

@@ -60,8 +60,19 @@ export async function user_device(client: Client, request: Request) {
     if (request.method === 'POST') {
         return service.registerUserDevice(request.body);
     }
+    if (request.method === 'GET') {
+        return service.getUserDevices(request.query);
+    }
     else {
         throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function remove_devices(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'POST') {
+        return service.removeDevices(request.body);
     }
 }
 

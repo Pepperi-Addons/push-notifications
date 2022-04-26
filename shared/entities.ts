@@ -19,7 +19,7 @@ export interface UserDevice {
     DeviceType: string,
     AppID: string,
     Token: string,
-    EndpointsARN: Array<string>,
+    Endpoint: string,
     Key: string,
     ExpirationDateTime: Date
 }

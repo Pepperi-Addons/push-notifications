@@ -1,23 +1,19 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MessageCreatorComponent } from './message-creator.component';
-import { PepTextboxModule } from '@pepperi-addons/ngx-lib/textbox';
-import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
-import { PepFileService, PepAddonService} from '@pepperi-addons/ngx-lib';
-import { HttpClient } from '@angular/common/http';
-import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
-import { PepPageLayoutComponent, PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
+import { DeviceManagmentComponent } from './device-managment.component';
+import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
-import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
+import { PepFileService,PepAddonService} from '@pepperi-addons/ngx-lib';
+import { HttpClient } from '@angular/common/http';
 
 @NgModule({
   imports: [
     CommonModule,
-    PepTextboxModule,
-    PepTextareaModule,
+    PepGenericListModule,
     PepPageLayoutModule,
     PepTopBarModule,
-    PepButtonModule,
     TranslateModule.forChild({
 
       loader: {
@@ -28,11 +24,11 @@ import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 
       }, isolate: false
 
-    }),
+    })
   ],
-  declarations: [MessageCreatorComponent]
+  declarations: [DeviceManagmentComponent]
 })
-export class MessageCreatorModule {
+export class DeviceManagmentModule {
   constructor(
     translate: TranslateService,
     private addonService: PepAddonService

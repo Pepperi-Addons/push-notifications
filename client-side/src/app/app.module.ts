@@ -6,6 +6,7 @@ import { NotificationBlockModule } from './components/notification-block';
 import { NotificationBlockEditorModule } from './components/notification-block-editor';
 import { MessageCreatorModule } from './components/message-creator'
 import { PepAddonService } from '@pepperi-addons/ngx-lib';
+import { DeviceManagmentModule } from './components/device-managment';
 
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 
@@ -26,6 +27,7 @@ import { AppComponent } from './app.component';
         NotificationBlockModule,
         NotificationBlockEditorModule,
         MessageCreatorModule,
+        DeviceManagmentModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,
