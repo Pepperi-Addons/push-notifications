@@ -37,6 +37,12 @@ export async function mark_notifications_as_read(client: Client, request: Reques
     }
 }
 
+export async function user_device_removed(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    await service.removeUserDeviceEndpoint(request.body);
+}
+
 // AWS endpoints
 export async function create_platform_application(client: Client, request:Request) {
     const service = new NotificationsService(client)
@@ -69,16 +75,6 @@ export async function create_application_endpoint(client: Client, request:Reques
     }
 }
 
-export async function create_topic(client: Client, request:Request) {
-    const service = new NotificationsService(client)
-    if (request.method == 'POST') {
-       return service.createTopic(request.body);
-    }
-    else {
-        throw new Error(`Method ${request.method} not supported`);
-    }
-}
-
 export async function publish(client: Client, request:Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
@@ -89,12 +85,3 @@ export async function publish(client: Client, request:Request) {
     }
 }
 
-export async function subscribe_device_to_topic(client: Client, request:Request) {
-    const service = new NotificationsService(client)
-    if (request.method == 'POST') {
-       return service.subscribeDeviceToTopic(request.body);
-    }
-    else {
-        throw new Error(`Method ${request.method} not supported`);
-    }
-}

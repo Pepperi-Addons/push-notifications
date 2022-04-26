@@ -32,13 +32,28 @@ class NotificationsService {
         this.sns = new AWS.SNS()
     }
 
+    // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
+    createPNSSubscription() {
+        return this.papiClient.notification.subscriptions.upsert({
+            AddonUUID: this.addonUUID,
+            AddonRelativeURL: "/api/user_device_removed",
+            Type: "data",
+            Name: "deviceRemovalSubscription",
+            FilterPolicy: {
+                Action: ['remove'],
+                Resource: [USER_DEVICE_TABLE_NAME],
+                AddonUUID: [this.addonUUID]
+            }
+        });
+    }
+
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
     }
 
     async getNotifications(query) {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query.options)
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query)
     }
 
     async upsertNotification(body) {
@@ -102,12 +117,9 @@ class NotificationsService {
 
     // create a single notification after all conditions have been checked
     async createNotification(body) {
-        let expirationDateTime = new Date();
-        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
-
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
-        body.ExpirationDateTime = expirationDateTime;
+        this.sendPushNotification(body);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -167,6 +179,9 @@ class NotificationsService {
             userDevice.EndpointsARN.push(endpointARN);
         }
         catch {
+            let expirationDateTime = new Date();
+            expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+
             userDevice = {
                 "Key": body.UserID,
                 "UserID": body.UserID,
@@ -175,13 +190,44 @@ class NotificationsService {
                 "DeviceName": body.DeviceName,
                 "DeviceType": body.DeviceType,
                 "Token": body.Token,
-                "EndpointsARN": []
+                "EndpointsARN": [],
+                "ExpirationDateTime": expirationDateTime
             };
             userDevice.EndpointsARN.push(endpointARN);
         }
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
     }
 
+    async removeUserDeviceEndpoint(body) {
+        for (const object of body.Message.ModifiedObjects) {
+            await this.sns.DeleteEndpoint(object.EndpointARN);
+        }
+    }
+
+    async sendPushNotification(notification) {
+        //get user devices by user uuid
+        const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
+        // for each user device send push notification
+        for (const device of userDevicesList) {
+            let pushNotification = {
+                Message: notification.Body,
+                Subject: notification.Subject,
+                TargetArn: device.EndpointArn
+            }
+            const ans = await this.publish(pushNotification);
+            console.log(ans);
+        }
+    }
+
+    async getUserDevicesByUserUUID(userUUID) {
+        try {
+            const userDeviceResource = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(userUUID);
+            return userDeviceResource.EndpointsARN;
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
 
     //MARK: API Validation
     validateSchema(body: any, schema: any) {
@@ -226,38 +272,15 @@ class NotificationsService {
         return this.sns.createPlatformEndpoint(params).promise();
     }
 
-    //creates topics where users can subscribe to the topics
-    createTopic(body) {
-        const params = {
-            Name: body.Name
-        }
-        return this.sns.createTopic(params).promise()
-    }
-
     // publish to particular topic ARN or to endpoint ARN
     publish(body) {
         const params = {
             Message: body.Message,
-            MessageAttributes: {
-                someKey: {
-                    DataType: body.DataType,
-                },
-            },
             MessageStructure: 'STRING_VALUE',
             Subject: body.Subject,
-            TargetArn: body.TargetArn,
-            TopicArn: body.TopicARN
+            TargetArn: body.TargetArn
         };
         return this.sns.publish(params).promise();
-    }
-
-    subscribeDeviceToTopic(body) {
-        const params = {
-            Protocol: "application",
-            TopicArn: body.TopicARN,
-            Endpoint: body.EndpointArn
-        };
-        return this.sns.subscribe(params).promise();
     }
 }
 

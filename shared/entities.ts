@@ -20,7 +20,8 @@ export interface UserDevice {
     AppID: string,
     Token: string,
     EndpointsARN: Array<string>,
-    Key: string
+    Key: string,
+    ExpirationDateTime: Date
 }
 
 export const notificationSchema: Schema = {
