@@ -90,7 +90,7 @@ export const userDeviceSchema: Schema = {
     properties: {
         UserID: {
             type: "string",
-            required: true
+            required: false
         },
         AppID: {
             type: "string",

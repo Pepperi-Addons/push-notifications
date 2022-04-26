@@ -53,6 +53,22 @@ class NotificationsService {
         return userUUID;
     }
 
+    createPayload(data) {
+        if (data.DeviceType.includes("iPhone")) {
+            return {
+                "default": `${data.Subject}`,
+                "APNS_SANDBOX": JSON.stringify({
+                    "aps": {
+                        "alert": {
+                            "title": `${data.Subject}`,
+                            "body": `${data.Message}`
+                        }
+                    }
+                })
+            }
+        }
+    }
+
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
@@ -157,6 +173,7 @@ class NotificationsService {
             });
 
             if (endpointARN.EndpointArn != undefined) {
+                body.UserID = this.currentUserUUID;
                 return await this.upsertUserDeviceResource(body, endpointARN);
             }
             else {
@@ -217,9 +234,10 @@ class NotificationsService {
             // for each user device send push notification
             for (const device of userDevicesList) {
                 let pushNotification = {
-                    Message: notification.Body,
-                    Subject: notification.Subject,
-                    TargetArn: device.Endpoint.EndpointArn
+                    Message: notification.Body ?? "",
+                    Subject: notification.Title,
+                    TargetArn: device.Endpoint.EndpointArn,
+                    DeviceType: device.DeviceType
                 }
                 const ans = await this.publish(pushNotification);
                 console.log(ans);
@@ -276,10 +294,10 @@ class NotificationsService {
 
     // publish to particular topic ARN or to endpoint ARN
     publish(body) {
+        const payload = this.createPayload(body);
         const params = {
-            Message: body.Message,
-            MessageStructure: 'STRING_VALUE',
-            Subject: body.Subject,
+            Message: JSON.stringify(payload),
+            MessageStructure: 'json',
             TargetArn: body.TargetArn
         };
         return this.sns.publish(params).promise();
