@@ -41,14 +41,6 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    const papiClient = new PapiClient({
-        baseURL: client.BaseURL,
-        token: client.OAuthAccessToken,
-        addonUUID: client.AddonUUID,
-        addonSecretKey: client.AddonSecretKey,
-        actionUUID: client["ActionUUID"]
-    });
-    await createRelations(papiClient);
     return { success: true, resultObject: {} }
 }
 
