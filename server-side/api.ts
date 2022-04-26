@@ -15,17 +15,6 @@ export async function notifications(client: Client, request: Request) {
     }
 }
 
-export async function create_notifications(client: Client, request: Request) {
-    const service = new NotificationsService(client)
-
-    if (request.method === 'POST') {
-        return service.createNotifications(request.body);
-    }
-    else {
-        throw new Error(`Method ${request.method} not supported`);
-    }
-}
-
 export async function mark_notifications_as_read(client: Client, request: Request) {
     const service = new NotificationsService(client)
     
@@ -36,7 +25,8 @@ export async function mark_notifications_as_read(client: Client, request: Reques
         throw new Error(`Method ${request.method} not supported`);
     }
 }
-
+// user device has been removed because it's expiration date has arrived.
+// called by PNS subscription
 export async function user_device_removed(client: Client, request: Request) {
     const service = new NotificationsService(client)
 
@@ -93,6 +83,18 @@ export async function publish(client: Client, request:Request) {
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+// DIMX
+// endpoints for the AddonRelativeURL of the relation
+export async function import_notifications_source(client: Client, request:Request) {
+    const service = new NotificationsService(client)
+    if (request.method == 'POST') {
+        return service.importNotificationsSource(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);       
     }
 }
 
