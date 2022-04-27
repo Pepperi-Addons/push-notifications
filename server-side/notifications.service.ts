@@ -28,7 +28,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        
+
         this.sns = new AWS.SNS()
     }
 
@@ -224,30 +224,32 @@ class NotificationsService {
             }
         }
     }
-
+    // called by PNS when a notification is created
     async sendPushNotification(body) {
-        console.log("@@@@@");
-        console.log("@@@body: ",body);
-        console.log("@@@Message: ",body.Message);
-        console.log("@@@ModifiedObjects: ",body.Message.ModifiedObjects);
         for (const object of body.Message.ModifiedObjects) {
-            console.log("@@@Object: ",object);
+            try {
+                const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
+                //get user devices by user uuid
+                const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
+                if (userDevicesList != undefined) {
+                    // for each user device send push notification
+                    for (const device of userDevicesList) {
+                        let pushNotification = {
+                            Message: notification.Body ?? "",
+                            Subject: notification.Title,
+                            TargetArn: device.Endpoint.EndpointArn,
+                            DeviceType: device.DeviceType
+                        }
+                        const ans = await this.publish(pushNotification);
+                        console.log("@@@: ", ans);
+                    }
+                }
+            }
+            catch {
+                console.log("@@@Notification does not exist");
+            }
+
         }
-        // //get user devices by user uuid
-        // const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
-        // if (userDevicesList != undefined) {
-        //     // for each user device send push notification
-        //     for (const device of userDevicesList) {
-        //         let pushNotification = {
-        //             Message: notification.Body ?? "",
-        //             Subject: notification.Title,
-        //             TargetArn: device.Endpoint.EndpointArn,
-        //             DeviceType: device.DeviceType
-        //         }
-        //         const ans = await this.publish(pushNotification);
-        //         console.log(ans);
-        //     }
-        // }
     }
 
     async getUserDevicesByUserUUID(userUUID) {
@@ -311,7 +313,7 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
-            if (object.EndpointARN != undefined){
+            if (object.EndpointARN != undefined) {
                 const params = {
                     EndpointArn: object.EndpointARN
                 };
