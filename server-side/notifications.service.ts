@@ -199,7 +199,7 @@ class NotificationsService {
     }
     // remove devices both from ADAL and SNS
     async removeDevices(body) {
-        for (const device of body.DevicesKey) {
+        for (const device of body.DevicesKeys) {
             try {
                 const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
                 deviceToRemove.Hidden = true;
