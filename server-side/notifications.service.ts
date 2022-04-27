@@ -1,6 +1,6 @@
 import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, messageSchema, userDeviceSchema, UserDevice } from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice } from '../shared/entities'
 import { Schema, Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -54,7 +54,7 @@ class NotificationsService {
     }
 
     createPayload(data) {
-        if (data.DeviceType.includes("iPhone")) {
+        if (data.DeviceType.includes("iPhone") || data.DeviceType.includes("iPad")) {
             return {
                 "default": `${data.Subject}`,
                 "APNS_SANDBOX": JSON.stringify({
@@ -89,33 +89,24 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
-            // The user must provide UserUUID or Email
-            if (body.UserUUID !== undefined || body.Email !== undefined) {
-                if (body.Email !== undefined) {
-                    // Email or UserUUID are mutually exclusive 
-                    if (body.UserUUID !== undefined) {
-                        throw new Error('Email or UserUUID are mutually exclusive ');
-                    }
-                    const userUUID = await this.getUserUUIDByEmail(body.Email)
-                    if (userUUID != undefined) {
-                        body.UserUUID = userUUID;
-                        delete body.Email;
-                    }
-                    else {
-                        throw new Error(`User with Email: ${body.Email} does not exist`);
-                    }
+            // replace mail by UserUUID
+            if (body.Email !== undefined) {
+                const userUUID = await this.getUserUUIDByEmail(body.Email)
+                if (userUUID != undefined) {
+                    body.UserUUID = userUUID;
+                    delete body.Email;
                 }
-                // Check that the UserUUID exists in the users list
-                try {
-                    await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
-                    return this.createNotification(body);
-                }
-                catch {
-                    throw new Error(`Could not find a user matching this UserUUID`);
+                else {
+                    throw new Error(`User with Email: ${body.Email} does not exist`);
                 }
             }
-            else {
-                throw new Error(`UserUUID or Email required`);
+            // Check that the UserUUID exists in the users list
+            try {
+                await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
+                return this.createNotification(body);
+            }
+            catch {
+                throw new Error(`Could not find a user matching this UserUUID`);
             }
         }
         else {
@@ -192,7 +183,7 @@ class NotificationsService {
         expirationDateTime.setDate(expirationDateTime.getDate() + 30);
 
         userDevice = {
-            "Key": `${body.UserID}_${body.DeviceID}`,
+            "Key": `${body.UserID}_${body.DeviceID}_${body.AppID}`,
             "UserID": body.UserID,
             "AppID": body.AppID,
             "AppName": body.AppName,
@@ -208,18 +199,11 @@ class NotificationsService {
     }
     // remove devices both from ADAL and SNS
     async removeDevices(body) {
-        for (const device of body.Devices) {
+        for (const device of body.DevicesKey) {
             try {
                 const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
-                const params = {
-                    EndpointArn: deviceToRemove.Endpoint.EndpointArn
-                };
-                let ans = await this.sns.deleteEndpoint(params).promise();
-                if (ans) {
-                    deviceToRemove.Hidden = true;
-                    await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
-
-                }
+                deviceToRemove.Hidden = true;
+                await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
             }
             catch {
 
@@ -306,10 +290,12 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
-            const params = {
-                EndpointArn: object.EndpointARN
-            };
-            await this.sns.deleteEndpoint(params).promise();
+            if (object.EndpointARN != undefined){
+                const params = {
+                    EndpointArn: object.EndpointARN
+                };
+                await this.sns.deleteEndpoint(params).promise();
+            }
         }
     }
 
@@ -320,13 +306,13 @@ class NotificationsService {
             if (dimxObj.Object.Key != undefined) {
                 throw new Error(`Key is read-only property`);
             }
-            // only one of these properties can be provided
-            if (dimxObj.Object.Email !== undefined && dimxObj.Object.USERUUID !== undefined) {
-                // TODO: save the notifications that failed
-            }
-            //Email or USERUUID must be provided
-            else if (dimxObj.Object.Email === undefined && dimxObj.Object.USERUUID === undefined) {
-                // TODO: save the notifications that failed
+            // USERUUID and Email are mutually exclusive
+            let isUserEmailProvided = dimxObj.Object.Email !== undefined;
+            let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
+            // consider !== as XOR
+            if (isUserEmailProvided !== isUserUUIDProvided) {
+                body.DIMXObjects.remove(dimxObj);
+                continue;
             }
             // find user uuid by Email
             else if (dimxObj.Object.Email !== undefined) {

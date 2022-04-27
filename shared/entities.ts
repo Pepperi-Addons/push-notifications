@@ -39,12 +39,6 @@ export const notificationSchema: Schema = {
         Body: {
             type: "string"
         },
-        UserUUID: {
-            type: "string"
-        },
-        Email: {
-            type: "string"
-        },
         CreatorUserUUID: {
             type: "string"
         },
@@ -62,26 +56,27 @@ export const notificationSchema: Schema = {
             type: "string",
             format: "date-time",
         }
-    }
-}
-
-export const messageSchema: Schema = {
-    $id: "/Message",
-    type: "object",
-    properties: {
-        EmailsList: {
-            type: "string[]",
-            required: true
-        },
-        Title: {
-            type: "string",
-            required: true
-        },
-        Body: {
-            type: "string",
-            required: true
-        }
-    }
+    },
+    // Email and UserUUID are mutually exclusive
+    oneOf:
+        [
+            {
+                properties: {
+                    UserUUID: {
+                        type: "string",
+                        required: true
+                    }
+                }
+            },
+            {
+                properties: {
+                    Email: {
+                        type: "string",
+                        required: true
+                    }
+                }
+            }
+        ]
 }
 
 export const userDeviceSchema: Schema = {
