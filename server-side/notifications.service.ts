@@ -296,6 +296,9 @@ class NotificationsService {
                 };
                 await this.sns.deleteEndpoint(params).promise();
             }
+            else {
+                console.log("Device endpoint does not exist");
+            }
         }
     }
 
