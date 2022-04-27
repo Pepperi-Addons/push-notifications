@@ -104,8 +104,7 @@ export class DeviceManagmentComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Delete"),
           handler: async (objs) => {
-            debugger
-           await this.userDevicesService.removeUserDevices({"Devices": objs.rows});
+           await this.userDevicesService.removeUserDevices({"DevicesKeys": objs.rows});
            this.dataSource = this.getDataSource();
           }
       });

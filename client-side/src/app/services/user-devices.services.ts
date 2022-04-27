@@ -22,7 +22,7 @@ export class UserDevicesService {
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
 
-    removeUserDevices(devices) {
-        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/remove_devices`, devices).toPromise();
+    removeUserDevices(devicesKeys) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/remove_devices`, devicesKeys).toPromise();
     }
 }
