@@ -27,7 +27,8 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsResourceRes = await createNotificationsResource(papiClient)
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
-    await service.createPNSSubscription();
+    await service.createPNSSubscriptionForUserDeviceRemoval();
+    await service.createPNSSubscriptionForNotificationInsert();
     await createRelations(papiClient);
 
     return {
