@@ -167,7 +167,7 @@ async function createRelations(papiClient: PapiClient) {
     let relations: Relation[] = [
         //DIMX import
         {
-            RelationName: "NotificationsImportResource",
+            RelationName: "DataImportResource",
             AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
             Name: NOTIFICATIONS_TABLE_NAME,
             Description: "Notifications Import Relation",

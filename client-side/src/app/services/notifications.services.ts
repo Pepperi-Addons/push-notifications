@@ -27,4 +27,8 @@ export class NotificationsService {
     markNotificationsAsRead(notifications) {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/mark_notifications_as_read`, notifications).toPromise()
     }
+
+    importNotifications(notifications) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/import_notifications`, notifications).toPromise()
+    }
 }

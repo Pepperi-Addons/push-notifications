@@ -7,16 +7,19 @@ import { NotificationBlockEditorModule } from './components/notification-block-e
 import { MessageCreatorModule } from './components/message-creator'
 import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { DeviceManagmentModule } from './components/device-managment';
+import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.component';
 
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 
 import { AppRoutingModule } from './app.routes';
 import { AddonModule } from './components/addon/addon.module';
 import { AppComponent } from './app.component';
+import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 
 @NgModule({
     declarations: [	
-        AppComponent
+        AppComponent,
+        PopupDialogComponent
    ],
     imports: [
         BrowserModule,
@@ -28,6 +31,7 @@ import { AppComponent } from './app.component';
         NotificationBlockEditorModule,
         MessageCreatorModule,
         DeviceManagmentModule,
+        PepButtonModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,

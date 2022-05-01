@@ -2,6 +2,8 @@ import { Observable } from 'rxjs';
 import jwt from 'jwt-decode';
 import { PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
+import { ComponentType } from '@angular/cdk/overlay';
+import { PepDialogData, PepDialogService, PepDialogActionButton } from '@pepperi-addons/ngx-lib/dialog';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 
@@ -14,24 +16,40 @@ export class AddonService {
     papiBaseURL = ''
     addonUUID;
     userUUID;
+    dialogRef;
 
     get papiClient(): PapiClient {
         return new PapiClient({
             baseURL: this.papiBaseURL,
             token: this.session.getIdpToken(),
             addonUUID: this.addonUUID,
-            suppressLogging:true
+            suppressLogging: true
         })
     }
 
     constructor(
-        public session:  PepSessionService,
-        private pepHttp: PepHttpService
+        public session: PepSessionService,
+        private pepHttp: PepHttpService,
+        private dialogService: PepDialogService
     ) {
         const accessToken = this.session.getIdpToken();
         this.parsedToken = jwt(accessToken);
         this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
         this.userUUID = this.parsedToken.sub;
+    }
+
+    // Dialog service 
+    openDialog(title: string, content: ComponentType<any>, buttons: Array<PepDialogActionButton>, input: any, callbackFunc?: (any) => void): void {
+        const dialogConfig = this.dialogService.getDialogConfig({ disableClose: true, panelClass: 'pepperi-standalone' }, 'inline')
+        const data = new PepDialogData({ title: title, actionsType: 'custom', content: content, actionButtons: buttons })
+        dialogConfig.data = data;
+
+        this.dialogRef = this.dialogService.openDialog(content, input, dialogConfig);
+        if (callbackFunc) {
+            this.dialogRef.afterClosed().subscribe(res => {
+                callbackFunc(res);
+            });
+        }
     }
 
     async get(endpoint: string): Promise<any> {

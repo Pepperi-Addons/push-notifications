@@ -1,9 +1,11 @@
-import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice } from '../shared/entities'
-import { Schema, Validator } from 'jsonschema';
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod } from '../shared/entities'
+import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
+import { Agent } from 'https';
+import fetch from 'node-fetch';
 const AWS = require('aws-sdk');
 
 class NotificationsService {
@@ -327,29 +329,98 @@ class NotificationsService {
 
     //DIMX 
     async importNotificationsSource(body) {
-        for (var dimxObj of body.DIMXObjects) {
+        for (const [index, dimxObj] of body.DIMXObjects.entries()) {
             // Upsert not support. only create.
             if (dimxObj.Object.Key != undefined) {
                 throw new Error(`Key is read-only property`);
             }
+            dimxObj.Object.Key = uuid();
+            dimxObj.Object.CreatorUUID = this.currentUserUUID;
+
             // USERUUID and Email are mutually exclusive
             let isUserEmailProvided = dimxObj.Object.Email !== undefined;
             let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
             // consider !== as XOR
             if (isUserEmailProvided !== isUserUUIDProvided) {
-                body.DIMXObjects.remove(dimxObj);
-                continue;
-            }
-            // find user uuid by Email
-            else if (dimxObj.Object.Email !== undefined) {
-                const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
-                if (userUUID !== undefined) {
-                    delete dimxObj.Object.Email;
-                    dimxObj.Object.UserUUID = userUUID;
+                // find user uuid by Email
+                if (dimxObj.Object.Email !== undefined) {
+                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
+                    // The Email is not compatible with any UserUUID
+                    if (userUUID !== undefined) {
+                        delete dimxObj.Object.Email;
+                        dimxObj.Object.UserUUID = userUUID;
+                    }
+                    else {
+                        body.DIMXObjects.splice(index, 1);
+                    }
                 }
             }
+            else {
+                body.DIMXObjects.splice(index, 1);
+            }
         }
+        console.log("@@@@import end body: ", body);
         return body;
+    }
+
+    // called from client side
+    async importNotifications(body) {
+        let fileURL = await this.uploadObject();
+        //upload Object To S3
+        await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());
+        if (fileURL != undefined && fileURL.URL != undefined) {
+            const file = {
+                'URI': fileURL.URL,
+                'OverwriteObject': false,
+                'Delimiter': ';',
+                "Version": "1.0.3"
+            }
+            const url = `/addons/data/import/file/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
+            return await this.papiClient.post(url, file);
+        }
+    }
+
+    async uploadObject() {
+        const url = `/addons/files/${this.addonUUID}`
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 1);
+        const body = {
+            "Key": "/tempBulkAPI/" + uuid() + ".json",
+            "MIME": "application/json",
+            "ExpirationDateTime": expirationDateTime
+        }
+        return await this.papiClient.post(url, body);
+    }
+
+    async apiCall(method: HttpMethod, url: string, body: any = undefined) {
+
+        const agent = new Agent({
+            rejectUnauthorized: false,
+        })
+
+        const options: any = {
+            method: method,
+            agent: agent,
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(url, options);
+
+
+        if (!res.ok) {
+            // try parsing error as json
+            let error = '';
+            try {
+                error = JSON.stringify(await res.json());
+            } catch { }
+
+            throw new Error(`${url} failed with status: ${res.status} - ${res.statusText} error: ${error}`);
+        }
+        return res;
     }
 
 }
