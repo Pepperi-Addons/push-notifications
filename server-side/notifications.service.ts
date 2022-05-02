@@ -31,7 +31,10 @@ class NotificationsService {
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
 
-        this.sns = new AWS.SNS()
+        var credentials = new AWS.SharedIniFileCredentials({ profile: 'Noam' });
+        AWS.config.credentials = credentials;
+        AWS.config.region = 'us-west-2';
+        this.sns = new AWS.SNS();
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
@@ -329,10 +332,11 @@ class NotificationsService {
 
     //DIMX 
     async importNotificationsSource(body) {
-        for (const [index, dimxObj] of body.DIMXObjects.entries()) {
+        for (const dimxObj of body.DIMXObjects) {
             // Upsert not support. only create.
             if (dimxObj.Object.Key != undefined) {
-                throw new Error(`Key is read-only property`);
+                dimxObj.Status = Error;
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: Key is read-only property`
             }
             dimxObj.Object.Key = uuid();
             dimxObj.Object.CreatorUUID = this.currentUserUUID;
@@ -351,12 +355,14 @@ class NotificationsService {
                         dimxObj.Object.UserUUID = userUUID;
                     }
                     else {
-                        body.DIMXObjects.splice(index, 1);
+                        dimxObj.Status = Error;
+                        dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: The given Email is not compatible with any UserUUID`
                     }
                 }
             }
             else {
-                body.DIMXObjects.splice(index, 1);
+                dimxObj.Status = Error;
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and Email are mutually exclusive`
             }
         }
         console.log("@@@@import end body: ", body);
@@ -376,7 +382,27 @@ class NotificationsService {
                 "Version": "1.0.3"
             }
             const url = `/addons/data/import/file/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
-            return await this.papiClient.post(url, file);
+            const ansFromImport = await this.papiClient.post(url, file);
+            const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
+            if (ansFromAuditLog.success === true) {
+                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).DownloadURL;
+                return await this.DownloadResultArray(downloadURL);
+            }
+            return ansFromAuditLog;
+        }
+    }
+
+    async DownloadResultArray(downloadURL): Promise<any[]> {
+        console.log(`OutputArrayObject: Downloading file`);
+        try {
+            const response = await fetch(downloadURL);
+            const data: string = await response.text();
+            const DIMXObjectArr: any[] = JSON.parse(data);
+            return DIMXObjectArr;
+        }
+        catch (ex) {
+            console.log(`DownloadResultArray: ${ex}`);
+            throw new Error((ex as { message: string }).message);
         }
     }
 
@@ -421,6 +447,30 @@ class NotificationsService {
             throw new Error(`${url} failed with status: ${res.status} - ${res.statusText} error: ${error}`);
         }
         return res;
+    }
+
+
+    async pollExecution(papiClient: PapiClient, ExecutionUUID: string, interval = 1000, maxAttempts = 60, validate = (res) => {
+        return res != null && (res.Status.Name === 'Failure' || res.Status.Name === 'Success');
+    }) {
+        let attempts = 0;
+
+        const executePoll = async (resolve, reject) => {
+            const result = await papiClient.get(`/audit_logs/${ExecutionUUID}`);
+            attempts++;
+
+            if (validate(result)) {
+                return resolve({ "success": result.Status.Name === 'Success', "errorCode": 0, 'resultObject': result.AuditInfo.ResultObject });
+            }
+            else if (maxAttempts && attempts === maxAttempts) {
+                return resolve({ "success": false, "errorCode": 1 });
+            }
+            else {
+                setTimeout(executePoll, interval, resolve, reject);
+            }
+        };
+
+        return new Promise<any>(executePoll);
     }
 
 }
