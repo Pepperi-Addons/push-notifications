@@ -356,7 +356,7 @@ class NotificationsService {
                     }
                     else {
                         dimxObj.Status = Error;
-                        dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: The given Email is not compatible with any UserUUID`
+                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.Email)} faild with the following error: The given Email is not compatible with any UserUUID`
                     }
                 }
             }
