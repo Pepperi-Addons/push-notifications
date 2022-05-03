@@ -17,5 +17,6 @@
     "App_Name": "App Name",
     "Last_Use_Date": "Last Use Date",
     "No_Devices_Error": "No Devices Assigned",
-    "Delete": "Delete"
+    "Delete": "Delete",
+    "Max_Users_Error": "Max 100 hard coded users"
 }

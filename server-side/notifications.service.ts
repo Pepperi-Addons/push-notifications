@@ -1,9 +1,11 @@
-import { PapiClient, InstalledAddon, AddonData } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice } from '../shared/entities'
-import { Schema, Validator } from 'jsonschema';
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod } from '../shared/entities'
+import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
+import { Agent } from 'https';
+import fetch from 'node-fetch';
 const AWS = require('aws-sdk');
 
 class NotificationsService {
@@ -29,7 +31,10 @@ class NotificationsService {
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
 
-        this.sns = new AWS.SNS()
+        var credentials = new AWS.SharedIniFileCredentials({ profile: 'Noam' });
+        AWS.config.credentials = credentials;
+        AWS.config.region = 'us-west-2';
+        this.sns = new AWS.SNS();
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
@@ -327,29 +332,145 @@ class NotificationsService {
 
     //DIMX 
     async importNotificationsSource(body) {
-        for (var dimxObj of body.DIMXObjects) {
+        for (const dimxObj of body.DIMXObjects) {
             // Upsert not support. only create.
             if (dimxObj.Object.Key != undefined) {
-                throw new Error(`Key is read-only property`);
+                dimxObj.Status = Error;
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: Key is read-only property`
             }
+            dimxObj.Object.Key = uuid();
+            dimxObj.Object.CreatorUUID = this.currentUserUUID;
+
             // USERUUID and Email are mutually exclusive
             let isUserEmailProvided = dimxObj.Object.Email !== undefined;
             let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
             // consider !== as XOR
             if (isUserEmailProvided !== isUserUUIDProvided) {
-                body.DIMXObjects.remove(dimxObj);
-                continue;
-            }
-            // find user uuid by Email
-            else if (dimxObj.Object.Email !== undefined) {
-                const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
-                if (userUUID !== undefined) {
-                    delete dimxObj.Object.Email;
-                    dimxObj.Object.UserUUID = userUUID;
+                // find user uuid by Email
+                if (dimxObj.Object.Email !== undefined) {
+                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
+                    // The Email is not compatible with any UserUUID
+                    if (userUUID !== undefined) {
+                        delete dimxObj.Object.Email;
+                        dimxObj.Object.UserUUID = userUUID;
+                    }
+                    else {
+                        dimxObj.Status = Error;
+                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.Email)} faild with the following error: The given Email is not compatible with any UserUUID`
+                    }
                 }
             }
+            else {
+                dimxObj.Status = Error;
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and Email are mutually exclusive`
+            }
         }
+        console.log("@@@@import end body: ", body);
         return body;
+    }
+
+    // called from client side
+    async importNotifications(body) {
+        let fileURL = await this.uploadObject();
+        //upload Object To S3
+        await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());
+        if (fileURL != undefined && fileURL.URL != undefined) {
+            const file = {
+                'URI': fileURL.URL,
+                'OverwriteObject': false,
+                'Delimiter': ';',
+                "Version": "1.0.3"
+            }
+            const url = `/addons/data/import/file/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
+            const ansFromImport = await this.papiClient.post(url, file);
+            const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
+            if (ansFromAuditLog.success === true) {
+                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).DownloadURL;
+                return await this.DownloadResultArray(downloadURL);
+            }
+            return ansFromAuditLog;
+        }
+    }
+
+    async DownloadResultArray(downloadURL): Promise<any[]> {
+        console.log(`OutputArrayObject: Downloading file`);
+        try {
+            const response = await fetch(downloadURL);
+            const data: string = await response.text();
+            const DIMXObjectArr: any[] = JSON.parse(data);
+            return DIMXObjectArr;
+        }
+        catch (ex) {
+            console.log(`DownloadResultArray: ${ex}`);
+            throw new Error((ex as { message: string }).message);
+        }
+    }
+
+    async uploadObject() {
+        const url = `/addons/files/${this.addonUUID}`
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 1);
+        const body = {
+            "Key": "/tempBulkAPI/" + uuid() + ".json",
+            "MIME": "application/json",
+            "ExpirationDateTime": expirationDateTime
+        }
+        return await this.papiClient.post(url, body);
+    }
+
+    async apiCall(method: HttpMethod, url: string, body: any = undefined) {
+
+        const agent = new Agent({
+            rejectUnauthorized: false,
+        })
+
+        const options: any = {
+            method: method,
+            agent: agent,
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(url, options);
+
+
+        if (!res.ok) {
+            // try parsing error as json
+            let error = '';
+            try {
+                error = JSON.stringify(await res.json());
+            } catch { }
+
+            throw new Error(`${url} failed with status: ${res.status} - ${res.statusText} error: ${error}`);
+        }
+        return res;
+    }
+
+
+    async pollExecution(papiClient: PapiClient, ExecutionUUID: string, interval = 1000, maxAttempts = 60, validate = (res) => {
+        return res != null && (res.Status.Name === 'Failure' || res.Status.Name === 'Success');
+    }) {
+        let attempts = 0;
+
+        const executePoll = async (resolve, reject) => {
+            const result = await papiClient.get(`/audit_logs/${ExecutionUUID}`);
+            attempts++;
+
+            if (validate(result)) {
+                return resolve({ "success": result.Status.Name === 'Success', "errorCode": 0, 'resultObject': result.AuditInfo.ResultObject });
+            }
+            else if (maxAttempts && attempts === maxAttempts) {
+                return resolve({ "success": false, "errorCode": 1 });
+            }
+            else {
+                setTimeout(executePoll, interval, resolve, reject);
+            }
+        };
+
+        return new Promise<any>(executePoll);
     }
 
 }

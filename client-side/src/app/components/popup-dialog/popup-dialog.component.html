@@ -1,0 +1,22 @@
+
+<div class="dialog">
+
+  <div mat-dialog-content class="mat-dialog-content">
+      <div class="form">
+        <div mat-dialog-title class=" header mat-dialog-title pepperi-border-bottom">
+            <h2 class="title"> {{ title | translate}} </h2>
+            <pep-button class="close_button" spacing-element [sizeType]="'sm'" [classNames]="'pep-spacing-element'" iconName="system_close" [styleType]="'weak'" (buttonClick)="onCloseFormClicked()"></pep-button>
+        </div>
+            <div class="message">
+                <p> {{message}} </p>
+            </div>
+        </div>
+  </div>
+  <div mat-dialog-actions class="pepperi-border-top mat-dialog-actions split-actions"
+      style="justify-content: flex-end;">
+      <div class="spacing-element-negative">
+          <pep-button class="spacing-element" mat-button [(value)]="bottomButtonText" [sizeType]="'md'" [styleType]="'strong'" [styleStateType]="'system'">
+          </pep-button>
+      </div>
+  </div>
+</div>

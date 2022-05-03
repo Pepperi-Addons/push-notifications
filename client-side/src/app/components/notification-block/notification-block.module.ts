@@ -8,7 +8,10 @@ import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } fr
 import { PepAddonService, PepFileService, PepHttpService } from '@pepperi-addons/ngx-lib';
 import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { config } from '../../addon.config';
+import { AddonService } from 'src/app/services/addon.service';
+import { NotificationsService } from 'src/app/services/notifications.services';
 
 export const routes: Routes = [
     {
@@ -25,6 +28,7 @@ export const routes: Routes = [
         PepGenericListModule,
         PepGenericFormModule,
         PepButtonModule,
+        PepDialogModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
@@ -37,7 +41,9 @@ export const routes: Routes = [
     ],
     exports: [NotificationBlockComponent],
     providers: [
-         TranslateStore
+         TranslateStore,
+         AddonService,
+         NotificationsService
     ]
 })
 

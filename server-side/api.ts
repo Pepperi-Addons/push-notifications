@@ -17,7 +17,7 @@ export async function notifications(client: Client, request: Request) {
 
 export async function mark_notifications_as_read(client: Client, request: Request) {
     const service = new NotificationsService(client)
-    
+
     if (request.method === 'POST') {
         return service.markNotificationsAsRead(request.body);
     }
@@ -42,13 +42,13 @@ export async function notification_inserted(client: Client, request: Request) {
 }
 
 // AWS endpoints
-export async function create_platform_application(client: Client, request:Request) {
+export async function create_platform_application(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-       return service.createPlatformApplication(request.body);
+        return service.createPlatformApplication(request.body);
     }
     else {
-        throw new Error(`Method ${request.method} not supported`); 
+        throw new Error(`Method ${request.method} not supported`);
     }
 }
 
@@ -74,20 +74,20 @@ export async function remove_devices(client: Client, request: Request) {
     }
 }
 
-export async function create_application_endpoint(client: Client, request:Request) {
+export async function create_application_endpoint(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-       return service.createApplicationEndpoint(request.body);
+        return service.createApplicationEndpoint(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
     }
 }
 
-export async function publish(client: Client, request:Request) {
+export async function publish(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-       return service.publish(request.body);
+        return service.publish(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
@@ -96,13 +96,24 @@ export async function publish(client: Client, request:Request) {
 
 // DIMX
 // endpoints for the AddonRelativeURL of the relation
-export async function import_notifications_source(client: Client, request:Request) {
+export async function import_notifications_source(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
         return service.importNotificationsSource(request.body);
     }
     else {
-        throw new Error(`Method ${request.method} not supported`);       
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+//called from client side
+export async function import_notifications(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method == 'POST') {
+        return service.importNotifications(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
     }
 }
 

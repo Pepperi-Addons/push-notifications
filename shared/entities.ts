@@ -2,6 +2,7 @@ import { Schema } from 'jsonschema';
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface Notification {
     Title: string,
