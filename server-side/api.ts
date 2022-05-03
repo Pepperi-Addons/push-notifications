@@ -33,6 +33,14 @@ export async function user_device_removed(client: Client, request: Request) {
     await service.removeUserDeviceEndpoint(request.body);
 }
 
+// called when user create a notification.
+// called by PNS subscription
+export async function notification_inserted(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    await service.sendPushNotification(request.body);
+}
+
 // AWS endpoints
 export async function create_platform_application(client: Client, request:Request) {
     const service = new NotificationsService(client)
