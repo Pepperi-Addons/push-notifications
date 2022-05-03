@@ -118,12 +118,12 @@ async function createNotificationsResource(papiClient: PapiClient) {
 async function createUserDeviceResource(papiClient: PapiClient) {
     var userDeviceScheme: AddonDataScheme = {
         Name: USER_DEVICE_TABLE_NAME,
-        Type: 'meta_data',
+        Type: 'indexed_data',
         Fields: {
-            UserID: {
+            UserUUID: {
                 Type: 'String'
             },
-            DeviceID: {
+            DeviceKey: {
                 Type: 'String'
             },
             DeviceName: {
@@ -132,7 +132,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
             DeviceType: {
                 Type: 'String'
             },
-            AppID: {
+            AppKey: {
                 Type: 'String'
             },
             AppName: {

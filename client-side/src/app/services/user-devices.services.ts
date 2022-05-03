@@ -15,8 +15,8 @@ export class UserDevicesService {
     }
 
     getUserDevices() {
-        const query =`?UserID=${this.addonService.userUUID}`;
-        let url = `/addons/api/${this.addonService.addonUUID}/api/user_device`
+        const query =`?UserUUID=${this.addonService.userUUID}`;
+        let url = `/addons/api/${this.addonService.addonUUID}/api/user_devices`
         url = url + query;
         
         return this.addonService.pepGet(encodeURI(url)).toPromise();
