@@ -9,10 +9,8 @@ import fetch from 'node-fetch';
 const AWS = require('aws-sdk');
 
 abstract class PlatformBase {
-    sns: any;
-
-    constructor(protected papiClient) {
-        this.sns = new AWS.SNS();
+    constructor(protected papiClient,
+        protected sns) {
     }
 
     abstract publish(pushNotification: any): any;
@@ -20,33 +18,36 @@ abstract class PlatformBase {
 class PlatformIOS extends PlatformBase {
 
     createPayload(data) {
-            return {
-                "default": `${data.Subject}`,
-                "APNS_SANDBOX": JSON.stringify({
-                    "aps": {
-                        "alert": {
-                            "title": `${data.Subject}`,
-                            "body": `${data.Message}`
-                        }
+        return {
+            "default": `${data.Subject}`,
+            "APNS_SANDBOX": JSON.stringify({
+                "aps": {
+                    "alert": {
+                        "title": `${data.Subject}`,
+                        "body": `${data.Message}`
                     }
-                })
-            }
+                }
+            })
+        }
     }
 
     publish(pushNotification: any): any {
         const payload = this.createPayload(pushNotification);
+        console.log("@@@payload: ", payload);
+        console.log("@@@pushNotifications inside publish: ", pushNotification);
         const params = {
             Message: JSON.stringify(payload),
             MessageStructure: 'json',
-            Endpoint: pushNotification.Endpoint.EndpointARN
+            TargetArn: pushNotification.Endpoint
         };
+        console.log("@@@params: ", params);
         return this.sns.publish(params).promise();
     }
 }
 class PlatformAndroid extends PlatformBase {
     publish(pushNotification: any): any {
         throw new Error("Not implemented");
-        
+
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -115,23 +116,6 @@ class NotificationsService {
         let userUUID = users.find(u => u.Email == userEmail)?.UUID
         return userUUID;
     }
-
-    createPayload(data) {
-        if (data.DeviceType.includes("iPhone") || data.DeviceType.includes("iPad")) {
-            return {
-                "default": `${data.Subject}`,
-                "APNS_SANDBOX": JSON.stringify({
-                    "aps": {
-                        "alert": {
-                            "title": `${data.Subject}`,
-                            "body": `${data.Message}`
-                        }
-                    }
-                })
-            }
-        }
-    }
-
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
@@ -182,7 +166,6 @@ class NotificationsService {
     async createNotification(body) {
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
-        //this.sendPushNotification(body);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -220,19 +203,21 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
             body.UserUUID = this.currentUserUUID;
+            body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
             const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
             // if device doesn't exist, create one
             if (userDevices.length === 0) {
                 const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
                 let endpointARN = await this.createApplicationEndpoint({
+                    AddonRelativeURL: body.AddonRelativeURL,
+                    PlatformType: body.PlatformType,
                     PlatformApplicationArn: appARN,
                     DeviceToken: body.Token
                 });
 
-                if (endpointARN.EndpointArn != undefined) {
+                if (endpointARN != undefined) {
                     body.Endpoint = endpointARN;
                 }
                 else {
@@ -291,15 +276,17 @@ class NotificationsService {
                             Message: notification.Body ?? "",
                             Subject: notification.Title,
                             Endpoint: device.Endpoint,
-                            DeviceType: device.DeviceType
+                            DeviceType: device.DeviceType,
+                            PlatformType: device.PlatformType
                         }
+                        console.log("@@@pushNotification: ", pushNotification);
                         const ans = await this.publish(pushNotification);
-                        console.log("@@@: ", ans);
+                        console.log("@@@ans from publish: ", ans);
                     }
                 }
             }
             catch (error) {
-                console.log(error);
+                console.log("@@@error", error);
             }
 
         }
@@ -344,27 +331,33 @@ class NotificationsService {
     if we send notification to platform application it 
     will send notifications to all mobile endpoints registered
     */
-    createApplicationEndpoint(body) {
-        const params = {
-            PlatformApplicationArn: body.PlatformApplicationArn,
-            Token: body.DeviceToken
-        };
-        return this.sns.createPlatformEndpoint(params).promise();
+    async createApplicationEndpoint(body) {
+        switch (body.PlatformType) {
+            case "Addon":
+                return body.AddonRelativeURL;
+            default:
+                const params = {
+                    PlatformApplicationArn: body.PlatformApplicationArn,
+                    Token: body.DeviceToken
+                };
+                const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
+                return Endpoint.EndpointArn;
+        }
     }
 
     // publish to particular topic ARN or to endpoint ARN
     publish(pushNotification) {
         let basePlatform: PlatformBase;
 
-        switch (pushNotification.PlatformType){
+        switch (pushNotification.PlatformType) {
             case "iOS":
-                basePlatform = new PlatformIOS(this.papiClient);
+                basePlatform = new PlatformIOS(this.papiClient, this.sns);
                 break;
-            case "Android": 
-                basePlatform = new PlatformAndroid(this.papiClient);
+            case "Android":
+                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
                 break;
             case "Addon":
-                basePlatform = new PlatformAddon(this.papiClient);
+                basePlatform = new PlatformAddon(this.papiClient, this.sns);
                 break;
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
