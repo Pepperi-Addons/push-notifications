@@ -8,6 +8,54 @@ import { Agent } from 'https';
 import fetch from 'node-fetch';
 const AWS = require('aws-sdk');
 
+abstract class PlatformBase {
+    constructor(protected papiClient,
+        protected sns) {
+    }
+
+    abstract publish(pushNotification: any): any;
+}
+class PlatformIOS extends PlatformBase {
+
+    createPayload(data) {
+        return {
+            "default": `${data.Subject}`,
+            "APNS_SANDBOX": JSON.stringify({
+                "aps": {
+                    "alert": {
+                        "title": `${data.Subject}`,
+                        "body": `${data.Message}`
+                    }
+                }
+            })
+        }
+    }
+
+    publish(pushNotification: any): any {
+        const payload = this.createPayload(pushNotification);
+        console.log("@@@payload: ", payload);
+        console.log("@@@pushNotifications inside publish: ", pushNotification);
+        const params = {
+            Message: JSON.stringify(payload),
+            MessageStructure: 'json',
+            TargetArn: pushNotification.Endpoint
+        };
+        console.log("@@@params: ", params);
+        return this.sns.publish(params).promise();
+    }
+}
+class PlatformAndroid extends PlatformBase {
+    publish(pushNotification: any): any {
+        throw new Error("Not implemented");
+
+    }
+}
+class PlatformAddon extends PlatformBase {
+    publish(pushNotification: any): any {
+        this.papiClient.post(pushNotification.Endpoint, pushNotification);
+    }
+}
+
 class NotificationsService {
     sns: any;
     papiClient: PapiClient
@@ -30,7 +78,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        
+
         this.sns = new AWS.SNS();
     }
 
@@ -68,23 +116,6 @@ class NotificationsService {
         let userUUID = users.find(u => u.Email == userEmail)?.UUID
         return userUUID;
     }
-
-    createPayload(data) {
-        if (data.DeviceType.includes("iPhone") || data.DeviceType.includes("iPad")) {
-            return {
-                "default": `${data.Subject}`,
-                "APNS_SANDBOX": JSON.stringify({
-                    "aps": {
-                        "alert": {
-                            "title": `${data.Subject}`,
-                            "body": `${data.Message}`
-                        }
-                    }
-                })
-            }
-        }
-    }
-
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
@@ -135,7 +166,6 @@ class NotificationsService {
     async createNotification(body) {
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
-        //this.sendPushNotification(body);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -169,23 +199,32 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query)
     }
 
-    async registerUserDevice(body) {
+    async upsertUserDevice(body) {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
-            let endpointARN = await this.createApplicationEndpoint({
-                PlatformApplicationArn: appARN,
-                DeviceToken: body.Token
-            });
+            body.UserUUID = this.currentUserUUID;
+            body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
+            const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
-            if (endpointARN.EndpointArn != undefined) {
-                body.UserUUID = this.currentUserUUID;
-                return await this.upsertUserDeviceResource(body, endpointARN);
+            // if device doesn't exist, create one
+            if (userDevices.length === 0) {
+                const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
+                let endpointARN = await this.createApplicationEndpoint({
+                    AddonRelativeURL: body.AddonRelativeURL,
+                    PlatformType: body.PlatformType,
+                    PlatformApplicationArn: appARN,
+                    DeviceToken: body.Token
+                });
+
+                if (endpointARN != undefined) {
+                    body.Endpoint = endpointARN;
+                }
+                else {
+                    throw new Error("Register user device faild");
+                }
             }
-            else {
-                throw new Error("Register user device faild");
-            }
+            return await this.upsertUserDeviceResource(body);
         }
         else {
             const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
@@ -193,25 +232,18 @@ class NotificationsService {
         }
     }
 
-    async upsertUserDeviceResource(body, endpointARN) {
-        let userDevice: UserDevice;
-        let expirationDateTime = new Date();
-        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+    async upsertUserDeviceResource(body) {
+        body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
+        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
-        userDevice = {
-            "Key": `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`,
-            "UserUUID": body.UserUUID,
-            "AppKey": body.AppKey,
-            "AppName": body.AppName,
-            "DeviceKey": body.DeviceKey,
-            "DeviceName": body.DeviceName,
-            "DeviceType": body.DeviceType,
-            "Token": body.Token,
-            "Endpoint": "",
-            "ExpirationDateTime": expirationDateTime
-        };
-        userDevice.Endpoint = endpointARN;
-        const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
+        // if device doesn't exist, create one
+        if (userDevices.length === 0) {
+            let expirationDateTime = new Date();
+            expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+            body.ExpirationDateTime = expirationDateTime;
+        }
+
+        const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
         if (device) {
             delete device.Endpoint;
             return device;
@@ -243,16 +275,18 @@ class NotificationsService {
                         let pushNotification = {
                             Message: notification.Body ?? "",
                             Subject: notification.Title,
-                            TargetArn: device.Endpoint.EndpointArn,
-                            DeviceType: device.DeviceType
+                            Endpoint: device.Endpoint,
+                            DeviceType: device.DeviceType,
+                            PlatformType: device.PlatformType
                         }
+                        console.log("@@@pushNotification: ", pushNotification);
                         const ans = await this.publish(pushNotification);
-                        console.log("@@@: ", ans);
+                        console.log("@@@ans from publish: ", ans);
                     }
                 }
             }
-            catch(error) {
-                console.log(error);
+            catch (error) {
+                console.log("@@@error", error);
             }
 
         }
@@ -297,23 +331,38 @@ class NotificationsService {
     if we send notification to platform application it 
     will send notifications to all mobile endpoints registered
     */
-    createApplicationEndpoint(body) {
-        const params = {
-            PlatformApplicationArn: body.PlatformApplicationArn,
-            Token: body.DeviceToken
-        };
-        return this.sns.createPlatformEndpoint(params).promise();
+    async createApplicationEndpoint(body) {
+        switch (body.PlatformType) {
+            case "Addon":
+                return body.AddonRelativeURL;
+            default:
+                const params = {
+                    PlatformApplicationArn: body.PlatformApplicationArn,
+                    Token: body.DeviceToken
+                };
+                const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
+                return Endpoint.EndpointArn;
+        }
     }
 
     // publish to particular topic ARN or to endpoint ARN
-    publish(body) {
-        const payload = this.createPayload(body);
-        const params = {
-            Message: JSON.stringify(payload),
-            MessageStructure: 'json',
-            TargetArn: body.TargetArn
-        };
-        return this.sns.publish(params).promise();
+    publish(pushNotification) {
+        let basePlatform: PlatformBase;
+
+        switch (pushNotification.PlatformType) {
+            case "iOS":
+                basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                break;
+            case "Android":
+                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                break;
+            case "Addon":
+                basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                break;
+            default:
+                throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
+        }
+        return basePlatform.publish(pushNotification)
     }
 
     //remove endpoint ARN

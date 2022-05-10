@@ -56,7 +56,7 @@ export async function user_devices(client: Client, request: Request) {
     const service = new NotificationsService(client)
 
     if (request.method === 'POST') {
-        return service.registerUserDevice(request.body);
+        return service.upsertUserDevice(request.body);
     }
     if (request.method === 'GET') {
         return service.getUserDevices(request.query);
