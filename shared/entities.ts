@@ -15,11 +15,11 @@ export interface Notification {
 }
 
 export interface UserDevice {
-    UserID: string,
-    DeviceID: string,
+    UserUUID: string,
+    DeviceKey: string,
     DeviceName: string,
     DeviceType: string,
-    AppID: string,
+    AppKey: string,
     AppName: string,
     Token: string,
     Endpoint: string,
@@ -84,11 +84,11 @@ export const userDeviceSchema: Schema = {
     $id: "/UserDevice",
     type: "object",
     properties: {
-        UserID: {
+        UserUUID: {
             type: "string",
             required: false
         },
-        AppID: {
+        AppKey: {
             type: "string",
             required: true
         },
@@ -96,7 +96,7 @@ export const userDeviceSchema: Schema = {
             type: "string",
             required: true
         },
-        DeviceID: {
+        DeviceKey: {
             type: "string",
             required: true
         },

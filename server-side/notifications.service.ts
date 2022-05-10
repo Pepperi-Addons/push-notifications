@@ -30,10 +30,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-
-        var credentials = new AWS.SharedIniFileCredentials({ profile: 'Noam' });
-        AWS.config.credentials = credentials;
-        AWS.config.region = 'us-west-2';
+        
         this.sns = new AWS.SNS();
     }
 
@@ -176,14 +173,14 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            const appARN: string = await this.getPlatformApplicationARN(body.AppID);
+            const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
             let endpointARN = await this.createApplicationEndpoint({
                 PlatformApplicationArn: appARN,
                 DeviceToken: body.Token
             });
 
             if (endpointARN.EndpointArn != undefined) {
-                body.UserID = this.currentUserUUID;
+                body.UserUUID = this.currentUserUUID;
                 return await this.upsertUserDeviceResource(body, endpointARN);
             }
             else {
@@ -202,11 +199,11 @@ class NotificationsService {
         expirationDateTime.setDate(expirationDateTime.getDate() + 30);
 
         userDevice = {
-            "Key": `${body.UserID}_${body.DeviceID}_${body.AppID}`,
-            "UserID": body.UserID,
-            "AppID": body.AppID,
+            "Key": `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`,
+            "UserUUID": body.UserUUID,
+            "AppKey": body.AppKey,
             "AppName": body.AppName,
-            "DeviceID": body.DeviceID,
+            "DeviceKey": body.DeviceKey,
             "DeviceName": body.DeviceName,
             "DeviceType": body.DeviceType,
             "Token": body.Token,
@@ -214,9 +211,13 @@ class NotificationsService {
             "ExpirationDateTime": expirationDateTime
         };
         userDevice.Endpoint = endpointARN;
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
+        const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(userDevice);
+        if (device) {
+            delete device.Endpoint;
+            return device;
+        }
     }
-    // remove devices both from ADAL and SNS
+    // remove devices from ADAL by deviceKey , it will remove from AWS in ExpirationDateTime
     async removeDevices(body) {
         for (const device of body.DevicesKeys) {
             try {
@@ -225,7 +226,7 @@ class NotificationsService {
                 await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
             }
             catch {
-
+                console.log('device does not exist');
             }
         }
     }
@@ -250,15 +251,15 @@ class NotificationsService {
                     }
                 }
             }
-            catch {
-                console.log("@@@Notification does not exist");
+            catch(error) {
+                console.log(error);
             }
 
         }
     }
 
     async getUserDevicesByUserUUID(userUUID) {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `UserID='${userUUID}'` });
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `UserUUID='${userUUID}'` });
     }
 
     //MARK: API Validation
@@ -285,9 +286,9 @@ class NotificationsService {
         return this.sns.createPlatformApplication(params).promise()
     }
 
-    async getPlatformApplicationARN(appID) {
+    async getPlatformApplicationARN(appKey) {
         const list = await this.sns.listPlatformApplications({}).promise();
-        const currentApp = list.PlatformApplications.find(app => app.Attributes.ApplePlatformBundleID === appID);
+        const currentApp = list.PlatformApplications.find(app => app.Attributes.ApplePlatformBundleID === appKey);
         return currentApp.PlatformApplicationArn;
     }
 

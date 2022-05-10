@@ -52,7 +52,7 @@ export async function create_platform_application(client: Client, request: Reque
     }
 }
 
-export async function user_device(client: Client, request: Request) {
+export async function user_devices(client: Client, request: Request) {
     const service = new NotificationsService(client)
 
     if (request.method === 'POST') {
