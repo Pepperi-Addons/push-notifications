@@ -1,6 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod } from '../shared/entities'
+import * as encryption from '../shared/encryption-service'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -59,6 +60,7 @@ class PlatformAddon extends PlatformBase {
 class NotificationsService {
     sns: any;
     papiClient: PapiClient
+    addonSecretKey: string
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
@@ -73,6 +75,7 @@ class NotificationsService {
         });
 
         this.addonUUID = client.AddonUUID;
+        this.addonSecretKey = client.AddonSecretKey ?? "";
         this.accessToken = client.OAuthAccessToken;
 
         // get user uuid from the token
@@ -196,7 +199,11 @@ class NotificationsService {
     //MARK: UserDevice handling
 
     async getUserDevices(query) {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query)
+        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query);
+        return userDevices.map(device => {
+             delete device.Token
+             return device;
+        });
     }
 
     async upsertUserDevice(body) {
@@ -241,6 +248,7 @@ class NotificationsService {
             let expirationDateTime = new Date();
             expirationDateTime.setDate(expirationDateTime.getDate() + 30);
             body.ExpirationDateTime = expirationDateTime;
+            body.Token = await encryption.decryptSecretKey(body.Token, this.addonSecretKey)
         }
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
