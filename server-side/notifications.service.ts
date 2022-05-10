@@ -201,8 +201,8 @@ class NotificationsService {
     async getUserDevices(query) {
         const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query);
         return userDevices.map(device => {
-             delete device.Token
-             return device;
+            delete device.Token
+            return device;
         });
     }
 
@@ -212,10 +212,8 @@ class NotificationsService {
         if (validation.valid) {
             body.UserUUID = this.currentUserUUID;
             body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
-            const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
-            // if device doesn't exist, create one
-            if (userDevices.length === 0) {
+            // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
                 const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
                 let endpointARN = await this.createApplicationEndpoint({
                     AddonRelativeURL: body.AddonRelativeURL,
@@ -230,7 +228,6 @@ class NotificationsService {
                 else {
                     throw new Error("Register user device faild");
                 }
-            }
             return await this.upsertUserDeviceResource(body);
         }
         else {
@@ -243,17 +240,24 @@ class NotificationsService {
         body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
         const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
-        // if device doesn't exist, create one
-        if (userDevices.length === 0) {
-            let expirationDateTime = new Date();
-            expirationDateTime.setDate(expirationDateTime.getDate() + 30);
-            body.ExpirationDateTime = expirationDateTime;
-            body.Token = await encryption.decryptSecretKey(body.Token, this.addonSecretKey)
+        // if there is a new token, then remove the endpoint with the old token
+        if (userDevices.length != 0) {
+            const userDeviceToken = await encryption.decryptSecretKey(userDevices[0].Token, this.addonSecretKey)
+            if (body.Token != userDeviceToken)
+                if (userDevices[0].Endpoint != undefined) {
+                    await this.deleteApplicationEndpoint(userDevices[0].Endpoint);
+                }
         }
+        //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
+        body.ExpirationDateTime = expirationDateTime;
+        body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
         if (device) {
             delete device.Endpoint;
+            delete device.Token;
             return device;
         }
     }
@@ -353,6 +357,13 @@ class NotificationsService {
         }
     }
 
+    async deleteApplicationEndpoint(endpointARN) {
+        const params = {
+            EndpointArn: endpointARN
+        };
+        return await this.sns.deleteEndpoint(params).promise();
+    }
+
     // publish to particular topic ARN or to endpoint ARN
     publish(pushNotification) {
         let basePlatform: PlatformBase;
@@ -377,10 +388,7 @@ class NotificationsService {
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
             if (object.EndpointARN != undefined) {
-                const params = {
-                    EndpointArn: object.EndpointARN
-                };
-                await this.sns.deleteEndpoint(params).promise();
+                await this.deleteApplicationEndpoint(object.EndpointARN);
             }
             else {
                 console.log("Device endpoint does not exist");
