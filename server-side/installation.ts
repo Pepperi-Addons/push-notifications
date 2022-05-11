@@ -122,7 +122,8 @@ async function createUserDeviceResource(papiClient: PapiClient) {
         Type: 'indexed_data',
         Fields: {
             UserUUID: {
-                Type: 'String'
+                Type: 'String',
+                Indexed: true
             },
             DeviceKey: {
                 Type: 'String'
@@ -145,7 +146,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
             Endpoint: {
                 Type: 'Array'
             }
-        }
+        } as any
     };
 
     try {

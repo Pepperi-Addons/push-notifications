@@ -112,6 +112,11 @@ export const userDeviceSchema: Schema = {
         Token: {
             type: "string",
             required: true
+        },
+        PlatformType: {
+            type: "string",
+            required: true,
+            enum: ["iOS", "Android", "Addon"]
         }
     }
 }
