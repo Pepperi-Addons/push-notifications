@@ -2,6 +2,7 @@ import { Schema } from 'jsonschema';
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
+export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface Notification {
@@ -113,4 +114,16 @@ export const userDeviceSchema: Schema = {
             required: true
         }
     }
+}
+
+export const DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION = {
+    key: 'NOTIFICATIONS_NUMBER_LIMITATION',
+    softValue: 600,
+    hardValue: 2000
+}
+
+export const DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION = {
+    key: 'NOTIFICATIONS_LIFETIME_LIMITATION',
+    softValue: 30,
+    hardValue: 60
 }

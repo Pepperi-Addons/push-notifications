@@ -1,6 +1,9 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod } from '../shared/entities'
+import {
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION
+} from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
@@ -53,6 +56,7 @@ class PlatformAndroid extends PlatformBase {
 }
 class PlatformAddon extends PlatformBase {
     publish(pushNotification: any): any {
+        console.log("@@@pushNotifications inside Addon publish: ", pushNotification);
         this.papiClient.post(pushNotification.Endpoint, pushNotification);
     }
 }
@@ -120,9 +124,8 @@ class NotificationsService {
         return userUUID;
     }
     getExpirationDateTime(days: number) {
-        let expirationDateTime = new Date();
-        expirationDateTime.setDate(expirationDateTime.getDate() + days);
-        return expirationDateTime;
+        const daysToAdd =  days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        return new Date( Date.now() + daysToAdd)
     }
 
     // For page block template
@@ -173,9 +176,10 @@ class NotificationsService {
 
     // create a single notification after all conditions have been checked
     async createNotification(body) {
+        const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
-        body.ExpirationDateTime = this.getExpirationDateTime(60)
+        body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -221,20 +225,20 @@ class NotificationsService {
             body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-                const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
-                let endpointARN = await this.createApplicationEndpoint({
-                    AddonRelativeURL: body.AddonRelativeURL,
-                    PlatformType: body.PlatformType,
-                    PlatformApplicationArn: appARN,
-                    DeviceToken: body.Token
-                });
+            const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
+            let endpointARN = await this.createApplicationEndpoint({
+                AddonRelativeURL: body.AddonRelativeURL,
+                PlatformType: body.PlatformType,
+                PlatformApplicationArn: appARN,
+                DeviceToken: body.Token
+            });
 
-                if (endpointARN != undefined) {
-                    body.Endpoint = endpointARN;
-                }
-                else {
-                    throw new Error("Register user device faild");
-                }
+            if (endpointARN != undefined) {
+                body.Endpoint = endpointARN;
+            }
+            else {
+                throw new Error("Register user device faild");
+            }
             return await this.upsertUserDeviceResource(body);
         }
         else {
@@ -381,6 +385,7 @@ class NotificationsService {
                 basePlatform = new PlatformAndroid(this.papiClient, this.sns);
                 break;
             case "Addon":
+                console.log("@@@switchCase addon: ", pushNotification);
                 basePlatform = new PlatformAddon(this.papiClient, this.sns);
                 break;
             default:
@@ -542,6 +547,49 @@ class NotificationsService {
         };
 
         return new Promise<any>(executePoll);
+    }
+
+    async getNotificationsSoftLimit() {
+        let notificationsVars;
+        try {
+            notificationsVars = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
+        } catch {
+            // Declare default.
+            notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
+        }
+        // If not exist add the default value of the blocks number limitation.
+        if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key)) {
+            notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
+        }
+
+        // If not exist add the default value of the page size limitation.
+        if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key)) {
+            notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
+        }
+
+        return notificationsVars;
+    }
+
+    async setNotificationsSoftLimit(varSettings) {
+        const notificationsNumberLimitation = Number(varSettings[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key]);
+        const notificationsLifetimeLimitationValue = Number(varSettings[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
+
+        if (!isNaN(notificationsNumberLimitation) && !isNaN(notificationsLifetimeLimitationValue)) {
+            if (notificationsNumberLimitation < 1 || notificationsNumberLimitation > DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.hardValue) {
+                throw new Error(`${DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key} should be in the range (1 - ${DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.hardValue}).`);
+            }
+
+            if (notificationsLifetimeLimitationValue < 1 || notificationsLifetimeLimitationValue > DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.hardValue) {
+                throw new Error(`${DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key} should be in the range (1 - ${DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.hardValue}).`);
+            }
+
+            // Save the key on the object for always work on the same object.
+            varSettings['Key'] = NOTIFICATIONS_VARS_TABLE_NAME;
+            return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(varSettings);
+        } else {
+            let nanVariableName = isNaN(notificationsNumberLimitation) ? DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key : DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key;
+            throw new Error(`${nanVariableName} is not a number.`);
+        }
     }
 
 }
