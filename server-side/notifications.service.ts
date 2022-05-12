@@ -142,9 +142,6 @@ class NotificationsService {
         if (body.Key != undefined) {
             throw new Error(`Key is read-only property`);
         }
-        if (body.Title === undefined) {
-            throw new Error(`Title is a mandatory property`);
-        }
         // Schema validation
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
@@ -179,6 +176,7 @@ class NotificationsService {
         const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
+        body.Read = false;
         body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }

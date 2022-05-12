@@ -36,16 +36,14 @@ export const notificationSchema: Schema = {
             type: "string"
         },
         Title: {
-            type: "string"
+            type: "string",
+            required: true
         },
         Body: {
             type: "string"
         },
         CreatorUserUUID: {
             type: "string"
-        },
-        Read: {
-            type: "boolean"
         },
         Hidden: {
             type: "boolean"
@@ -57,6 +55,12 @@ export const notificationSchema: Schema = {
         ModificationDateTime: {
             type: "string",
             format: "date-time",
+        },
+        UserUUID: {
+            type: "string"
+        },
+        Email: {
+            type: "string"
         }
     },
     // Email and UserUUID are mutually exclusive
@@ -78,7 +82,8 @@ export const notificationSchema: Schema = {
                     }
                 }
             }
-        ]
+        ],
+        additionalProperties: false
 }
 
 export const userDeviceSchema: Schema = {
