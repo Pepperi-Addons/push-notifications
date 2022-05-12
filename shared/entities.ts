@@ -67,6 +67,8 @@ export const notificationSchema: Schema = {
     oneOf:
         [
             {
+                $id: "/UserUUID",
+                type: "object",
                 properties: {
                     UserUUID: {
                         type: "string",
@@ -75,6 +77,8 @@ export const notificationSchema: Schema = {
                 }
             },
             {
+                $id: "/Email",
+                type: "object",
                 properties: {
                     Email: {
                         type: "string",
