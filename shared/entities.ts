@@ -37,10 +37,12 @@ export const notificationSchema: Schema = {
         },
         Title: {
             type: "string",
+            maxLength: 40,
             required: true
         },
         Body: {
-            type: "string"
+            type: "string",
+            maxLength: 200,
         },
         CreatorUserUUID: {
             type: "string"
