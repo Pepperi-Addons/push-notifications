@@ -5,7 +5,7 @@ const share = mf.share;
 const singleSpaAngularWebpack = require('single-spa-angular/lib/webpack').default;
 const { merge } = require('webpack-merge');
 
-const filename = 'addon'; // addon
+const filename = 'push_notifications';
 
 const sharedMappings = new mf.SharedMappings();
 sharedMappings.register(

@@ -1,3 +1,10 @@
 {
-    "Title_Addon": "Title of the addon"
+    "NOTIFICATIONS": "Notificacions",
+    "NOTIFICATIONS_FOOTER_LINE": "That's all your notifications from the last 30 days",
+    "ACTIONS": {
+        "MARK_ALL_AS_READ": "Mark all as read",
+        "MARK_AS_READ": "Mark as read",
+        "MARK_AS_UNREAD": "Mark as Unread",
+        "GO_TO_TEXT": "Go to"
+    }
 }

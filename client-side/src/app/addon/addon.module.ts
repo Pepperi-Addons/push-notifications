@@ -11,6 +11,8 @@ import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/ico
 
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
+import { NotificationsModule } from '../components/notifications/notifications.module';
+
 import { AddonService } from './addon.service';
 import { AddonComponent } from './index';
 
@@ -36,6 +38,7 @@ export const routes: Routes = [
         PepSizeDetectorModule,
         PepTopBarModule,
         PepPageLayoutModule,
+        NotificationsModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
