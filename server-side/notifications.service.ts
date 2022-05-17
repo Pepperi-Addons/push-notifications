@@ -119,6 +119,12 @@ class NotificationsService {
         let userUUID = users.find(u => u.Email == userEmail)?.UUID
         return userUUID;
     }
+    getExpirationDateTime(days: number) {
+        let expirationDateTime = new Date();
+        expirationDateTime.setDate(expirationDateTime.getDate() + days);
+        return expirationDateTime;
+    }
+
     // For page block template
     upsertRelation(relation): Promise<any> {
         return this.papiClient.post('/addons/data/relations', relation);
@@ -169,6 +175,7 @@ class NotificationsService {
     async createNotification(body) {
         body.Key = uuid();
         body.CreatorUUID = this.currentUserUUID;
+        body.ExpirationDateTime = this.getExpirationDateTime(60)
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
@@ -249,9 +256,7 @@ class NotificationsService {
                 }
         }
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
-        let expirationDateTime = new Date();
-        expirationDateTime.setDate(expirationDateTime.getDate() + 30);
-        body.ExpirationDateTime = expirationDateTime;
+        body.ExpirationDateTime = this.getExpirationDateTime(30);
         body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
