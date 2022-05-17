@@ -555,24 +555,7 @@ class NotificationsService {
     }
 
     async getNotificationsSoftLimit() {
-        let notificationsVars;
-        try {
-            notificationsVars = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
-        } catch {
-            // Declare default.
-            notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
-        }
-        // If not exist add the default value of the notifications number limitation.
-        if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key)) {
-            notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
-        }
-
-        // If not exist add the default value of the notifications lifetime limitation.
-        if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key)) {
-            notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
-        }
-
-        return notificationsVars;
+        return  await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
     }
 
     async setNotificationsSoftLimit(varSettings) {
