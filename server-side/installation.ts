@@ -165,7 +165,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
     }
 }
 
-async function createNotificationsVariablesResource(papiClient: PapiClient) {
+async function createNotificationsVariablesResource(papiClient: PapiClient, client) {
     var variablesScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_VARS_TABLE_NAME,
         Type: 'meta_data',
@@ -178,6 +178,11 @@ async function createNotificationsVariablesResource(papiClient: PapiClient) {
 
     try {
         await papiClient.addons.data.schemes.post(variablesScheme);
+        // Declare default.
+        let notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
+        notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
+        notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
+        await papiClient.addons.data.uuid(client.AddonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(notificationsVars);
 
         return {
             success: true,
