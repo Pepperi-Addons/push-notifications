@@ -25,6 +25,19 @@ export async function mark_notifications_as_read(client: Client, request: Reques
         throw new Error(`Method ${request.method} not supported`);
     }
 }
+export async function notifications_soft_limt(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'GET') {
+        return service.getNotificationsSoftLimit();
+    }
+    if (request.method === 'POST') {
+        return service.setNotificationsSoftLimit(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
 // user device has been removed because it's expiration date has arrived.
 // called by PNS subscription
 export async function user_device_removed(client: Client, request: Request) {
