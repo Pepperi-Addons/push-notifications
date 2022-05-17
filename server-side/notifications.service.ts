@@ -124,8 +124,8 @@ class NotificationsService {
         return userUUID;
     }
     getExpirationDateTime(days: number) {
-        const daysToAdd =  days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
-        return new Date( Date.now() + daysToAdd)
+        const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        return new Date(Date.now() + daysToAdd)
     }
 
     // For page block template
@@ -192,21 +192,21 @@ class NotificationsService {
         let readNotifications: AddonData[] = [];
         for (const notification of body.Keys) {
             //Protection against change of properties. The only property that can change is Read
-            try {
-                let currentNotification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(notification).get();
+            let currentNotification;
+            await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find({ where: `Key='${notification}'` }).then(res => {
+                currentNotification = res[0]
+            });
+            if (currentNotification != undefined) {
                 if (this.currentUserUUID === currentNotification.UserUUID) {
                     currentNotification.Read = true;
                     let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
                     readNotifications.push(ans);
                 }
                 else {
-                    let error: any = new Error(`The UserUUID is different from the CreatorUUID`);
+                    let error: any = new Error(`The UserUUID is different from the notification UserUUID`);
                     error.code = 403;
                     throw error;
                 }
-            }
-            catch {
-                console.log("Notification with key ${notification.Key} does not exist")
             }
         }
         return readNotifications;
@@ -562,12 +562,12 @@ class NotificationsService {
             // Declare default.
             notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
         }
-        // If not exist add the default value of the blocks number limitation.
+        // If not exist add the default value of the notifications number limitation.
         if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key)) {
             notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
         }
 
-        // If not exist add the default value of the page size limitation.
+        // If not exist add the default value of the notifications lifetime limitation.
         if (!notificationsVars.hasOwnProperty(DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key)) {
             notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
         }
