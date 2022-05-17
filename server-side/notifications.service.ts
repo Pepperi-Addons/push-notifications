@@ -166,7 +166,14 @@ class NotificationsService {
             }
         }
         else {
-            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = validation.errors.map(error => {
+                if (error.name === 'oneOf') {
+                    return error.message = "One of the following properties is requierd: " + error.argument;
+                }
+                else {
+                    return error.stack.replace("instance.", "");
+                }
+            });
             throw new Error(errors.join("\n"));
         }
     }
