@@ -166,7 +166,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
 }
 
 async function createNotificationsVariablesResource(papiClient: PapiClient) {
-    var userDeviceScheme: AddonDataScheme = {
+    var variablesScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_VARS_TABLE_NAME,
         Type: 'meta_data',
         Fields: {
@@ -177,7 +177,7 @@ async function createNotificationsVariablesResource(papiClient: PapiClient) {
     };
 
     try {
-        await papiClient.addons.data.schemes.post(userDeviceScheme);
+        await papiClient.addons.data.schemes.post(variablesScheme);
 
         return {
             success: true,
