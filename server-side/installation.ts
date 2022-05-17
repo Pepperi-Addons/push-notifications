@@ -26,7 +26,7 @@ export async function install(client: Client, request: Request): Promise<any> {
 
     const notificationsResourceRes = await createNotificationsResource(papiClient)
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-    const NotificationsVariablesRes = await createNotificationsVariablesResource(papiClient);
+    const NotificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
     const relationsRes = await createPageBlockRelation(client);
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -165,7 +165,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
     }
 }
 
-async function createNotificationsVariablesResource(papiClient: PapiClient) {
+async function createNotificationsVariablesResource(papiClient: PapiClient, client: Client) {
     var userDeviceScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_VARS_TABLE_NAME,
         Type: 'meta_data',
@@ -178,6 +178,11 @@ async function createNotificationsVariablesResource(papiClient: PapiClient) {
 
     try {
         await papiClient.addons.data.schemes.post(userDeviceScheme);
+        // Declare default.
+        let notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
+        notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
+        notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
+        await papiClient.addons.data.uuid(client.AddonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(notificationsVars);
 
         return {
             success: true,
