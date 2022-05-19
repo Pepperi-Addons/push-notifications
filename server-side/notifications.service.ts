@@ -56,8 +56,8 @@ class PlatformAndroid extends PlatformBase {
 }
 class PlatformAddon extends PlatformBase {
     publish(pushNotification: any): any {
-        console.log("@@@pushNotifications inside Addon publish: ", pushNotification);
-        this.papiClient.post(pushNotification.Endpoint, pushNotification);
+        console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
+        this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
 }
 
@@ -580,6 +580,42 @@ class NotificationsService {
         }
     }
 
+    // Usage monitor
+
+    async getTotalNotificationsSentperDay() {
+        const totalNotifications = await this.getNotifications({where: `CreationDateTime='${new Date()}'`});
+        return {
+            Title: "Usage",
+            "Resources": [
+                {
+                    "Data": "Daily Notifications Count",
+                    "Description": "Number of Notifications sent per day",
+                    "Size": totalNotifications.length,
+                },
+            ],
+            "ReportingPeriod": "Weekly",
+            "AggregationFunction": "LAST"
+        }
+    }
+
+    async getTotalNotificationsSentInTheLastWeekUsageData() {
+        const daysToSubstract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        let firstDate = new Date(Date.now() - daysToSubstract)
+
+        const totalNotifications = await this.getNotifications({where: `CreationDateTime>'${firstDate}'`});
+        return {
+            Title: "Usage",
+            "Resources": [
+                {
+                    "Data": "Total Notifications",
+                    "Description": "Total Notifications Sent in The Last 7 Days’",
+                    "Size": totalNotifications.length,
+                },
+            ],
+            "ReportingPeriod": "Weekly",
+            "AggregationFunction": "LAST"
+        }
+    }
 }
 
 export default NotificationsService;

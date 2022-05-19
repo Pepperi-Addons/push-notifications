@@ -130,3 +130,28 @@ export async function import_notifications(client: Client, request: Request) {
     }
 }
 
+// Usage Monitor
+export async function total_daily_notifications(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method == 'GET') {
+        return service.getTotalNotificationsSentperDay();
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function total_notifications_in_last_week(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method == 'GET') {
+        return service.getTotalNotificationsSentInTheLastWeekUsageData()
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function Test(client: Client, request: Request) {
+    console.log(request.body);
+}
+
