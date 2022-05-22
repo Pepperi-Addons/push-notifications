@@ -591,7 +591,15 @@ class NotificationsService {
     // Usage monitor
 
     async getTotalNotificationsSentperDay() {
-        const totalNotifications = await this.getNotifications({ where: `CreationDateTime='${new Date()}'` });
+        const today = new Date();
+        let totalNotifications: Notification[] = [];
+        await this.getNotifications({}).then(notifications => {
+            totalNotifications = notifications.filter(notification => {
+                const creationsDateTime = new Date(notification.CreationDateTime ?? "")
+                // comparison only of the days without the hours
+                return creationsDateTime.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+            }) as Notification[];
+        });
         return {
             Title: "Usage",
             "Resources": [
