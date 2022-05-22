@@ -378,6 +378,14 @@ class NotificationsService {
         return await this.sns.deleteEndpoint(params).promise();
     }
 
+    async deleteAllApplicationEndpoints() {
+        let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find();
+
+        for (let device of devices) {
+            await this.deleteApplicationEndpoint(device.Endpoint);
+        }
+    }
+
     // publish to particular topic ARN or to endpoint ARN
     publish(pushNotification) {
         let basePlatform: PlatformBase;
@@ -555,7 +563,7 @@ class NotificationsService {
     }
 
     async getNotificationsSoftLimit() {
-        return  await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
     }
 
     async setNotificationsSoftLimit(varSettings) {
@@ -583,14 +591,14 @@ class NotificationsService {
     // Usage monitor
 
     async getTotalNotificationsSentperDay() {
-        const totalNotifications = await this.getNotifications({where: `CreationDateTime='${new Date()}'`});
+        const totalNotifications = await this.getNotifications({ where: `CreationDateTime='${new Date()}'` });
         return {
             Title: "Usage",
             "Resources": [
                 {
                     "Data": "Daily Notifications Count",
                     "Description": "Number of Notifications sent per day",
-                    "Size": totalNotifications.length,
+                    "Size": totalNotifications.length
                 },
             ],
             "ReportingPeriod": "Weekly",
@@ -602,14 +610,14 @@ class NotificationsService {
         const daysToSubstract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         let firstDate = new Date(Date.now() - daysToSubstract)
 
-        const totalNotifications = await this.getNotifications({where: `CreationDateTime>'${firstDate}'`});
+        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
         return {
             Title: "Usage",
             "Resources": [
                 {
                     "Data": "Total Notifications",
                     "Description": "Total Notifications Sent in The Last 7 Days’",
-                    "Size": totalNotifications.length,
+                    "Size": totalNotifications.length
                 },
             ],
             "ReportingPeriod": "Weekly",

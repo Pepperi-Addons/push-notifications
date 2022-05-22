@@ -39,6 +39,15 @@ export async function install(client: Client, request: Request): Promise<any> {
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
+    const papiClient = new PapiClient({
+        baseURL: client.BaseURL,
+        token: client.OAuthAccessToken,
+        addonUUID: client.AddonUUID,
+        addonSecretKey: client.AddonSecretKey,
+        actionUUID: client["ActionUUID"]
+    });
+    // need authorization to perform SNS actions that only the push-notifications lambda has
+    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
     return { success: true, resultObject: {} }
 }
 
