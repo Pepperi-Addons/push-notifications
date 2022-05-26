@@ -165,3 +165,18 @@ export async function Test(client: Client, request: Request) {
     console.log(request.body);
 }
 
+// notifications log
+export async function notifications_log(client: Client, request: Request) {
+    const service = new NotificationsService(client);
+
+    if (request.method == 'POST') {
+        return service.duplicateNotifications(request.body);
+    }
+    else if (request.method == 'GET') {
+        return service.getNotificationsLog();
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+

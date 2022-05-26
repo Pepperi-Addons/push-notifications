@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { MessageCreatorComponent } from './components/message-creator/message-creator.component';
 import { DeviceManagmentComponent } from './components/device-managment/device-managment.component';
+import { NotificationsLogComponent } from './components/notifications-log/notifications-log.component';
 
 // Important for single spa
 @Component({
@@ -22,6 +23,10 @@ const routes: Routes = [
             {
                 path: 'device_managment',
                 component: DeviceManagmentComponent
+            },
+            {
+                path: 'notifications_log',
+                component: NotificationsLogComponent
             }
         ]
     },

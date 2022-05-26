@@ -21,6 +21,7 @@ export interface NotificationLog {
     UsersList: string[],
     Title: string,
     Body?: string
+    Key: string
 }
 
 export interface UserDevice {

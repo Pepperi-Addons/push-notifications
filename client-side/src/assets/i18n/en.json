@@ -18,5 +18,10 @@
     "Last_Use_Date": "Last Use Date",
     "No_Devices_Error": "No Devices Assigned",
     "Delete": "Delete",
-    "Max_Users_Error": "Max 100 hard coded users"
+    "Max_Users_Error": "Max 100 hard coded users",
+    "Notifications_Log_Title": "Notifications Log",
+    "Notifications_Log_Subtitle": "Messages sent by",
+    "Sent_To": "Sent To",
+    "Date": "Date",
+    "Duplicate": "Duplicate"
 }

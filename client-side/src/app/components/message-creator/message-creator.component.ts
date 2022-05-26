@@ -15,7 +15,7 @@ export class MessageCreatorComponent implements OnInit {
   message: MessageObject = {
     UserEmailList: [],
     Recipients: "",
-    Subject: "",
+    Title: "",
     Body: ""
   };
 
@@ -45,6 +45,6 @@ export class MessageCreatorComponent implements OnInit {
 export type MessageObject = {
   UserEmailList?: string[],
   Recipients: string,
-  Subject: string,
+  Title: string,
   Body: string
 } 

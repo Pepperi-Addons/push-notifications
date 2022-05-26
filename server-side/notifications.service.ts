@@ -458,30 +458,11 @@ class NotificationsService {
         return body;
     }
 
-    async upsertNotificationLog(body) {
-        const users = await this.papiClient.users.find();
-        let usersList: string[] = [];
-
-        for (let userEmail of body.UserEmailList) {
-            let user = await users.find(u => u.Email == userEmail);
-            let userName = user?.FirstName + ' ' + user?.LastName;
-            usersList.push(userName);
-        }
-
-        let notificationLog: NotificationLog = {
-            'CreatorUUID': this.currentUserUUID,
-            'UsersList': usersList,
-            'Title': body.Subject,
-            'Body': body.Body
-
-        };
-
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
-    }
-
     // create notifications using DIMX
     async bulkNotifications(body) {
-        this.upsertNotificationLog(body);
+        let ans = await this.upsertNotificationLog(body);
+        console.log('ans from upload notifications log', ans);
+        
         if (body.UserEmailList != undefined) {
             if (body.UserEmailList.length > 100) {
                 throw new Error('Max 100 hard coded users');
@@ -491,7 +472,7 @@ class NotificationsService {
                 for (let email of body.UserEmailList) {
                     let notification: Notification = {
                         "Email": email,
-                        "Title": body.Subject,
+                        "Title": body.Title,
                         "Body": body.Body,
                     }
                     notifications.push(notification);
@@ -673,6 +654,52 @@ class NotificationsService {
             "ReportingPeriod": "Weekly",
             "AggregationFunction": "LAST"
         }
+    }
+
+    // Notifications Log
+    async getNotificationsLog() {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `CreatorUUID='${this.currentUserUUID}'` });
+    }
+
+    async upsertNotificationLog(body) {
+        const users = await this.papiClient.users.find();
+        let usersList: string[] = [];
+
+        for (let userEmail of body.UserEmailList) {
+            let user = users.find(u => u.Email == userEmail);
+            let userName = user?.FirstName + ' ' + user?.LastName;
+            usersList.push(userName);
+        }
+
+        let notificationLog: NotificationLog = {
+            'CreatorUUID': this.currentUserUUID,
+            'UsersList': usersList,
+            'Title': body.Title,
+            'Body': body.Body,
+            'Key': uuid()
+
+        };
+
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
+    }
+
+    async duplicateNotifications(body: NotificationLog) {
+        const users = await this.papiClient.users.find();
+        let usersEmailList: string[] = [];
+
+        for (let user of body.UsersList) {
+            let userEmail = users.find(u => u.FirstName + ' ' + u.LastName == user)?.UUID;
+            if (userEmail != undefined) {
+                usersEmailList.push(userEmail);
+            }
+        }
+        return await this.bulkNotifications(
+            {
+                "UserEmailList": usersEmailList,
+                "Title": body.Title,
+                "Body": body.Body
+            }
+        );
     }
 }
 

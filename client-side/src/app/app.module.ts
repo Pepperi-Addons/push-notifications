@@ -7,6 +7,7 @@ import { NotificationBlockEditorModule } from './components/notification-block-e
 import { MessageCreatorModule } from './components/message-creator'
 import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { DeviceManagmentModule } from './components/device-managment';
+import { NotificationsLogModule } from './components/notifications-log';
 import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
@@ -34,6 +35,7 @@ import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
         NotificationBlockEditorModule,
         MessageCreatorModule,
         DeviceManagmentModule,
+        NotificationsLogModule,
         PepButtonModule,
         MatDialogModule,
         PepDialogModule,
