@@ -1,8 +1,8 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
 import { Validator } from 'jsonschema';
@@ -458,8 +458,50 @@ class NotificationsService {
         return body;
     }
 
-    // called from client side
-    async importNotifications(body) {
+    async upsertNotificationLog(body) {
+        const users = await this.papiClient.users.find();
+        let usersList: string[] = [];
+
+        for (let userEmail of body.UserEmailList) {
+            let user = await users.find(u => u.Email == userEmail);
+            let userName = user?.FirstName + ' ' + user?.LastName;
+            usersList.push(userName);
+        }
+
+        let notificationLog: NotificationLog = {
+            'CreatorUUID': this.currentUserUUID,
+            'UsersList': usersList,
+            'Title': body.Subject,
+            'Body': body.Body
+
+        };
+
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
+    }
+
+    // create notifications using DIMX
+    async bulkNotifications(body) {
+        this.upsertNotificationLog(body);
+        if (body.UserEmailList != undefined) {
+            if (body.UserEmailList.length > 100) {
+                throw new Error('Max 100 hard coded users');
+            }
+            else {
+                let notifications: Notification[] = [];
+                for (let email of body.UserEmailList) {
+                    let notification: Notification = {
+                        "Email": email,
+                        "Title": body.Subject,
+                        "Body": body.Body,
+                    }
+                    notifications.push(notification);
+                }
+                return await this.uploadFileAndImport(notifications);
+            }
+        }
+    }
+
+    async uploadFileAndImport(body) {
         let fileURL = await this.uploadObject();
         //upload Object To S3
         await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());

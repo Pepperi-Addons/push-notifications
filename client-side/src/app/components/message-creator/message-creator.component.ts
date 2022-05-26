@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 export class MessageCreatorComponent implements OnInit {
 
   message: MessageObject = {
+    UserEmailList: [],
     Recipients: "",
     Subject: "",
     Body: ""
@@ -31,27 +32,10 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   async sendNotifications() {
-    const emails: string[] = this.message.Recipients.split(";");
-    if (emails.length > 100) {
-      let message = this.translate.instant("Max_Users_Error");
-      let dialogData = {
-        "Message": message,
-        "Title": ""
-      }
-      this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {});
-    }
-    else {
-      let notifications = [];
-      for (let email of emails) {
-        let notification = {
-          "Email": email,
-          "Title": this.message.Subject,
-          "Body": this.message.Body
-        }
-        notifications.push(notification);
-      }
-      this.notificationsService.importNotifications(notifications);
-    }
+     this.message.UserEmailList = this.message.Recipients.split(";");
+     let ans = await this.notificationsService.bulkNotifications(this.message);
+     console.log(ans);
+
   }
 
   onValueChanged(element, $event) {
@@ -59,6 +43,7 @@ export class MessageCreatorComponent implements OnInit {
 }
 
 export type MessageObject = {
+  UserEmailList?: string[],
   Recipients: string,
   Subject: string,
   Body: string

@@ -1,6 +1,7 @@
 import { Schema } from 'jsonschema';
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
+export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
 export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -10,9 +11,16 @@ export interface Notification {
     Body?: string,
     Key?: string,
     Hidden?: boolean,
-    UserUUID: string,
+    UserUUID?: string,
     Email?: string,
-    CreatorUserUUID: string
+    CreatorUserUUID?: string
+}
+
+export interface NotificationLog {
+    CreatorUUID: string,
+    UsersList: string[],
+    Title: string,
+    Body?: string
 }
 
 export interface UserDevice {
