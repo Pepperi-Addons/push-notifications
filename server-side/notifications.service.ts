@@ -462,7 +462,7 @@ class NotificationsService {
     async bulkNotifications(body) {
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
-        
+
         if (body.UserEmailList != undefined) {
             if (body.UserEmailList.length > 100) {
                 throw new Error('Max 100 hard coded users');
@@ -647,7 +647,7 @@ class NotificationsService {
             "Resources": [
                 {
                     "Data": "Total Notifications",
-                    "Description": "Total Notifications Sent in The Last 7 Days’",
+                    "Description": "Total Notifications Sent in The Last 7 Days",
                     "Size": totalNotifications.length
                 },
             ],
