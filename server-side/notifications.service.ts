@@ -17,9 +17,23 @@ abstract class PlatformBase {
         protected sns) {
     }
 
+    abstract createPlatformApplication(body: any): any;
     abstract publish(pushNotification: any): any;
 }
 class PlatformIOS extends PlatformBase {
+    createPlatformApplication(body) {
+        const params = {
+            Name: body.Name,
+            Platform: body.Platform,
+            Attributes: {
+                'PlatformCredential': body.Credential,// .p8
+                'PlatformPrincipal': body.SigningKeyID,
+                'ApplePlatformTeamID': body.TeamID,
+                'ApplePlatformBundleID': body.BundleID
+            }
+        };
+        return this.sns.createPlatformApplication(params).promise();
+    }
 
     createPayload(data) {
         return {
@@ -49,12 +63,19 @@ class PlatformIOS extends PlatformBase {
     }
 }
 class PlatformAndroid extends PlatformBase {
+    createPlatformApplication(body: any): any {
+        throw new Error("Not implemented");
+    }
+
     publish(pushNotification: any): any {
         throw new Error("Not implemented");
-
     }
 }
 class PlatformAddon extends PlatformBase {
+    createPlatformApplication(body: any): any {
+        throw new Error("Not implemented");
+    }
+
     publish(pushNotification: any): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
         this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
@@ -168,7 +189,7 @@ class NotificationsService {
         else {
             const errors = validation.errors.map(error => {
                 if (error.name === 'oneOf') {
-                    return error.message = "One of the following properties is requierd: " + error.argument;
+                    return error.message = "Excactly one of the following properties is requierd: " + error.argument;
                 }
                 else {
                     return error.stack.replace("instance.", "");
@@ -333,17 +354,22 @@ class NotificationsService {
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
     createPlatformApplication(body) {
-        const params = {
-            Name: body.Name,
-            Platform: body.Platform,
-            Attributes: {
-                'PlatformCredential': body.Credential,// .p8
-                'PlatformPrincipal': body.SigningKeyID,
-                'ApplePlatformTeamID': body.TeamID,
-                'ApplePlatformBundleID': body.BundleID
-            }
-        };
-        return this.sns.createPlatformApplication(params).promise()
+        let basePlatform: PlatformBase;
+
+        switch (body.PlatformType) {
+            case "iOS":
+                basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                break;
+            case "Android":
+                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                break;
+            case "Addon":
+                basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                break;
+            default:
+                throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+        }
+        return basePlatform.createPlatformApplication(body)
     }
 
     async getPlatformApplicationARN(appKey) {
@@ -459,7 +485,7 @@ class NotificationsService {
     }
 
     // create notifications using DIMX
-    async bulkNotifications(body) {
+    async bulkNotifications(body): Promise<any> {
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
 
@@ -662,18 +688,19 @@ class NotificationsService {
     }
 
     async upsertNotificationLog(body) {
-        const users = await this.papiClient.users.find();
-        let usersList: string[] = [];
+        //for later version
+        //const users = await this.papiClient.users.find();
+        // let usersList: string[] = [];
 
-        for (let userEmail of body.UserEmailList) {
-            let user = users.find(u => u.Email == userEmail);
-            let userName = user?.FirstName + ' ' + user?.LastName;
-            usersList.push(userName);
-        }
+        // for (let userEmail of body.UserEmailList) {
+        //     let user = users.find(u => u.Email == userEmail);
+        //     let userName = user?.FirstName + ' ' + user?.LastName;
+        //     usersList.push(userName);
+        // }
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': usersList,
+            'UsersList': body.UserEmailList,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()
@@ -683,23 +710,21 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
     }
 
-    async duplicateNotifications(body: NotificationLog) {
-        const users = await this.papiClient.users.find();
-        let usersEmailList: string[] = [];
-
-        for (let user of body.UsersList) {
-            let userEmail = users.find(u => u.FirstName + ' ' + u.LastName == user)?.UUID;
-            if (userEmail != undefined) {
-                usersEmailList.push(userEmail);
+    async duplicateNotifications(body) {
+        let ansArray: any[] = [];
+        for (const notificationKey of body.Keys) {
+            let notificationLog = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `Key='${notificationKey}'` }) as NotificationLog[];
+            if (notificationLog[0] != undefined) {
+                let ans = await this.bulkNotifications(
+                    {
+                        "UserEmailList": notificationLog[0].UsersList,
+                        "Title": notificationLog[0].Title,
+                        "Body": notificationLog[0].Body
+                    });
+                    ansArray.push(ans);
             }
+            return ansArray;
         }
-        return await this.bulkNotifications(
-            {
-                "UserEmailList": usersEmailList,
-                "Title": body.Title,
-                "Body": body.Body
-            }
-        );
     }
 }
 

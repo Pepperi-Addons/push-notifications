@@ -20,6 +20,6 @@ export class NotificationsLogService {
     }
 
     duplicateNotificationsLog(notifications) {
-       
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/notifications_log`, notifications).toPromise();
     }
 }

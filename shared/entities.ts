@@ -1,4 +1,5 @@
 import { Schema } from 'jsonschema';
+import {AddonData } from '@pepperi-addons/papi-sdk'
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
@@ -16,7 +17,7 @@ export interface Notification {
     CreatorUserUUID?: string
 }
 
-export interface NotificationLog {
+export interface NotificationLog extends AddonData {
     CreatorUUID: string,
     UsersList: string[],
     Title: string,

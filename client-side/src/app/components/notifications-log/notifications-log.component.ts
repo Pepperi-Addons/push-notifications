@@ -32,6 +32,10 @@ export class NotificationsLogComponent implements OnInit {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
        // this.noDataMessage = this.translate.instant("No_Devices_Error");
+       for (let notification of notificationsList) {
+         let creationDate = new Date(notification.CreationDateTime);
+         notification.Date = creationDate.getDate()+'/'+(creationDate.getMonth()+1)+'/'+creationDate.getFullYear();
+       }
 
         return Promise.resolve({
           dataView: {
@@ -65,7 +69,7 @@ export class NotificationsLogComponent implements OnInit {
                 ReadOnly: true
               },
               {
-                FieldID: 'CreationDateTime',
+                FieldID: 'Date',
                 Type: 'TextBox',
                 Title: this.translate.instant("Date"),
                 Mandatory: false,
@@ -118,7 +122,9 @@ export class NotificationsLogComponent implements OnInit {
           title: this.translate.instant("Duplicate"),
           handler: async (objs) => {
             debugger
-           await this.notificationsLogService.duplicateNotificationsLog(objs.rows[0]);
+           let ans = await this.notificationsLogService.duplicateNotificationsLog({
+             "Keys":objs.rows
+            });
            this.dataSource = this.getDataSource();
           }
       });
