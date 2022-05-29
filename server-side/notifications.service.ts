@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -22,17 +22,17 @@ abstract class PlatformBase {
 }
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
-        const params = {
-            Name: body.Name,
-            Platform: body.Platform,
-            Attributes: {
-                'PlatformCredential': body.Credential,// .p8
-                'PlatformPrincipal': body.SigningKeyID,
-                'ApplePlatformTeamID': body.TeamID,
-                'ApplePlatformBundleID': body.BundleID
-            }
-        };
-        return this.sns.createPlatformApplication(params).promise();
+            const params = {
+                Name: body.Name,
+                Platform: body.Platform,
+                Attributes: {
+                    'PlatformCredential': body.Credential,// .p8
+                    'PlatformPrincipal': body.SigningKeyID,
+                    'ApplePlatformTeamID': body.TeamID,
+                    'ApplePlatformBundleID': body.BundleID
+                }
+            };
+            return this.sns.createPlatformApplication(params).promise();
     }
 
     createPayload(data) {
@@ -354,22 +354,26 @@ class NotificationsService {
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
     createPlatformApplication(body) {
-        let basePlatform: PlatformBase;
+        // Schema validation
+        let validation = this.validateSchema(body, platformApplicationsSchema);
+        if (validation.valid) {
+            let basePlatform: PlatformBase;
 
-        switch (body.PlatformType) {
-            case "iOS":
-                basePlatform = new PlatformIOS(this.papiClient, this.sns);
-                break;
-            case "Android":
-                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
-                break;
-            case "Addon":
-                basePlatform = new PlatformAddon(this.papiClient, this.sns);
-                break;
-            default:
-                throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+            switch (body.PlatformType) {
+                case "iOS":
+                    basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                    break;
+                case "Android":
+                    basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                    break;
+                case "Addon":
+                    basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                    break;
+                default:
+                    throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+            }
+            return basePlatform.createPlatformApplication(body)
         }
-        return basePlatform.createPlatformApplication(body)
     }
 
     async getPlatformApplicationARN(appKey) {

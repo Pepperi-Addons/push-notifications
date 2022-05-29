@@ -142,6 +142,42 @@ export const userDeviceSchema: Schema = {
     }
 }
 
+export const platformApplicationsSchema: Schema = {
+    $id: "/PlatformApplication",
+    type: "object",
+    properties: {
+        Name: {
+            type: "string",
+            required: true
+        },
+        Platform: {
+            type: "string",
+            required: true
+        },
+        Credential: {
+            type: "string",
+            required: true
+        },
+        SigningKeyID: {
+            type: "string",
+            required: true
+        },
+        TeamID: {
+            type: "string",
+            required: true
+        },
+        BundleID: {
+            type: "string",
+            required: true
+        },
+        PlatformType: {
+            type: "string",
+            required: true,
+            enum: ["iOS", "Android", "Addon"]
+        }
+    }
+}
+
 export const DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION = {
     key: 'NOTIFICATIONS_NUMBER_LIMITATION',
     softValue: 600,
