@@ -6,5 +6,25 @@
         "MARK_AS_READ": "Mark as read",
         "MARK_AS_UNREAD": "Mark as Unread",
         "GO_TO_TEXT": "Go to"
-    }
+    },
+    "Title_Addon": "Notifications",
+    "No_Notifications_Error": "No Notifications Assigned",
+    "User_UUID": "User ID",
+    "Creator_UUID": "Creator ID",
+    "Creation_Date": "Creation Date",
+    "Title": "Title",
+    "Body": "Body",
+    "Read": "Read",
+    "Mark_As_Read": "Mark as read",
+    "Notifications_Form_Title": "Notifications form",
+    "To": "To",
+    "Subject": "Subject",
+    "Send": "Send",
+    "View": "View",
+    "Device_Name": "Device Name",
+    "App_Name": "App Name",
+    "Last_Use_Date": "Last Use Date",
+    "No_Devices_Error": "No Devices Assigned",
+    "Delete": "Delete",
+    "Max_Users_Error": "Max 100 hard coded users"
 }

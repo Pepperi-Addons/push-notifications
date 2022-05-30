@@ -3,5 +3,7 @@ var_sk
 node_modules
 server-side/node_modules
 client-side/node_modules
+cpi-side/node_modules
 cpi-side/node_modules/**
 cpi-side/build/*
+cpi-side/node_modules/**

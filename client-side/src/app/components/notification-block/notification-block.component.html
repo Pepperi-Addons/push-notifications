@@ -1,0 +1,23 @@
+<div *ngIf="!this.isFormView" class="genericListContainer">
+  <pep-generic-list 
+  [showTopBar]="true"
+  [inline]="true"
+  [dataSource]="dataSource"
+  [showSearch]="true"
+  [actions]="actions"
+  [uuidMapping]="'Key'"
+  [selectionType]="'single'"
+  [noDataFoundMsg]= noDataMessage>
+  </pep-generic-list>
+</div>
+<div *ngIf="this.isFormView" class="genericFormContainer">
+  <pep-generic-form class="generic-form"  [dataSource]="notification" [dataView]="getFormDataView()" (valueChange)="onValueChanged($event)">
+  </pep-generic-form>
+  <pep-button 
+  class="pep-spacing-element"
+  [sizeType]="'md'" 
+  [value]="'Cancel' | translate" 
+  [styleType]="'weak'" 
+  (buttonClick)="close()"
+></pep-button>
+</div>

@@ -10,10 +10,8 @@ import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/icon';
 
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
-
-import { NotificationsModule } from '../components/notifications/notifications.module';
-
-import { AddonService } from './addon.service';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { AddonService } from '../../services/addon.service';
 import { AddonComponent } from './index';
 
 const pepIcons = [

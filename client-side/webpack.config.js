@@ -5,7 +5,7 @@ const share = mf.share;
 const singleSpaAngularWebpack = require('single-spa-angular/lib/webpack').default;
 const { merge } = require('webpack-merge');
 
-const filename = 'push_notifications';
+const filename = 'notifications'; // addon
 
 const sharedMappings = new mf.SharedMappings();
 sharedMappings.register(
@@ -34,7 +34,9 @@ module.exports = (config, options, env) => {
                 name: `${filename}`,
                 filename: `${filename}.js`,
                 exposes: {
-                  './AddonModule': './src/app/addon/index.ts'
+                  './AddonModule': './src/app/components/addon/index.ts',
+                  './NotificationBlockModule': './src/app/components/notification-block/index.ts',
+                  './NotificationBlockEditorModule': './src/app/components/notification-block-editor/index.ts'
                 },
                 shared: share({
                     "@angular/core": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },

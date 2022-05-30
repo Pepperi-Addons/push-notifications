@@ -1,0 +1,19 @@
+p {
+    white-space: pre-line;
+    text-align: center;
+}
+
+  .close_button {
+      display: inline-block;
+      margin-left: 5px;
+      margin-right: 1fr;
+  }
+
+  .title {
+      display: inline-block;
+  }
+
+  .header {
+      display: flex;
+      justify-content: space-between;
+  }

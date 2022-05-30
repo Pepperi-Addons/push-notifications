@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { AddonComponent } from './addon/addon.component';
+import { MessageCreatorComponent } from './components/message-creator/message-creator.component';
+import { DeviceManagmentComponent } from './components/device-managment/device-managment.component';
 
 // Important for single spa
 @Component({
@@ -15,11 +16,12 @@ const routes: Routes = [
         path: `settings/:addon_uuid`,
         children: [
             {
-                path: ':editor',
-                component: AddonComponent
-                // TODO: solve routing
-                // path: '**',
-                // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
+                path: 'message_creator',
+                component: MessageCreatorComponent
+            },
+            {
+                path: 'device_managment',
+                component: DeviceManagmentComponent
             }
         ]
     },
