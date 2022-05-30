@@ -15,6 +15,14 @@ export async function notifications(client: Client, request: Request) {
     }
 }
 
+export async function unread_notifications(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'GET') {
+        return service.getNumberOfUnreadNotifications();
+    }
+}
+
 export async function mark_notifications_as_read(client: Client, request: Request) {
     const service = new NotificationsService(client)
 

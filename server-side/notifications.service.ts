@@ -18,7 +18,7 @@ abstract class PlatformBase {
     }
 
     abstract createPlatformApplication(body: any): any;
-    abstract publish(pushNotification: any): any;
+    abstract publish(pushNotification: any, numberOfUnreadNotifications: Number): any;
 }
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
@@ -35,11 +35,12 @@ class PlatformIOS extends PlatformBase {
             return this.sns.createPlatformApplication(params).promise();
     }
 
-    createPayload(data) {
+    createPayload(data, numberOfUnreadNotifications) {
         return {
             "default": `${data.Subject}`,
             "APNS_SANDBOX": JSON.stringify({
                 "aps": {
+                    "badge": numberOfUnreadNotifications,
                     "alert": {
                         "title": `${data.Subject}`,
                         "body": `${data.Message}`
@@ -49,8 +50,8 @@ class PlatformIOS extends PlatformBase {
         }
     }
 
-    publish(pushNotification: any): any {
-        const payload = this.createPayload(pushNotification);
+    publish(pushNotification: any, numberOfUnreadNotifications): any {
+        const payload = this.createPayload(pushNotification, numberOfUnreadNotifications);
         console.log("@@@payload: ", payload);
         console.log("@@@pushNotifications inside publish: ", pushNotification);
         const params = {
@@ -67,7 +68,7 @@ class PlatformAndroid extends PlatformBase {
         throw new Error("Not implemented");
     }
 
-    publish(pushNotification: any): any {
+    publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
         throw new Error("Not implemented");
     }
 }
@@ -76,7 +77,7 @@ class PlatformAddon extends PlatformBase {
         throw new Error("Not implemented");
     }
 
-    publish(pushNotification: any): any {
+    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
         this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
@@ -147,6 +148,12 @@ class NotificationsService {
     getExpirationDateTime(days: number) {
         const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         return new Date(Date.now() + daysToAdd)
+    }
+
+    async getNumberOfUnreadNotifications() {
+        let notifications = await  this.getNotifications({ where: `UserUUID='${this.currentUserUUID}'`});
+        notifications.filter(notification => notification.Read == 'false');
+        return notifications.length;
     }
 
     // For page block template
@@ -434,7 +441,11 @@ class NotificationsService {
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
         }
-        return basePlatform.publish(pushNotification)
+        let numberOfUnreadNotifications = 0;
+        this.getNumberOfUnreadNotifications().then(notifications => {
+            numberOfUnreadNotifications = notifications;
+        });
+        return basePlatform.publish(pushNotification, numberOfUnreadNotifications)
     }
 
     //remove endpoint ARN
