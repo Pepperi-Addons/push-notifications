@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, markAsReadSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -218,26 +218,33 @@ class NotificationsService {
 
     async markNotificationsAsRead(body) {
         let readNotifications: AddonData[] = [];
-        for (const notification of body.Keys) {
-            //Protection against change of properties. The only property that can change is Read
-            let currentNotification;
-            await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find({ where: `Key='${notification}'` }).then(res => {
-                currentNotification = res[0]
-            });
-            if (currentNotification != undefined) {
-                if (this.currentUserUUID === currentNotification.UserUUID) {
-                    currentNotification.Read = true;
-                    let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
-                    readNotifications.push(ans);
-                }
-                else {
-                    let error: any = new Error(`The UserUUID is different from the notification UserUUID`);
-                    error.code = 403;
-                    throw error;
+        let validation = this.validateSchema(body, markAsReadSchema);
+        if (validation.valid) {
+            for (const notification of body.Keys) {
+                //Protection against change of properties. The only property that can change is Read
+                let currentNotification;
+                await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find({ where: `Key='${notification}'` }).then(res => {
+                    currentNotification = res[0]
+                });
+                if (currentNotification != undefined) {
+                    if (this.currentUserUUID === currentNotification.UserUUID) {
+                        currentNotification.Read = true;
+                        let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
+                        readNotifications.push(ans);
+                    }
+                    else {
+                        let error: any = new Error(`The UserUUID is different from the notification UserUUID`);
+                        error.code = 403;
+                        throw error;
+                    }
                 }
             }
+            return readNotifications;
+        }    
+        else {
+            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+            throw new Error(errors.join("\n"));
         }
-        return readNotifications;
     }
 
     //MARK: UserDevice handling

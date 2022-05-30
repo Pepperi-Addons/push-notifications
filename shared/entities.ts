@@ -102,6 +102,20 @@ export const notificationSchema: Schema = {
         additionalProperties: false
 }
 
+export const markAsReadSchema: Schema = {
+    $id: "/MarkAsRead",
+    type: "object",
+    properties: {
+        Keys: {
+            type: "array",
+            items: {
+                "type": "string"
+              },
+            required: true
+        }
+    }
+}
+
 export const userDeviceSchema: Schema = {
     $id: "/UserDevice",
     type: "object",
