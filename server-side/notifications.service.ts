@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -18,28 +18,29 @@ abstract class PlatformBase {
     }
 
     abstract createPlatformApplication(body: any): any;
-    abstract publish(pushNotification: any): any;
+    abstract publish(pushNotification: any, numberOfUnreadNotifications: Number): any;
 }
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
-        const params = {
-            Name: body.Name,
-            Platform: body.Platform,
-            Attributes: {
-                'PlatformCredential': body.Credential,// .p8
-                'PlatformPrincipal': body.SigningKeyID,
-                'ApplePlatformTeamID': body.TeamID,
-                'ApplePlatformBundleID': body.BundleID
-            }
-        };
-        return this.sns.createPlatformApplication(params).promise();
+            const params = {
+                Name: body.Name,
+                Platform: body.Platform,
+                Attributes: {
+                    'PlatformCredential': body.Credential,// .p8
+                    'PlatformPrincipal': body.SigningKeyID,
+                    'ApplePlatformTeamID': body.TeamID,
+                    'ApplePlatformBundleID': body.BundleID
+                }
+            };
+            return this.sns.createPlatformApplication(params).promise();
     }
 
-    createPayload(data) {
+    createPayload(data, numberOfUnreadNotifications) {
         return {
             "default": `${data.Subject}`,
             "APNS_SANDBOX": JSON.stringify({
                 "aps": {
+                    "badge": numberOfUnreadNotifications,
                     "alert": {
                         "title": `${data.Subject}`,
                         "body": `${data.Message}`
@@ -49,8 +50,8 @@ class PlatformIOS extends PlatformBase {
         }
     }
 
-    publish(pushNotification: any): any {
-        const payload = this.createPayload(pushNotification);
+    publish(pushNotification: any, numberOfUnreadNotifications): any {
+        const payload = this.createPayload(pushNotification, numberOfUnreadNotifications);
         console.log("@@@payload: ", payload);
         console.log("@@@pushNotifications inside publish: ", pushNotification);
         const params = {
@@ -67,7 +68,7 @@ class PlatformAndroid extends PlatformBase {
         throw new Error("Not implemented");
     }
 
-    publish(pushNotification: any): any {
+    publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
         throw new Error("Not implemented");
     }
 }
@@ -76,7 +77,7 @@ class PlatformAddon extends PlatformBase {
         throw new Error("Not implemented");
     }
 
-    publish(pushNotification: any): any {
+    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
         this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
@@ -147,6 +148,12 @@ class NotificationsService {
     getExpirationDateTime(days: number) {
         const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         return new Date(Date.now() + daysToAdd)
+    }
+
+    async getNumberOfUnreadNotifications() {
+        let notifications = await  this.getNotifications({ where: `UserUUID='${this.currentUserUUID}'`});
+        notifications.filter(notification => notification.Read == 'false');
+        return notifications.length;
     }
 
     // For page block template
@@ -354,22 +361,26 @@ class NotificationsService {
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
     createPlatformApplication(body) {
-        let basePlatform: PlatformBase;
+        // Schema validation
+        let validation = this.validateSchema(body, platformApplicationsSchema);
+        if (validation.valid) {
+            let basePlatform: PlatformBase;
 
-        switch (body.PlatformType) {
-            case "iOS":
-                basePlatform = new PlatformIOS(this.papiClient, this.sns);
-                break;
-            case "Android":
-                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
-                break;
-            case "Addon":
-                basePlatform = new PlatformAddon(this.papiClient, this.sns);
-                break;
-            default:
-                throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+            switch (body.PlatformType) {
+                case "iOS":
+                    basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                    break;
+                case "Android":
+                    basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                    break;
+                case "Addon":
+                    basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                    break;
+                default:
+                    throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+            }
+            return basePlatform.createPlatformApplication(body)
         }
-        return basePlatform.createPlatformApplication(body)
     }
 
     async getPlatformApplicationARN(appKey) {
@@ -430,7 +441,11 @@ class NotificationsService {
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
         }
-        return basePlatform.publish(pushNotification)
+        let numberOfUnreadNotifications = 0;
+        this.getNumberOfUnreadNotifications().then(notifications => {
+            numberOfUnreadNotifications = notifications;
+        });
+        return basePlatform.publish(pushNotification, numberOfUnreadNotifications)
     }
 
     //remove endpoint ARN
