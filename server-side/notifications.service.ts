@@ -1,8 +1,8 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, UserDevice, HttpMethod,
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
 import { Validator } from 'jsonschema';
@@ -17,9 +17,23 @@ abstract class PlatformBase {
         protected sns) {
     }
 
+    abstract createPlatformApplication(body: any): any;
     abstract publish(pushNotification: any): any;
 }
 class PlatformIOS extends PlatformBase {
+    createPlatformApplication(body) {
+        const params = {
+            Name: body.Name,
+            Platform: body.Platform,
+            Attributes: {
+                'PlatformCredential': body.Credential,// .p8
+                'PlatformPrincipal': body.SigningKeyID,
+                'ApplePlatformTeamID': body.TeamID,
+                'ApplePlatformBundleID': body.BundleID
+            }
+        };
+        return this.sns.createPlatformApplication(params).promise();
+    }
 
     createPayload(data) {
         return {
@@ -49,12 +63,19 @@ class PlatformIOS extends PlatformBase {
     }
 }
 class PlatformAndroid extends PlatformBase {
+    createPlatformApplication(body: any): any {
+        throw new Error("Not implemented");
+    }
+
     publish(pushNotification: any): any {
         throw new Error("Not implemented");
-
     }
 }
 class PlatformAddon extends PlatformBase {
+    createPlatformApplication(body: any): any {
+        throw new Error("Not implemented");
+    }
+
     publish(pushNotification: any): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
         this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
@@ -168,7 +189,7 @@ class NotificationsService {
         else {
             const errors = validation.errors.map(error => {
                 if (error.name === 'oneOf') {
-                    return error.message = "One of the following properties is requierd: " + error.argument;
+                    return error.message = "Excactly one of the following properties is requierd: " + error.argument;
                 }
                 else {
                     return error.stack.replace("instance.", "");
@@ -333,17 +354,22 @@ class NotificationsService {
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
     createPlatformApplication(body) {
-        const params = {
-            Name: body.Name,
-            Platform: body.Platform,
-            Attributes: {
-                'PlatformCredential': body.Credential,// .p8
-                'PlatformPrincipal': body.SigningKeyID,
-                'ApplePlatformTeamID': body.TeamID,
-                'ApplePlatformBundleID': body.BundleID
-            }
-        };
-        return this.sns.createPlatformApplication(params).promise()
+        let basePlatform: PlatformBase;
+
+        switch (body.PlatformType) {
+            case "iOS":
+                basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                break;
+            case "Android":
+                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                break;
+            case "Addon":
+                basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                break;
+            default:
+                throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+        }
+        return basePlatform.createPlatformApplication(body)
     }
 
     async getPlatformApplicationARN(appKey) {
@@ -458,8 +484,31 @@ class NotificationsService {
         return body;
     }
 
-    // called from client side
-    async importNotifications(body) {
+    // create notifications using DIMX
+    async bulkNotifications(body): Promise<any> {
+        let ans = await this.upsertNotificationLog(body);
+        console.log('ans from upload notifications log', ans);
+
+        if (body.UserEmailList != undefined) {
+            if (body.UserEmailList.length > 100) {
+                throw new Error('Max 100 hard coded users');
+            }
+            else {
+                let notifications: Notification[] = [];
+                for (let email of body.UserEmailList) {
+                    let notification: Notification = {
+                        "Email": email,
+                        "Title": body.Title,
+                        "Body": body.Body,
+                    }
+                    notifications.push(notification);
+                }
+                return await this.uploadFileAndImport(notifications);
+            }
+        }
+    }
+
+    async uploadFileAndImport(body) {
         let fileURL = await this.uploadObject();
         //upload Object To S3
         await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());
@@ -624,12 +673,57 @@ class NotificationsService {
             "Resources": [
                 {
                     "Data": "Total Notifications",
-                    "Description": "Total Notifications Sent in The Last 7 Days’",
+                    "Description": "Total Notifications Sent in The Last 7 Days",
                     "Size": totalNotifications.length
                 },
             ],
             "ReportingPeriod": "Weekly",
             "AggregationFunction": "LAST"
+        }
+    }
+
+    // Notifications Log
+    async getNotificationsLog() {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `CreatorUUID='${this.currentUserUUID}'` });
+    }
+
+    async upsertNotificationLog(body) {
+        //for later version
+        //const users = await this.papiClient.users.find();
+        // let usersList: string[] = [];
+
+        // for (let userEmail of body.UserEmailList) {
+        //     let user = users.find(u => u.Email == userEmail);
+        //     let userName = user?.FirstName + ' ' + user?.LastName;
+        //     usersList.push(userName);
+        // }
+
+        let notificationLog: NotificationLog = {
+            'CreatorUUID': this.currentUserUUID,
+            'UsersList': body.UserEmailList,
+            'Title': body.Title,
+            'Body': body.Body,
+            'Key': uuid()
+
+        };
+
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
+    }
+
+    async duplicateNotifications(body) {
+        let ansArray: any[] = [];
+        for (const notificationKey of body.Keys) {
+            let notificationLog = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `Key='${notificationKey}'` }) as NotificationLog[];
+            if (notificationLog[0] != undefined) {
+                let ans = await this.bulkNotifications(
+                    {
+                        "UserEmailList": notificationLog[0].UsersList,
+                        "Title": notificationLog[0].Title,
+                        "Body": notificationLog[0].Body
+                    });
+                    ansArray.push(ans);
+            }
+            return ansArray;
         }
     }
 }

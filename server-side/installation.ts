@@ -10,7 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
@@ -25,6 +25,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     });
 
     const notificationsResourceRes = await createNotificationsResource(papiClient)
+    const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
     const NotificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
     const relationsRes = await createPageBlockRelation(client);
@@ -33,8 +34,8 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && NotificationsVariablesRes.success,
-        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, notificationsVarsRes:  ${NotificationsVariablesRes.errorMessage}`
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && NotificationsVariablesRes.success && notificationsLogViewRes.success,
+        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, notificationsVarsRes:  ${NotificationsVariablesRes.errorMessage}`
     };
 }
 
@@ -106,6 +107,42 @@ async function createNotificationsResource(papiClient: PapiClient) {
             Read: {
                 Type: 'Bool'
             }
+        }
+    };
+
+    try {
+        await papiClient.addons.data.schemes.post(notificationsScheme);
+
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+//save a list of notifications sent by users
+async function createNotificationsLogViewResource(papiClient: PapiClient) {
+    var notificationsScheme: AddonDataScheme = {
+        Name: NOTIFICATIONS_LOGS_TABLE_NAME,
+        Type: 'meta_data',
+        Fields: {
+            CreatorUUID: {
+                Type: 'String'
+            },
+            UsersList: {
+                Type: 'Array'
+            },
+            Title: {
+                Type: 'String',
+            },
+            Body: {
+                Type: 'String'
+            } 
         }
     };
 

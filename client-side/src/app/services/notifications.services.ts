@@ -23,7 +23,7 @@ export class NotificationsService {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/mark_notifications_as_read`, notifications).toPromise()
     }
 
-    importNotifications(notifications) {
-        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/import_notifications`, notifications).toPromise()
+    bulkNotifications(notifications) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/bulk_notifications`, notifications).toPromise()
     }
 }

@@ -130,10 +130,10 @@ export async function import_notifications_source(client: Client, request: Reque
 }
 
 //called from client side
-export async function import_notifications(client: Client, request: Request) {
+export async function bulk_notifications(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-        return service.importNotifications(request.body);
+        return service.bulkNotifications(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
@@ -163,5 +163,20 @@ export async function total_notifications_in_last_week(client: Client, request: 
 
 export async function Test(client: Client, request: Request) {
     console.log(request.body);
+}
+
+// notifications log
+export async function notifications_log(client: Client, request: Request) {
+    const service = new NotificationsService(client);
+
+    if (request.method == 'POST') {
+        return service.duplicateNotifications(request.body);
+    }
+    else if (request.method == 'GET') {
+        return service.getNotificationsLog();
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
 }
 
