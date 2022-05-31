@@ -219,6 +219,23 @@ async function createRelations(papiClient: PapiClient) {
                                                                         
             Title: "Notifications Soft Limit",
             DataView: notificatiosDataView
+        },
+        // usage monitor
+        {
+            RelationName: "UsageMonitor",
+            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
+            Name: "DailyNotificationsUsageMonitor",
+            Description: 'relation for "usage" tab in usage monitor to display number of daily notifications count',
+            Type: "AddonAPI",
+            AddonRelativeURL: "/api/total_daily_notifications"
+        },
+        {
+            RelationName: "UsageMonitor",
+            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
+            Name: "WeeklyNotificationsUsageMonitor",
+            Description: 'relation for "usage" tab in usage monitor to display total notifications sent in the last 7 days',
+            Type: "AddonAPI",
+            AddonRelativeURL: "/api/total_notifications_in_last_week"
         }
     ]
     try {
