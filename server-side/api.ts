@@ -87,6 +87,16 @@ export async function remove_devices(client: Client, request: Request) {
     }
 }
 
+export async function delete_all_application_endpoints(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method === 'POST') {
+        await service.deleteAllApplicationEndpoints();
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function create_application_endpoint(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
