@@ -151,8 +151,7 @@ class NotificationsService {
     }
 
     async getNumberOfUnreadNotifications() {
-        let notifications = await  this.getNotifications({ where: `UserUUID='${this.currentUserUUID}'`});
-        notifications = notifications.filter(notification => notification.Read == 'false');
+        let notifications = await  this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'`});
         return notifications.length;
     }
 
@@ -162,7 +161,7 @@ class NotificationsService {
     }
 
     async getNotifications(query) {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find(query);
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
     }
 
     async upsertNotification(body) {
@@ -223,9 +222,10 @@ class NotificationsService {
             for (const notification of body.Keys) {
                 //Protection against change of properties. The only property that can change is Read
                 let currentNotification;
-                await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).find({ where: `Key='${notification}'` }).then(res => {
-                    currentNotification = res[0]
-                });
+                let notifications = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter({ where: `Key='${notification}'` }).toArray();
+                if(notifications != undefined && notifications.length > 0) {
+                    currentNotification = notifications[0]
+                }
                 if (currentNotification != undefined) {
                     if (this.currentUserUUID === currentNotification.UserUUID) {
                         currentNotification.Read = true;
@@ -250,7 +250,7 @@ class NotificationsService {
     //MARK: UserDevice handling
 
     async getUserDevices(query) {
-        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find(query);
+        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter(query).toArray();
         return userDevices.map(device => {
             delete device.Token
             return device;
@@ -423,7 +423,7 @@ class NotificationsService {
     }
 
     async deleteAllApplicationEndpoints() {
-        let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find();
+        let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter().toArray();
 
         for (let device of devices) {
             await this.deleteApplicationEndpoint(device.Endpoint);
@@ -431,7 +431,7 @@ class NotificationsService {
     }
 
     // publish to particular topic ARN or to endpoint ARN
-    publish(pushNotification) {
+    async publish(pushNotification) {
         let basePlatform: PlatformBase;
 
         switch (pushNotification.PlatformType) {
@@ -448,10 +448,7 @@ class NotificationsService {
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
         }
-        let numberOfUnreadNotifications = 0;
-        this.getNumberOfUnreadNotifications().then(notifications => {
-            numberOfUnreadNotifications = notifications;
-        });
+        let numberOfUnreadNotifications = await this.getNumberOfUnreadNotifications();
         return basePlatform.publish(pushNotification, numberOfUnreadNotifications)
     }
 
@@ -707,7 +704,7 @@ class NotificationsService {
 
     // Notifications Log
     async getNotificationsLog() {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `CreatorUUID='${this.currentUserUUID}'` });
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).iter({ where: `CreatorUUID='${this.currentUserUUID}'` }).toArray();
     }
 
     async upsertNotificationLog(body) {
