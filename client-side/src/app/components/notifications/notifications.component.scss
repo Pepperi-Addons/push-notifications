@@ -1,0 +1,154 @@
+@use '~@pepperi-addons/ngx-lib/src/core/style/abstracts/variables';
+@use '~@pepperi-addons/ngx-lib/src/core/style/abstracts/mixins';
+@use '~@pepperi-addons/ngx-lib/src/core/style/abstracts/functions';
+
+.notifications-menu {
+    min-width: 400px;
+    
+    .notifications-header {
+        position: sticky;
+        top: 0px;
+        z-index: 5;
+        padding: 1rem 1rem 0 1rem;
+        margin-bottom: 0.25rem;
+        background: functions.get-pep-color(color-system-primary-invert, color-base);
+
+        .title {
+            display: grid;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            height: 2rem;
+            grid-auto-flow: column;
+        }
+    }
+
+    .notifications-items {
+        overflow: auto;
+        margin: 0;
+        padding: 0;
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            min-height: 4rem;
+            height: auto;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+            
+            .msg-wrapper {
+                width: 100%;
+                display: flex;
+                flex-flow: column;
+
+                .notification-title {
+                }
+    
+                .notification-body {
+                    white-space: normal;
+                }
+    
+                .notification-item-footer {
+                    display: flex;
+                    gap: 0.25rem;
+
+                    .notification-date {
+                    }
+
+                    .notification-goto {
+                        @include mixins.state-weak-default();
+                        display: flex;
+                        align-self: center;
+                        padding: 0.125rem 0.25rem;
+                        border-radius: variables.$border-radius-md;
+                    }
+                }
+            }
+
+            .notification-read {
+                display: flex;
+                align-self: flex-start;
+                margin-top: .75rem;
+                
+                ::ng-deep .pep-button {
+                    border-radius: 50%;
+
+                    &.unread {
+                        .mat-button-wrapper {
+                            background-color: functions.get-pep-color(color-text, color-success);
+                            height: 0.5rem;
+                            border-radius: 50%;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .notifications-footer {
+        display: flex;
+        flex-flow: column;
+        margin: 1rem 0 1rem 1rem;
+
+        .ascii-frog {
+            text-align: center;
+            font-family: monospace;
+            user-select: none;
+        }
+
+        .footer-text {
+            align-self: center;
+            text-align: center;
+            width: 248px;
+        }
+
+    }
+}
+
+.mat-menu-panel {
+
+}
+    
+// .round {
+//     position: relative;
+// }
+  
+// .round label {
+//     background-color: #fff;
+//     border: 1px solid #ccc;
+//     border-radius: 50%;
+//     cursor: pointer;
+//     height: 28px;
+//     left: 0;
+//     position: absolute;
+//     top: 0;
+//     width: 28px;
+// }
+  
+// .round label:after {
+//     border: 2px solid #fff;
+//     border-top: none;
+//     border-right: none;
+//     content: "";
+//     height: 6px;
+//     left: 7px;
+//     opacity: 0;
+//     position: absolute;
+//     top: 8px;
+//     transform: rotate(-45deg);
+//     width: 12px;
+// }
+  
+// .round input[type="checkbox"] {
+//     visibility: hidden;
+// }
+  
+// .round input[type="checkbox"]:checked + label {
+//     background-color: #66bb6a;
+//     border-color: #66bb6a;
+// }
+  
+// .round input[type="checkbox"]:checked + label:after {
+//     opacity: 1;
+// }
+  

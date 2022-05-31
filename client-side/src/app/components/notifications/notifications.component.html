@@ -1,0 +1,48 @@
+
+<div style="display: flex">
+    <pep-button iconName="system_menu" [matMenuTriggerFor]="notificationsMenu" pepButtonBlur>
+    </pep-button>
+</div>
+<mat-menu #notificationsMenu="matMenu" class="notifications-menu-container">
+    <div class="notifications-menu" (click)="$event.stopPropagation()">
+        <div class="notifications-header">
+            <div class="title">
+                <span>{{ 'NOTIFICATIONS' | translate }}</span>
+                <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button>
+            </div>
+            <div class="separator pep-border-bottom"></div>
+        </div>
+        <ul class="notifications-items">
+            <li *ngFor="let item of items" mat-menu-item class="notification-item" (click)="onNotificationItemClick(item)">
+                <ng-container *ngTemplateOutlet="notificationItemTemplate; context: {item: item}"></ng-container>
+            </li>
+        </ul>
+        <div class="notifications-footer">
+            <div class="ascii-frog body-xs">
+                    o  o            <br/>
+                   ( -- )           <br/>
+                /\( ,   ,)/\        <br/>
+              ^^   ^^  ^^   ^^      <br/>
+            </div>
+            <span class="footer-text body-sm">
+                {{ 'NOTIFICATIONS_FOOTER_LINE' | translate }}
+            </span>
+        </div>
+    </div>
+</mat-menu>
+
+<ng-template #notificationItemTemplate let-item="item">
+    <div class="msg-wrapper">
+        <label class="title-md">{{ item.title }}</label>
+        <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
+        <div class="notification-item-footer body-xs color-dimmed">
+            <span *ngIf="item.to" class="">{{ item.to }}</span>
+            <span *ngIf="item.to">&#8226;</span><!--•-->
+            <span class="date-ago">{{ item.date | dateAgo }}</span>
+            <span *ngIf="item.goToActivityName" class="notification-goto body-2xs">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
+        </div>
+    </div>
+    <pep-button [title]="(item.read ? 'ACTIONS.MARK_AS_UNREAD' : 'ACTIONS.MARK_AS_READ') | translate" 
+        class="notification-read keep-background-on-focus" [classNames]="item.read ? 'read': 'unread'" 
+        sizeType="xs" (buttonClick)="onNotificationItemReadClick($event, item)" ></pep-button>
+</ng-template>
