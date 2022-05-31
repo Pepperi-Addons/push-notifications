@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter} from '@angular/core';
 import { NotificationsService } from '../../services/notifications.services';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { AddonService } from '../../services/addon.service';
+import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { FormDataView } from "@pepperi-addons/papi-sdk";
 import { ObjectsDataRowCell } from '@pepperi-addons/ngx-lib';
 import { config } from '../../addon.config';
@@ -13,14 +14,23 @@ import { config } from '../../addon.config';
   styleUrls: ['./notification-block.component.css']
 })
 export class NotificationBlockComponent implements OnInit {
+  @Input() hostObject: any;
+    
+  @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
+  screenSize: PepScreenSizeType;
 
   constructor(
     private translate: TranslateService,
+    private layoutService: PepLayoutService,
     private notificationsService: NotificationsService,
     private addonService: AddonService,
     private genericListService: PepGenericListService
   ) {
     this.addonService.addonUUID = config.AddonUUID;
+
+    this.layoutService.onResize$.subscribe(size => {
+      this.screenSize = size;
+  });
   }
 
   ngOnInit() {
