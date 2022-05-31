@@ -14,7 +14,8 @@ export interface Notification {
     Hidden?: boolean,
     UserUUID?: string,
     Email?: string,
-    CreatorUserUUID?: string
+    CreatorUserUUID?: string,
+    Read: boolean
 }
 
 export interface NotificationLog extends AddonData {
@@ -100,6 +101,20 @@ export const notificationSchema: Schema = {
             }
         ],
         additionalProperties: false
+}
+
+export const markAsReadSchema: Schema = {
+    $id: "/MarkAsRead",
+    type: "object",
+    properties: {
+        Keys: {
+            type: "array",
+            items: {
+                "type": "string"
+              },
+            required: true
+        }
+    }
 }
 
 export const userDeviceSchema: Schema = {
