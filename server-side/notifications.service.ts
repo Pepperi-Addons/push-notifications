@@ -152,7 +152,7 @@ class NotificationsService {
 
     async getNumberOfUnreadNotifications() {
         let notifications = await  this.getNotifications({ where: `UserUUID='${this.currentUserUUID}'`});
-        notifications.filter(notification => notification.Read == 'false');
+        notifications = notifications.filter(notification => notification.Read == 'false');
         return notifications.length;
     }
 
@@ -522,6 +522,7 @@ class NotificationsService {
                         "Email": email,
                         "Title": body.Title,
                         "Body": body.Body,
+                        "Read": false
                     }
                     notifications.push(notification);
                 }

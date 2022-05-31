@@ -14,7 +14,8 @@ export interface Notification {
     Hidden?: boolean,
     UserUUID?: string,
     Email?: string,
-    CreatorUserUUID?: string
+    CreatorUserUUID?: string,
+    Read: boolean
 }
 
 export interface NotificationLog extends AddonData {
