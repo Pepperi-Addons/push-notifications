@@ -1,10 +1,4 @@
-
-<div style="display: flex">
-    <pep-button iconName="system_menu" [matMenuTriggerFor]="notificationsMenu" pepButtonBlur>
-    </pep-button>
-</div>
-<mat-menu #notificationsMenu="matMenu" class="notifications-menu-container">
-    <div class="notifications-menu" (click)="$event.stopPropagation()">
+ <div class="notifications-menu" (click)="$event.stopPropagation()">
         <div class="notifications-header">
             <div class="title">
                 <span>{{ 'NOTIFICATIONS' | translate }}</span>
@@ -18,19 +12,11 @@
             </li>
         </ul>
         <div class="notifications-footer">
-            <div class="ascii-frog body-xs">
-                    o  o            <br/>
-                   ( -- )           <br/>
-                /\( ,   ,)/\        <br/>
-              ^^   ^^  ^^   ^^      <br/>
-            </div>
             <span class="footer-text body-sm">
                 {{ 'NOTIFICATIONS_FOOTER_LINE' | translate }}
             </span>
         </div>
     </div>
-</mat-menu>
-
 <ng-template #notificationItemTemplate let-item="item">
     <div class="msg-wrapper">
         <label class="title-md">{{ item.title }}</label>

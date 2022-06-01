@@ -23,11 +23,11 @@ export async function unread_notifications(client: Client, request: Request) {
     }
 }
 
-export async function mark_notifications_as_read(client: Client, request: Request) {
+export async function update_notifications_read_status(client: Client, request: Request) {
     const service = new NotificationsService(client)
 
     if (request.method === 'POST') {
-        return service.markNotificationsAsRead(request.body);
+        return service.updateNotificationReadStatus(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);

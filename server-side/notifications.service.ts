@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, markAsReadSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, readStatusSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -215,9 +215,9 @@ class NotificationsService {
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
-    async markNotificationsAsRead(body) {
+    async updateNotificationReadStatus(body) {
         let readNotifications: AddonData[] = [];
-        let validation = this.validateSchema(body, markAsReadSchema);
+        let validation = this.validateSchema(body, readStatusSchema);
         if (validation.valid) {
             for (const notification of body.Keys) {
                 //Protection against change of properties. The only property that can change is Read
@@ -228,7 +228,7 @@ class NotificationsService {
                 }
                 if (currentNotification != undefined) {
                     if (this.currentUserUUID === currentNotification.UserUUID) {
-                        currentNotification.Read = true;
+                        currentNotification.Read = body.Read;
                         let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
                         readNotifications.push(ans);
                     }

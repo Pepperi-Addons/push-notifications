@@ -103,7 +103,7 @@ export const notificationSchema: Schema = {
         additionalProperties: false
 }
 
-export const markAsReadSchema: Schema = {
+export const readStatusSchema: Schema = {
     $id: "/MarkAsRead",
     type: "object",
     properties: {
@@ -112,6 +112,10 @@ export const markAsReadSchema: Schema = {
             items: {
                 "type": "string"
               },
+            required: true
+        },
+        Read: {
+            type: "boolean",
             required: true
         }
     }
