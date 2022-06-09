@@ -271,9 +271,10 @@ class NotificationsService {
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX"
-            //TODO: Change the aws ID to environment var
-            const appARN = `arn:aws:sns:us-west-2:796051133443:app/${pushNotificationsPlatform}/${body.AppKey}`;
+            const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX";
+            const awsID = process.env.AccountID;
+            console.log("@@@awsID:", awsID);
+            const appARN = `arn:aws:sns:us-west-2:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
             let endpointARN = await this.createApplicationEndpoint({
                 AddonRelativeURL: body.AddonRelativeURL,
                 PlatformType: body.PlatformType,
