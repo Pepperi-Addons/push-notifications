@@ -268,8 +268,7 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            body.UserUUID = this.currentUserUUID;
-            body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
+            body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
             const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX"
@@ -297,7 +296,7 @@ class NotificationsService {
     }
 
     async upsertUserDeviceResource(body) {
-        body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
+        body.Key = `${body.DeviceKey}_${body.AppKey}`;
         const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
 
         // if there is a new token, then remove the endpoint with the old token
