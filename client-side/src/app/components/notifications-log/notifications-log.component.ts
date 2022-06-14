@@ -117,7 +117,7 @@ export class NotificationsLogComponent implements OnInit {
   actions: IPepGenericListActions = {
     get: async (data) => {
       const actions = [];
-      if (data.rows.length === 1 || data?.selectionType == 0){
+      if (data.rows.length === 1){
         actions.push({
           title: this.translate.instant("Duplicate"),
           handler: async (objs) => {

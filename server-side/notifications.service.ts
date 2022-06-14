@@ -268,6 +268,7 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
+            body.UserUUID = this.currentUserUUID;
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
@@ -334,11 +335,13 @@ class NotificationsService {
     }
     // called by PNS when a notification is created
     async sendPushNotification(body) {
+        console.log("@@@pushNotification body: ", body);
         for (const object of body.Message.ModifiedObjects) {
             try {
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
                 //get user devices by user uuid
                 const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
+                console.log("@@@pushNotification userDevicesList: ", userDevicesList);
                 if (userDevicesList != undefined) {
                     // for each user device send push notification
                     for (const device of userDevicesList) {
