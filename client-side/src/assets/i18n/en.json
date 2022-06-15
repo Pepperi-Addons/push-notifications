@@ -31,5 +31,7 @@
     "Notifications_Log_Subtitle": "Messages sent by",
     "Sent_To": "Sent To",
     "Date": "Date",
-    "Duplicate": "Duplicate"
+    "Duplicate": "Duplicate",
+    "Messages_Sent_Successfuly": "All the messages sent successfully",
+    "OK": "OK"
 }

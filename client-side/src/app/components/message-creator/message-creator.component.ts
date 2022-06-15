@@ -40,8 +40,24 @@ export class MessageCreatorComponent implements OnInit {
   async sendNotifications() {
      this.message.UserEmailList = this.message.Recipients.split(";");
      let ans = await this.notificationsService.bulkNotifications(this.message);
-     console.log(ans);
+     let dialogMessage:string = undefined;
 
+     for (const message of ans) {
+       if (message.Details != undefined) {
+        dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
+       }
+     }
+
+     if (dialogMessage === undefined) {
+      dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
+     }
+
+     let dialogData = {
+      "Message": dialogMessage,
+      "Title": "",
+      "ButtonText": this.translate.instant("OK")
+    }
+     this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {});
   }
 
   onValueChanged(element, $event) {
