@@ -18,8 +18,4 @@ export class NotificationsLogService {
         let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
-
-    duplicateNotificationsLog(notifications) {
-        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/notifications_log`, notifications).toPromise();
-    }
 }

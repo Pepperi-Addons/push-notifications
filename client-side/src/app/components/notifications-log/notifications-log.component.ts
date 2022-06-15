@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { IPepGenericListActions, IPepGenericListDataSource, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationsLogService } from '../../services/notifications-log.services';
 
 @Component({
@@ -16,7 +16,9 @@ export class NotificationsLogComponent implements OnInit {
     private translate: TranslateService,
     private notificationsLogService: NotificationsLogService,
     private addonService: AddonService,
-    private route: ActivatedRoute
+    private genericListService: PepGenericListService,
+    private route: ActivatedRoute,
+    private router: Router,
     ) {
       this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
      }
@@ -121,11 +123,8 @@ export class NotificationsLogComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Duplicate"),
           handler: async (objs) => {
-            debugger
-           let ans = await this.notificationsLogService.duplicateNotificationsLog({
-             "Keys":objs.rows
-            });
-           this.dataSource = this.getDataSource();
+            let notification = this.genericListService.getItemById(objs.rows[0]);
+            this.goToMessageCreator(notification);
           }
       });
       }
@@ -133,6 +132,17 @@ export class NotificationsLogComponent implements OnInit {
 
       return actions;
     }
+  }
+
+  goToMessageCreator(notification) {
+    this.router.navigate(['../message_creator'], {
+      relativeTo: this.route,
+      queryParams: {
+        "UserEmailList": notification.Fields[2]?.FormattedValue,
+        "Title": notification.Fields[0]?.FormattedValue,
+        "Body": notification.Fields[1]?.FormattedValue
+      }
+    })
   }
 
 }

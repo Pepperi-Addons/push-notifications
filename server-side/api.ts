@@ -176,11 +176,7 @@ export async function Test(client: Client, request: Request) {
 // notifications log
 export async function notifications_log(client: Client, request: Request) {
     const service = new NotificationsService(client);
-
-    if (request.method == 'POST') {
-        return service.duplicateNotifications(request.body);
-    }
-    else if (request.method == 'GET') {
+    if (request.method == 'GET') {
         return service.getNotificationsLog();
     }
     else {

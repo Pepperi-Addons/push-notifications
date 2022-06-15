@@ -29,6 +29,12 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   ngOnInit() {
+    const queryParams = this.route.snapshot.queryParams;
+    if (queryParams != undefined) {
+      this.message.Title = queryParams.Title;
+      this.message.Body = queryParams.Body;
+      this.message.Recipients = queryParams.UserEmailList.replace(",", ";");
+    }
   }
 
   async sendNotifications() {
