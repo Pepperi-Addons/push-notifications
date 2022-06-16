@@ -19,8 +19,8 @@ export class NotificationsService {
         }
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
-    markNotificationsAsRead(notifications) {
-        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/mark_notifications_as_read`, notifications).toPromise()
+    updateNotificationReadStatus(notifications) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/update_notifications_read_status`, notifications).toPromise()
     }
 
     bulkNotifications(notifications) {

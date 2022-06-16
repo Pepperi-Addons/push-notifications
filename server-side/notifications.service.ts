@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, markAsReadSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, readStatusSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -38,7 +38,7 @@ class PlatformIOS extends PlatformBase {
     createPayload(data, numberOfUnreadNotifications) {
         return {
             "default": `${data.Subject}`,
-            "APNS_SANDBOX": JSON.stringify({
+            "APNS": JSON.stringify({
                 "aps": {
                     "badge": numberOfUnreadNotifications,
                     "alert": {
@@ -69,7 +69,6 @@ class PlatformAndroid extends PlatformBase {
     }
 
     publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
-        throw new Error("Not implemented");
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -215,9 +214,9 @@ class NotificationsService {
         return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
     }
 
-    async markNotificationsAsRead(body) {
+    async updateNotificationReadStatus(body) {
         let readNotifications: AddonData[] = [];
-        let validation = this.validateSchema(body, markAsReadSchema);
+        let validation = this.validateSchema(body, readStatusSchema);
         if (validation.valid) {
             for (const notification of body.Keys) {
                 //Protection against change of properties. The only property that can change is Read
@@ -228,7 +227,7 @@ class NotificationsService {
                 }
                 if (currentNotification != undefined) {
                     if (this.currentUserUUID === currentNotification.UserUUID) {
-                        currentNotification.Read = true;
+                        currentNotification.Read = body.Read;
                         let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
                         readNotifications.push(ans);
                     }
@@ -728,23 +727,6 @@ class NotificationsService {
         };
 
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
-    }
-
-    async duplicateNotifications(body) {
-        let ansArray: any[] = [];
-        for (const notificationKey of body.Keys) {
-            let notificationLog = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `Key='${notificationKey}'` }) as NotificationLog[];
-            if (notificationLog[0] != undefined) {
-                let ans = await this.bulkNotifications(
-                    {
-                        "UserEmailList": notificationLog[0].UsersList,
-                        "Title": notificationLog[0].Title,
-                        "Body": notificationLog[0].Body
-                    });
-                    ansArray.push(ans);
-            }
-            return ansArray;
-        }
     }
 }
 
