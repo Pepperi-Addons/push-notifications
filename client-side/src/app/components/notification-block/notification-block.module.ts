@@ -12,6 +12,7 @@ import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { config } from '../../addon.config';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 export const routes: Routes = [
     {
@@ -27,6 +28,7 @@ export const routes: Routes = [
         PepButtonModule,
         PepGenericListModule,
         PepGenericFormModule,
+        NotificationsModule,
         PepButtonModule,
         PepDialogModule,
         TranslateModule.forChild({
