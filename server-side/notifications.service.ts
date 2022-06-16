@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
 import { Agent } from 'https';
 import fetch from 'node-fetch';
-const AWS = require('aws-sdk');
+import AWS, { SNS } from 'aws-sdk';
 
 abstract class PlatformBase {
     constructor(protected papiClient,
@@ -23,13 +23,13 @@ abstract class PlatformBase {
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
             const params = {
-                Name: body.Name,
+                Name: body.AppKey,
                 Platform: body.Platform,
                 Attributes: {
                     'PlatformCredential': body.Credential,// .p8
                     'PlatformPrincipal': body.SigningKeyID,
                     'ApplePlatformTeamID': body.TeamID,
-                    'ApplePlatformBundleID': body.BundleID
+                    'ApplePlatformBundleID': body.AppKey
                 }
             };
             return this.sns.createPlatformApplication(params).promise();
@@ -64,9 +64,16 @@ class PlatformIOS extends PlatformBase {
     }
 }
 class PlatformAndroid extends PlatformBase {
-    createPlatformApplication(body: any): any {
-        throw new Error("Not implemented");
-    }
+    createPlatformApplication(body) {
+        const params = {
+            Name: body.Name,
+            Platform: body.Platform,
+            Attributes: {
+                'PlatformCredential': body.Credential,// API Key
+            }
+        };
+        return this.sns.createPlatformApplication(params).promise();
+}
 
     publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
     }
@@ -83,7 +90,7 @@ class PlatformAddon extends PlatformBase {
 }
 
 class NotificationsService {
-    sns: any;
+    sns: SNS;
     papiClient: PapiClient
     addonSecretKey: string
     addonUUID: string;
@@ -264,7 +271,9 @@ class NotificationsService {
             body.Key = `${body.UserUUID}_${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const appARN: string = await this.getPlatformApplicationARN(body.AppKey);
+            const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX"
+            //TODO: Change the aws ID to environment var
+            const appARN = `arn:aws:sns:us-west-2:796051133443:app/${pushNotificationsPlatform}/${body.AppKey}`;
             let endpointARN = await this.createApplicationEndpoint({
                 AddonRelativeURL: body.AddonRelativeURL,
                 PlatformType: body.PlatformType,
@@ -389,11 +398,6 @@ class NotificationsService {
         }
     }
 
-    async getPlatformApplicationARN(appKey) {
-        const list = await this.sns.listPlatformApplications({}).promise();
-        const currentApp = list.PlatformApplications.find(app => app.Attributes.ApplePlatformBundleID === appKey);
-        return currentApp.PlatformApplicationArn;
-    }
 
     /*
     It will register mobile to platform application so that 

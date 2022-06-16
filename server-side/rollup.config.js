@@ -14,6 +14,7 @@ export default config.Endpoints.map(endpoint => {
          }
         ],
         external: [
+            'aws-sdk'
         ],
         plugins: [
          typescript({

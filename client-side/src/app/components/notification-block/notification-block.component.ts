@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter} from '@angular/core';
 import { NotificationsService } from '../../services/notifications.services';
 import { AddonService } from '../../services/addon.service';
 import { INotificationItem } from '../notifications/notifications.model';
+import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { config } from '../../addon.config';
 
 @Component({
@@ -12,12 +13,18 @@ import { config } from '../../addon.config';
 export class NotificationBlockComponent implements OnInit {
   items: INotificationItem[] = [];
   notificationsList = [];
+  screenSize: PepScreenSizeType;
 
   constructor(
     private notificationsService: NotificationsService,
     private addonService: AddonService,
+    public layoutService: PepLayoutService
   ) {
     this.addonService.addonUUID = config.AddonUUID;
+
+    this.layoutService.onResize$.subscribe(size => {
+      this.screenSize = size;
+  });
   }
 
   ngOnInit() {

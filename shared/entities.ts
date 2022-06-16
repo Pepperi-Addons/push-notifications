@@ -165,10 +165,6 @@ export const platformApplicationsSchema: Schema = {
     $id: "/PlatformApplication",
     type: "object",
     properties: {
-        Name: {
-            type: "string",
-            required: true
-        },
         Platform: {
             type: "string",
             required: true
@@ -179,15 +175,15 @@ export const platformApplicationsSchema: Schema = {
         },
         SigningKeyID: {
             type: "string",
-            required: true
+            required: false
         },
         TeamID: {
             type: "string",
-            required: true
+            required: false
         },
         BundleID: {
             type: "string",
-            required: true
+            required: false
         },
         PlatformType: {
             type: "string",
