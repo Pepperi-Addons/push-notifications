@@ -38,7 +38,7 @@ class PlatformIOS extends PlatformBase {
     createPayload(data, numberOfUnreadNotifications) {
         return {
             "default": `${data.Subject}`,
-            "APNS_SANDBOX": JSON.stringify({
+            "APNS": JSON.stringify({
                 "aps": {
                     "badge": numberOfUnreadNotifications,
                     "alert": {
@@ -76,7 +76,6 @@ class PlatformAndroid extends PlatformBase {
 }
 
     publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
-        throw new Error("Not implemented");
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -732,23 +731,6 @@ class NotificationsService {
         };
 
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
-    }
-
-    async duplicateNotifications(body) {
-        let ansArray: any[] = [];
-        for (const notificationKey of body.Keys) {
-            let notificationLog = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).find({ where: `Key='${notificationKey}'` }) as NotificationLog[];
-            if (notificationLog[0] != undefined) {
-                let ans = await this.bulkNotifications(
-                    {
-                        "UserEmailList": notificationLog[0].UsersList,
-                        "Title": notificationLog[0].Title,
-                        "Body": notificationLog[0].Body
-                    });
-                    ansArray.push(ans);
-            }
-            return ansArray;
-        }
     }
 }
 
