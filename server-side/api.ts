@@ -184,3 +184,13 @@ export async function notifications_log(client: Client, request: Request) {
     }
 }
 
+export async function delete_notifications_log(client: Client, request: Request) {
+    const service = new NotificationsService(client);
+    if (request.method == 'POST') {
+        return service.deleteNotificationsLog(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+

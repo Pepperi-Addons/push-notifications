@@ -18,4 +18,8 @@ export class NotificationsLogService {
         let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
+
+    deleteNotificationsLog(notifications) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/delete_notifications_log`, notifications).toPromise()
+    }
 }

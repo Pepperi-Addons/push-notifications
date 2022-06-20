@@ -13,7 +13,7 @@
     "Creator_UUID": "Creator ID",
     "Creation_Date": "Creation Date",
     "Title": "Title",
-    "Body": "Body",
+    "Message_Body": "Message Body",
     "Read": "Read",
     "Mark_As_Read": "Mark as read",
     "Notifications_Form_Title": "Notifications form",
@@ -30,8 +30,11 @@
     "Notifications_Log_Title": "Notifications Log",
     "Notifications_Log_Subtitle": "Messages sent by",
     "Sent_To": "Sent To",
-    "Date": "Date",
+    "Time": "Time",
     "Duplicate": "Duplicate",
     "Messages_Sent_Successfuly": "All the messages sent successfully",
-    "OK": "OK"
+    "OK": "OK",
+    "No_Notifications_Log_Error": "No Notifications Log found",
+    "No_Results_Error": "No results found"
+    
 }

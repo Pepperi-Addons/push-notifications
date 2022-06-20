@@ -735,6 +735,19 @@ class NotificationsService {
 
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
     }
+
+    async deleteNotificationsLog(notifications) {
+        const ansArray = notifications.map(notification => {
+            return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(
+                {
+                    'Key': notification,
+                    'Hidden': true
+                }
+            );
+        })
+        await Promise.all(ansArray);
+        return ansArray;
+    }
 }
 
 export default NotificationsService;
