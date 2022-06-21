@@ -745,8 +745,8 @@ class NotificationsService {
                 }
             );
         })
-        await Promise.all(ansArray);
-        return ansArray;
+        const ans = await Promise.all(ansArray);
+        return ans;
     }
 }
 
