@@ -179,14 +179,14 @@ class NotificationsService {
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
             // replace mail by UserUUID
-            if (body.Email !== undefined) {
-                const userUUID = await this.getUserUUIDByEmail(body.Email)
+            if (body.UserEmail !== undefined) {
+                const userUUID = await this.getUserUUIDByEmail(body.UserEmail)
                 if (userUUID != undefined) {
                     body.UserUUID = userUUID;
-                    delete body.Email;
+                    delete body.UserEmail;
                 }
                 else {
-                    throw new Error(`User with Email: ${body.Email} does not exist`);
+                    throw new Error(`User with Email: ${body.UserEmail} does not exist`);
                 }
             }
             // Check that the UserUUID exists in the users list
@@ -481,28 +481,28 @@ class NotificationsService {
             dimxObj.Object.Key = uuid();
             dimxObj.Object.CreatorUUID = this.currentUserUUID;
 
-            // USERUUID and Email are mutually exclusive
-            let isUserEmailProvided = dimxObj.Object.Email !== undefined;
+            // USERUUID and UserEmail are mutually exclusive
+            let isUserEmailProvided = dimxObj.Object.UserEmail !== undefined;
             let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
             // consider !== as XOR
             if (isUserEmailProvided !== isUserUUIDProvided) {
                 // find user uuid by Email
-                if (dimxObj.Object.Email !== undefined) {
-                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
-                    // The Email is not compatible with any UserUUID
+                if (dimxObj.Object.UserEmail !== undefined) {
+                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
+                    // The UserEmail is not compatible with any UserUUID
                     if (userUUID !== undefined) {
-                        delete dimxObj.Object.Email;
+                        delete dimxObj.Object.UserEmail;
                         dimxObj.Object.UserUUID = userUUID;
                     }
                     else {
                         dimxObj.Status = Error;
-                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.Email)} faild with the following error: The given Email is not compatible with any UserUUID`
+                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} faild with the following error: The given Email is not compatible with any UserUUID`
                     }
                 }
             }
             else {
                 dimxObj.Status = Error;
-                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and Email are mutually exclusive`
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
             }
         }
         console.log("@@@@import end body: ", body);
@@ -522,7 +522,7 @@ class NotificationsService {
                 let notifications: Notification[] = [];
                 for (let email of body.UserEmailList) {
                     let notification: Notification = {
-                        "Email": email,
+                        "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
                         "Read": false
