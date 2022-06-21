@@ -85,7 +85,7 @@ class PlatformAddon extends PlatformBase {
 
     publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
-        this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
+        return this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
 }
 
