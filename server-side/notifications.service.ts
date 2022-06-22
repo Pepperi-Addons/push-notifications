@@ -66,7 +66,7 @@ class PlatformIOS extends PlatformBase {
 class PlatformAndroid extends PlatformBase {
     createPlatformApplication(body) {
         const params = {
-            Name: body.Name,
+            Name: body.AppKey,
             Platform: "GCM",
             Attributes: {
                 'PlatformCredential': body.Credential,// API Key
