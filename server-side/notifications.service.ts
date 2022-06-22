@@ -22,17 +22,17 @@ abstract class PlatformBase {
 }
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
-            const params = {
-                Name: body.AppKey,
-                Platform: body.Platform,
-                Attributes: {
-                    'PlatformCredential': body.Credential,// .p8
-                    'PlatformPrincipal': body.SigningKeyID,
-                    'ApplePlatformTeamID': body.TeamID,
-                    'ApplePlatformBundleID': body.AppKey
-                }
-            };
-            return this.sns.createPlatformApplication(params).promise();
+        const params = {
+            Name: body.AppKey,
+            Platform: body.Platform,
+            Attributes: {
+                'PlatformCredential': body.Credential,// .p8
+                'PlatformPrincipal': body.SigningKeyID,
+                'ApplePlatformTeamID': body.TeamID,
+                'ApplePlatformBundleID': body.AppKey
+            }
+        };
+        return this.sns.createPlatformApplication(params).promise();
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -73,9 +73,29 @@ class PlatformAndroid extends PlatformBase {
             }
         };
         return this.sns.createPlatformApplication(params).promise();
-}
+    }
 
-    publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
+    createPayload(data, numberOfUnreadNotifications) {
+        return {
+            "default": `${data.Subject}`,
+            "GCM": {
+                "notification": {
+                    "body": `${data.Message}`,
+                    "title": `${data.Subject}`
+                }
+            }
+        }
+    }
+
+    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
+        const payload = this.createPayload(pushNotification, numberOfUnreadNotifications);
+        const params = {
+            Message: JSON.stringify(payload),
+            MessageStructure: 'json',
+            TargetArn: pushNotification.Endpoint
+        };
+        console.log("@@@params: ", params);
+        return this.sns.publish(params).promise();
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -157,7 +177,7 @@ class NotificationsService {
     }
 
     async getNumberOfUnreadNotifications() {
-        let notifications = await  this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'`});
+        let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'` });
         return notifications.length;
     }
 
@@ -229,7 +249,7 @@ class NotificationsService {
                 //Protection against change of properties. The only property that can change is Read
                 let currentNotification;
                 let notifications = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter({ where: `Key='${notification}'` }).toArray();
-                if(notifications != undefined && notifications.length > 0) {
+                if (notifications != undefined && notifications.length > 0) {
                     currentNotification = notifications[0]
                 }
                 if (currentNotification != undefined) {
@@ -246,7 +266,7 @@ class NotificationsService {
                 }
             }
             return readNotifications;
-        }    
+        }
         else {
             const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
@@ -271,7 +291,7 @@ class NotificationsService {
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX";
+            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS_SANDBOX";
             const awsID = process.env.AccountID;
             console.log("@@@awsID:", awsID);
             const appARN = `arn:aws:sns:us-west-2:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
