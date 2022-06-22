@@ -8,7 +8,7 @@ export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface Notification {
-    Title: string,
+    Title?: string,
     Body?: string,
     Key?: string,
     Hidden?: boolean,
@@ -101,24 +101,6 @@ export const notificationSchema: Schema = {
             }
         ],
         additionalProperties: false
-}
-
-export const readStatusSchema: Schema = {
-    $id: "/MarkAsRead",
-    type: "object",
-    properties: {
-        Keys: {
-            type: "array",
-            items: {
-                "type": "string"
-              },
-            required: true
-        },
-        Read: {
-            type: "boolean",
-            required: true
-        }
-    }
 }
 
 export const userDeviceSchema: Schema = {

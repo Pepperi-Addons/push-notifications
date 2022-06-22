@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, readStatusSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -194,10 +194,11 @@ class NotificationsService {
         // Schema validation
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
-            if (body.Key != undefined && body.Hidden != undefined) {
+            if (body.Key != undefined && (body.Hidden != undefined || body.Read != undefined)) {
                 let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
                 if (notifications[0] != undefined) {
                     notifications[0].Hidden = body.Hidden
+                    notifications[0].Read = body.Read
                     return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
                 }
                 else {
@@ -251,35 +252,15 @@ class NotificationsService {
     }
 
     async updateNotificationReadStatus(body) {
-        let readNotifications: AddonData[] = [];
-        let validation = this.validateSchema(body, readStatusSchema);
-        if (validation.valid) {
-            for (const notification of body.Keys) {
-                //Protection against change of properties. The only property that can change is Read
-                let currentNotification;
-                let notifications = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter({ where: `Key='${notification}'` }).toArray();
-                if (notifications != undefined && notifications.length > 0) {
-                    currentNotification = notifications[0]
-                }
-                if (currentNotification != undefined) {
-                    if (this.currentUserUUID === currentNotification.UserUUID) {
-                        currentNotification.Read = body.Read;
-                        let ans = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(currentNotification);
-                        readNotifications.push(ans);
-                    }
-                    else {
-                        let error: any = new Error(`The UserUUID is different from the notification UserUUID`);
-                        error.code = 403;
-                        throw error;
-                    }
-                }
+        let notifications: Notification[] = [];
+        for (let key of body.Keys) {
+            let notification: Notification = {
+                "Key": key,
+                "Read": body.Read
             }
-            return readNotifications;
+            notifications.push(notification);
         }
-        else {
-            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
-            throw new Error(errors.join("\n"));
-        }
+        return await this.uploadFileAndImport(notifications);
     }
 
     //MARK: UserDevice handling
@@ -502,36 +483,38 @@ class NotificationsService {
     //DIMX 
     async importNotificationsSource(body) {
         for (const dimxObj of body.DIMXObjects) {
-            // Upsert not support. only create.
+            //upsert notifications
             if (dimxObj.Object.Key != undefined) {
-                dimxObj.Status = Error;
-                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: Key is read-only property`
+                console.log("@@@upsert notification", dimxObj.Object);
             }
-            dimxObj.Object.Key = uuid();
-            dimxObj.Object.CreatorUUID = this.currentUserUUID;
+            // create notifications
+            else {
+                dimxObj.Object.Key = uuid();
+                dimxObj.Object.CreatorUUID = this.currentUserUUID;
 
-            // USERUUID and UserEmail are mutually exclusive
-            let isUserEmailProvided = dimxObj.Object.UserEmail !== undefined;
-            let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
-            // consider !== as XOR
-            if (isUserEmailProvided !== isUserUUIDProvided) {
-                // find user uuid by Email
-                if (dimxObj.Object.UserEmail !== undefined) {
-                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
-                    // The UserEmail is not compatible with any UserUUID
-                    if (userUUID !== undefined) {
-                        delete dimxObj.Object.UserEmail;
-                        dimxObj.Object.UserUUID = userUUID;
-                    }
-                    else {
-                        dimxObj.Status = Error;
-                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} faild with the following error: The given Email is not compatible with any UserUUID`
+                // USERUUID and UserEmail are mutually exclusive
+                let isUserEmailProvided = dimxObj.Object.UserEmail !== undefined;
+                let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
+                // consider !== as XOR
+                if (isUserEmailProvided !== isUserUUIDProvided) {
+                    // find user uuid by Email
+                    if (dimxObj.Object.UserEmail !== undefined) {
+                        const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
+                        // The UserEmail is not compatible with any UserUUID
+                        if (userUUID !== undefined) {
+                            delete dimxObj.Object.UserEmail;
+                            dimxObj.Object.UserUUID = userUUID;
+                        }
+                        else {
+                            dimxObj.Status = Error;
+                            dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} faild with the following error: The given Email is not compatible with any UserUUID`
+                        }
                     }
                 }
-            }
-            else {
-                dimxObj.Status = Error;
-                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
+                else {
+                    dimxObj.Status = Error;
+                    dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
+                }
             }
         }
         console.log("@@@@import end body: ", body);
@@ -554,7 +537,7 @@ class NotificationsService {
                         "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
-                        "Read": false
+                        "Read": body.Read
                     }
                     notifications.push(notification);
                 }
