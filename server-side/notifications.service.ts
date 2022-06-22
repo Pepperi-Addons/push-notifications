@@ -191,31 +191,40 @@ class NotificationsService {
     }
 
     async upsertNotification(body) {
-        //Check that the user did not send a key
-        if (body.Key != undefined) {
-            throw new Error(`Key is read-only property`);
-        }
         // Schema validation
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
-            // replace mail by UserUUID
-            if (body.UserEmail !== undefined) {
-                const userUUID = await this.getUserUUIDByEmail(body.UserEmail)
-                if (userUUID != undefined) {
-                    body.UserUUID = userUUID;
-                    delete body.UserEmail;
+            if (body.Key != undefined && body.Hidden != undefined) {
+                let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
+                if (notifications[0] != undefined) {
+                    notifications[0].Hidden = body.Hidden
+                    return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
                 }
                 else {
-                    throw new Error(`User with Email: ${body.UserEmail} does not exist`);
+                    throw new Error(`Could not find a notification matching this Key`);
                 }
+
             }
-            // Check that the UserUUID exists in the users list
-            try {
-                await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
-                return this.createNotification(body);
-            }
-            catch {
-                throw new Error(`Could not find a user matching this UserUUID`);
+            else {
+                // replace mail by UserUUID
+                if (body.UserEmail !== undefined) {
+                    const userUUID = await this.getUserUUIDByEmail(body.UserEmail)
+                    if (userUUID != undefined) {
+                        body.UserUUID = userUUID;
+                        delete body.UserEmail;
+                    }
+                    else {
+                        throw new Error(`User with Email: ${body.UserEmail} does not exist`);
+                    }
+                }
+                // Check that the UserUUID exists in the users list
+                try {
+                    await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
+                    return this.createNotification(body);
+                }
+                catch {
+                    throw new Error(`Could not find a user matching this UserUUID`);
+                }
             }
         }
         else {
