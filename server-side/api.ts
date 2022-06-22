@@ -63,7 +63,7 @@ export async function notification_inserted(client: Client, request: Request) {
 }
 
 // AWS endpoints
-export async function create_platform_application(client: Client, request: Request) {
+export async function platforms(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
         return service.createPlatformApplication(request.body);
