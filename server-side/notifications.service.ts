@@ -78,12 +78,15 @@ class PlatformAndroid extends PlatformBase {
     createPayload(data, numberOfUnreadNotifications) {
         return {
             "default": `${data.Subject}`,
-            "GCM": {
-                "notification": {
-                    "body": `${data.Message}`,
-                    "title": `${data.Subject}`
+            "GCM": JSON.stringify(
+                {
+                    "data": {
+                        "body": `${data.Message}`,
+                        "title": `${data.Subject}`,
+                        "badge": `${numberOfUnreadNotifications}`
+                    }
                 }
-            }
+            )
         }
     }
 
