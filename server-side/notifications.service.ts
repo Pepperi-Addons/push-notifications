@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -21,7 +21,7 @@ abstract class PlatformBase {
     abstract publish(pushNotification: any, numberOfUnreadNotifications: Number): any;
 }
 class PlatformIOS extends PlatformBase {
-    createPlatformApplication(body) {
+    async createPlatformApplication(body) {
         const params = {
             Name: body.AppKey,
             Platform: "APNS",
@@ -32,7 +32,7 @@ class PlatformIOS extends PlatformBase {
                 'ApplePlatformBundleID': body.AppKey
             }
         };
-        return this.sns.createPlatformApplication(params).promise();
+        return await this.sns.createPlatformApplication(params).promise();
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -64,7 +64,7 @@ class PlatformIOS extends PlatformBase {
     }
 }
 class PlatformAndroid extends PlatformBase {
-    createPlatformApplication(body) {
+    async createPlatformApplication(body) {
         const params = {
             Name: body.AppKey,
             Platform: "GCM",
@@ -72,7 +72,7 @@ class PlatformAndroid extends PlatformBase {
                 'PlatformCredential': body.Credential,// API Key
             }
         };
-        return this.sns.createPlatformApplication(params).promise();
+        return await this.sns.createPlatformApplication(params).promise();
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -136,7 +136,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-
+        
         this.sns = new AWS.SNS();
     }
 
@@ -168,6 +168,21 @@ class NotificationsService {
             }
         });
     }
+
+        // subscribe to remove platform application from SNS when the expiration date arrives 
+        createPNSSubscriptionForPlatformApplicationRemoval() {
+            return this.papiClient.notification.subscriptions.upsert({
+                AddonUUID: this.addonUUID,
+                AddonRelativeURL: "/api/platform_removed",
+                Type: "data",
+                Name: "applicationRemovalSubscription",
+                FilterPolicy: {
+                    Action: ['remove'],
+                    Resource: [PLATFORM_APPLICATION_TABLE_NAME],
+                    AddonUUID: [this.addonUUID]
+                }
+            });
+        }
 
     async getUserUUIDByEmail(userEmail) {
         const users = await this.papiClient.users.find();
@@ -284,10 +299,12 @@ class NotificationsService {
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS_SANDBOX";
+            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
             const awsID = process.env.AccountID;
+            const region = process.env.AWS_REGION
             console.log("@@@awsID:", awsID);
-            const appARN = `arn:aws:sns:us-west-2:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
+            console.log("@@@region:", region);
+            const appARN = `arn:aws:sns:${region}:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
             let endpointARN = await this.createApplicationEndpoint({
                 AddonRelativeURL: body.AddonRelativeURL,
                 PlatformType: body.PlatformType,
@@ -389,18 +406,60 @@ class NotificationsService {
         return result;
     }
 
+    async platformApplication(body) {
+        if (body.Key != undefined) {
+            return await this.updatePlatformApplication(body);
+        }
+        else {
+            return await this.createPlatformApplication(body);
+        }
+    }
+
+    async updatePlatformApplication(body) {
+        let application = await this.getPlatformApplication({ where: `Key='${body.Key}'` });
+        if (application.length > 0 ){
+            application[0].Hidden = body.Hidden
+            return await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).upsert(application[0]);
+        }
+        else {
+            throw new Error("platform with the given key does not exist");
+        }
+    }
+
+    async getPlatformApplication(query) {
+        let applications = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).find(query);
+        applications = applications.map(app => {
+            delete app.ApplicationARN
+            return app
+        });
+        return applications;
+    }
+
     // MARK: AWS endpoints
     // Create PlatformApplication in order to register users mobile endpoints .
-    createPlatformApplication(body) {
+    async createPlatformApplication(body) {
         // Schema validation
         let validation = this.validateSchema(body, platformApplicationsSchema);
         if (validation.valid) {
+            // dist can have only one iOS & one Android platform
+            let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
+            if (applications.length > 0) {
+                throw new Error("Only one iOS and one Android platforms are allowed");
+            }
+
             let basePlatform: PlatformBase;
 
             switch (body.Type) {
                 case "iOS":
-                    basePlatform = new PlatformIOS(this.papiClient, this.sns);
-                    break;
+                    let validation = this.validateSchema(body, platformApplicationsIOSSchema);
+                    if (validation.valid) {
+                        basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                        break;
+                    }
+                    else {
+                        const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+                        throw new Error(errors.join("\n"));
+                    }
                 case "Android":
                     basePlatform = new PlatformAndroid(this.papiClient, this.sns);
                     break;
@@ -408,12 +467,23 @@ class NotificationsService {
                     basePlatform = new PlatformAddon(this.papiClient, this.sns);
                     break;
                 default:
-                    throw new Error(`PlatformType not supported ${body.PlatformType}}`);
+                    throw new Error(`Type not supported ${body.PlatformType}}`);
             }
-            return basePlatform.createPlatformApplication(body)
+
+            let application = await basePlatform.createPlatformApplication(body)
+
+            if (application.PlatformApplicationArn != undefined) {
+                return await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).upsert({
+                    "ApplicationARN": application.PlatformApplicationArn,
+                    "Type": body.Type,
+                    "Key": `${body.Type}_${body.AppKey}`
+                });
+            }
+            else {
+                console.log("application", application)
+            }
         }
     }
-
 
     /*
     It will register mobile to platform application so that 
@@ -449,6 +519,21 @@ class NotificationsService {
         }
     }
 
+    async deleteAllPlatformsApplication() {
+        let platforms = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).iter().toArray();
+
+        for (let platform of platforms) {
+            await this.deleteApplication(platform.ApplicationARN);
+        }
+    }
+
+    async deleteApplication(platformArn) {
+        const params = {
+            PlatformApplicationArn: platformArn
+        };
+        return await this.sns.deletePlatformApplication(params).promise();
+    }
+
     // publish to particular topic ARN or to endpoint ARN
     async publish(pushNotification) {
         let basePlatform: PlatformBase;
@@ -476,6 +561,17 @@ class NotificationsService {
         for (const object of body.Message.ModifiedObjects) {
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.EndpointARN);
+            }
+            else {
+                console.log("Device endpoint does not exist");
+            }
+        }
+    }
+
+    async removePlatformApplication(body) {
+        for (const object of body.Message.ModifiedObjects) {
+            if (object.EndpointARN != undefined) {
+                await this.deleteApplicationEndpoint(object.ApplicationARN);
             }
             else {
                 console.log("Device endpoint does not exist");

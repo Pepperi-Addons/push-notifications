@@ -1,9 +1,10 @@
 import { Schema } from 'jsonschema';
-import {AddonData } from '@pepperi-addons/papi-sdk'
+import { AddonData } from '@pepperi-addons/papi-sdk'
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
+export const PLATFORM_APPLICATION_TABLE_NAME = 'PlatformApplication';
 export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -100,7 +101,7 @@ export const notificationSchema: Schema = {
                 }
             }
         ],
-        additionalProperties: false
+    additionalProperties: false
 }
 
 export const userDeviceSchema: Schema = {
@@ -151,22 +152,33 @@ export const platformApplicationsSchema: Schema = {
             type: "string",
             required: true
         },
-        AppleSigningKeyID: {
+        AppKey: {
             type: "string",
-            required: false
-        },
-        AppleTeamID: {
-            type: "string",
-            required: false
-        },
-        BundleID: {
-            type: "string",
-            required: false
+            required: true
         },
         Type: {
             type: "string",
             required: true,
             enum: ["iOS", "Android", "Addon"]
+        }
+    }
+}
+
+export const platformApplicationsIOSSchema: Schema = {
+    $id: "/PlatformApplication",
+    type: "object",
+    properties: {
+        AppleSigningKeyID: {
+            type: "string",
+            required: true
+        },
+        AppleTeamID: {
+            type: "string",
+            required: true
+        },
+        BundleID: {
+            type: "string",
+            required: true
         }
     }
 }

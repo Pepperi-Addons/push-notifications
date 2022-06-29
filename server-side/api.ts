@@ -54,6 +54,11 @@ export async function user_device_removed(client: Client, request: Request) {
     await service.removeUserDeviceEndpoint(request.body);
 }
 
+export async function platform_removed(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    await service.removePlatformApplication(request.body);
+}
+
 // called when user create a notification.
 // called by PNS subscription
 export async function notification_inserted(client: Client, request: Request) {
@@ -66,7 +71,20 @@ export async function notification_inserted(client: Client, request: Request) {
 export async function platforms(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-        return service.createPlatformApplication(request.body);
+        return service.platformApplication(request.body);
+    }
+    if (request.method === 'GET') {
+        return service.getPlatformApplication(request.query);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function delete_all_platforms(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method === 'POST') {
+        await service.deleteAllPlatformsApplication();
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
