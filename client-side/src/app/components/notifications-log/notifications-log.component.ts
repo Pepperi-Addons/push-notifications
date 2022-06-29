@@ -4,6 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationsLogService } from '../../services/notifications-log.services';
+import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
 
 @Component({
   selector: 'app-notifications-log',
@@ -138,8 +139,15 @@ export class NotificationsLogComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Delete"),
           handler: async (objs) => {
-            let ans = this.notificationsLogService.deleteNotificationsLog(objs.rows);
+            await this.notificationsLogService.deleteNotificationsLog(objs.rows);
             this.dataSource = this.getDataSource();
+
+            let dialogData = {
+              "Message": this.translate.instant("Notifications_Log_Deleted_Successfuly"),
+              "Title": "",
+              "ButtonText": this.translate.instant("OK")
+            }
+             this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {});
           }
       });
       }
