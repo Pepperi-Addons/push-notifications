@@ -40,13 +40,10 @@ export interface UserDevice {
     ExpirationDateTime: Date
 }
 
-export const notificationSchema: Schema = {
+export const notificationOnCreateSchema: Schema = {
     $id: "/Notification",
     type: "object",
     properties: {
-        Key: {
-            type: "string"
-        },
         Title: {
             type: "string",
             maxLength: 40,
@@ -55,20 +52,6 @@ export const notificationSchema: Schema = {
         Body: {
             type: "string",
             maxLength: 200,
-        },
-        CreatorUserUUID: {
-            type: "string"
-        },
-        Hidden: {
-            type: "boolean"
-        },
-        CreationDateTime: {
-            type: "string",
-            format: "date-time",
-        },
-        ModificationDateTime: {
-            type: "string",
-            format: "date-time",
         },
         UserUUID: {
             type: "string"
@@ -101,6 +84,25 @@ export const notificationSchema: Schema = {
                 }
             }
         ],
+    additionalProperties: false
+}
+
+export const notificationOnUpdateSchema: Schema = {
+    $id: "/Notification",
+    type: "object",
+    properties: {
+        Key: {
+            type: "string",
+            required: true
+        },
+        Hidden: {
+            type: "boolean"
+        },
+        Read: {
+            type: "boolean"
+        }
+
+    },
     additionalProperties: false
 }
 

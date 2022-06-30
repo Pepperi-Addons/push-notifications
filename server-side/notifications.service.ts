@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -136,7 +136,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        
+
         this.sns = new AWS.SNS();
     }
 
@@ -169,26 +169,32 @@ class NotificationsService {
         });
     }
 
-        // subscribe to remove platform application from SNS when the expiration date arrives 
-        createPNSSubscriptionForPlatformApplicationRemoval() {
-            return this.papiClient.notification.subscriptions.upsert({
-                AddonUUID: this.addonUUID,
-                AddonRelativeURL: "/api/platform_removed",
-                Type: "data",
-                Name: "applicationRemovalSubscription",
-                FilterPolicy: {
-                    Action: ['remove'],
-                    Resource: [PLATFORM_APPLICATION_TABLE_NAME],
-                    AddonUUID: [this.addonUUID]
-                }
-            });
-        }
+    // subscribe to remove platform application from SNS when the expiration date arrives 
+    createPNSSubscriptionForPlatformApplicationRemoval() {
+        return this.papiClient.notification.subscriptions.upsert({
+            AddonUUID: this.addonUUID,
+            AddonRelativeURL: "/api/platform_removed",
+            Type: "data",
+            Name: "applicationRemovalSubscription",
+            FilterPolicy: {
+                Action: ['remove'],
+                Resource: [PLATFORM_APPLICATION_TABLE_NAME],
+                AddonUUID: [this.addonUUID]
+            }
+        });
+    }
 
     async getUserUUIDByEmail(userEmail) {
         const users = await this.papiClient.users.find();
         let userUUID = users.find(u => u.Email == userEmail)?.UUID
-        return userUUID;
+        if (userUUID != undefined) {
+            return userUUID;
+        }
+        else {
+            throw new Error(`User with Email: ${userEmail} does not exist`);
+        }
     }
+
     getExpirationDateTime(days: number) {
         const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         return new Date(Date.now() + daysToAdd)
@@ -209,47 +215,41 @@ class NotificationsService {
     }
 
     async upsertNotification(body) {
-        // Schema validation
-        let validation = this.validateSchema(body, notificationSchema);
-        if (validation.valid) {
-            if (body.Key != undefined && (body.Hidden != undefined || body.Read != undefined)) {
-                let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
-                if (notifications[0] != undefined) {
-                    notifications[0].Hidden = body.Hidden
-                    notifications[0].Read = body.Read
-                    return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
-                }
-                else {
-                    throw new Error(`Could not find a notification matching this Key`);
-                }
+        if (body.Key != undefined) {
+            return await this.updateNotification(body);
+        }
+        else {
+            return this.createNotification(body);
+        }
+    }
 
+    // create a single notification
+    async createNotification(body) {
+        let validation = this.validateSchema(body, notificationOnCreateSchema);
+        if (validation.valid) {
+            // replace Email by UserUUID
+            if (body.UserEmail !== undefined) {
+                body.UserUUID = await this.getUserUUIDByEmail(body.UserEmail);
+                delete body.UserEmail;
             }
-            else {
-                // replace mail by UserUUID
-                if (body.UserEmail !== undefined) {
-                    const userUUID = await this.getUserUUIDByEmail(body.UserEmail)
-                    if (userUUID != undefined) {
-                        body.UserUUID = userUUID;
-                        delete body.UserEmail;
-                    }
-                    else {
-                        throw new Error(`User with Email: ${body.UserEmail} does not exist`);
-                    }
-                }
-                // Check that the UserUUID exists in the users list
-                try {
-                    await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
-                    return this.createNotification(body);
-                }
-                catch {
-                    throw new Error(`Could not find a user matching this UserUUID`);
-                }
+            // Check that the UserUUID exists in the users list
+            try {
+                await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
             }
+            catch {
+                throw new Error(`Could not find a user matching this UserUUID`);
+            }
+            const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
+            body.Key = uuid();
+            body.CreatorUUID = this.currentUserUUID;
+            body.Read = false;
+            body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
+            return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
         }
         else {
             const errors = validation.errors.map(error => {
                 if (error.name === 'oneOf') {
-                    return error.message = "Excactly one of the following properties is requierd: " + error.argument;
+                    return error.message = "Exactly one of the following properties is required: " + error.argument;
                 }
                 else {
                     return error.stack.replace("instance.", "");
@@ -259,14 +259,22 @@ class NotificationsService {
         }
     }
 
-    // create a single notification after all conditions have been checked
-    async createNotification(body) {
-        const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
-        body.Key = uuid();
-        body.CreatorUUID = this.currentUserUUID;
-        body.Read = false;
-        body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
-        return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
+    async updateNotification(body) {
+        let validation = this.validateSchema(body, notificationOnUpdateSchema);
+        if (validation.valid) {
+            let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
+            if (notifications[0] != undefined) {
+                notifications[0].Hidden = body.Hidden
+                notifications[0].Read = body.Read
+                return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
+            }
+            else {
+                throw new Error(`Could not find a notification matching this Key`);
+            }
+        }
+        else {
+            this.throwErrorFromSchema(validation);
+        }
     }
 
     async updateNotificationReadStatus(body) {
@@ -321,8 +329,7 @@ class NotificationsService {
             return await this.upsertUserDeviceResource(body);
         }
         else {
-            const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
-            throw new Error(errors.join("\n"));
+            this.throwErrorFromSchema(validation);
         }
     }
 
@@ -406,6 +413,11 @@ class NotificationsService {
         return result;
     }
 
+    throwErrorFromSchema(validation) {
+        const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
+        throw new Error(errors.join("\n"));
+    }
+
     async platformApplication(body) {
         if (body.Key != undefined) {
             return await this.updatePlatformApplication(body);
@@ -417,7 +429,7 @@ class NotificationsService {
 
     async updatePlatformApplication(body) {
         let application = await this.getPlatformApplication({ where: `Key='${body.Key}'` });
-        if (application.length > 0 ){
+        if (application.length > 0) {
             application[0].Hidden = body.Hidden
             return await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).upsert(application[0]);
         }
@@ -444,6 +456,7 @@ class NotificationsService {
             // dist can have only one iOS & one Android platform
             let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
             if (applications.length > 0) {
+                let error = new Error("Only one iOS and one Android platforms are allowed");
                 throw new Error("Only one iOS and one Android platforms are allowed");
             }
 
@@ -457,8 +470,7 @@ class NotificationsService {
                         break;
                     }
                     else {
-                        const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
-                        throw new Error(errors.join("\n"));
+                        this.throwErrorFromSchema(validation);
                     }
                 case "Android":
                     basePlatform = new PlatformAndroid(this.papiClient, this.sns);
@@ -482,6 +494,9 @@ class NotificationsService {
             else {
                 console.log("application", application)
             }
+        }
+        else {
+            this.throwErrorFromSchema(validation);
         }
     }
 
@@ -636,7 +651,7 @@ class NotificationsService {
                         "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
-                        "Read": body.Read
+                        "Read": body.Read ?? false
                     }
                     notifications.push(notification);
                 }
