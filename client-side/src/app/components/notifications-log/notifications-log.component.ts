@@ -164,7 +164,8 @@ export class NotificationsLogComponent implements OnInit {
       queryParams: {
         "UserEmailList": notification.Fields[2]?.FormattedValue,
         "Title": notification.Fields[0]?.FormattedValue,
-        "Body": notification.Fields[1]?.FormattedValue
+        "Body": notification.Fields[1]?.FormattedValue,
+        "FromNotificationsLog": true
       }
     })
   }
