@@ -10,7 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
@@ -27,15 +27,17 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsResourceRes = await createNotificationsResource(papiClient)
     const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-    const NotificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
+    const notificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
+    const platformApplicationResourceRes = await createPlatformApplicationResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
+    await service.createPNSSubscriptionForPlatformApplicationRemoval();
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && NotificationsVariablesRes.success && notificationsLogViewRes.success,
-        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, notificationsVarsRes:  ${NotificationsVariablesRes.errorMessage}`
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success,
+        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage}, platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}`
     };
 }
 
@@ -49,6 +51,7 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
     });
     // need authorization to perform SNS actions that only the push-notifications lambda has
     await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
+    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_platforms').post();
     return { success: true, resultObject: {} }
 }
 
@@ -125,6 +128,37 @@ async function createNotificationsResource(papiClient: PapiClient) {
         }
     }
 }
+
+async function createPlatformApplicationResource(papiClient:PapiClient) {
+    var notificationsScheme: AddonDataScheme = {
+        Name: PLATFORM_APPLICATION_TABLE_NAME,
+        Type: 'meta_data',
+        Fields: {
+            ApplicationARN: {
+                Type: 'String'
+            },
+            Type: {
+                Type: 'String'
+            }
+        }
+    };
+
+    try {
+        await papiClient.addons.data.schemes.post(notificationsScheme);
+
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+
 //save a list of notifications sent by users
 async function createNotificationsLogViewResource(papiClient: PapiClient) {
     var notificationsScheme: AddonDataScheme = {

@@ -3,8 +3,6 @@
 @use '~@pepperi-addons/ngx-lib/src/core/style/abstracts/functions';
 
 .notifications-menu {
-    min-width: 400px;
-    
     .notifications-header {
         position: sticky;
         top: 0px;
