@@ -165,19 +165,15 @@ export const platformApplicationsSchema: Schema = {
     $id: "/PlatformApplication",
     type: "object",
     properties: {
-        Platform: {
-            type: "string",
-            required: true
-        },
         Credential: {
             type: "string",
             required: true
         },
-        SigningKeyID: {
+        AppleSigningKeyID: {
             type: "string",
             required: false
         },
-        TeamID: {
+        AppleTeamID: {
             type: "string",
             required: false
         },
@@ -185,7 +181,7 @@ export const platformApplicationsSchema: Schema = {
             type: "string",
             required: false
         },
-        PlatformType: {
+        Type: {
             type: "string",
             required: true,
             enum: ["iOS", "Android", "Addon"]

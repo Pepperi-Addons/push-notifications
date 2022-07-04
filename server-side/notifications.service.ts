@@ -24,11 +24,11 @@ class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
         const params = {
             Name: body.AppKey,
-            Platform: body.Platform,
+            Platform: "APNS",
             Attributes: {
                 'PlatformCredential': body.Credential,// .p8
-                'PlatformPrincipal': body.SigningKeyID,
-                'ApplePlatformTeamID': body.TeamID,
+                'PlatformPrincipal': body.AppleSigningKeyID,
+                'ApplePlatformTeamID': body.AppleTeamID,
                 'ApplePlatformBundleID': body.AppKey
             }
         };
@@ -67,7 +67,7 @@ class PlatformAndroid extends PlatformBase {
     createPlatformApplication(body) {
         const params = {
             Name: body.Name,
-            Platform: body.Platform,
+            Platform: "GCM",
             Attributes: {
                 'PlatformCredential': body.Credential,// API Key
             }
@@ -404,7 +404,7 @@ class NotificationsService {
         if (validation.valid) {
             let basePlatform: PlatformBase;
 
-            switch (body.PlatformType) {
+            switch (body.Type) {
                 case "iOS":
                     basePlatform = new PlatformIOS(this.papiClient, this.sns);
                     break;
