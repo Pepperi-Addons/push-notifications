@@ -22,17 +22,17 @@ abstract class PlatformBase {
 }
 class PlatformIOS extends PlatformBase {
     createPlatformApplication(body) {
-            const params = {
-                Name: body.AppKey,
-                Platform: body.Platform,
-                Attributes: {
-                    'PlatformCredential': body.Credential,// .p8
-                    'PlatformPrincipal': body.SigningKeyID,
-                    'ApplePlatformTeamID': body.TeamID,
-                    'ApplePlatformBundleID': body.AppKey
-                }
-            };
-            return this.sns.createPlatformApplication(params).promise();
+        const params = {
+            Name: body.AppKey,
+            Platform: body.Platform,
+            Attributes: {
+                'PlatformCredential': body.Credential,// .p8
+                'PlatformPrincipal': body.SigningKeyID,
+                'ApplePlatformTeamID': body.TeamID,
+                'ApplePlatformBundleID': body.AppKey
+            }
+        };
+        return this.sns.createPlatformApplication(params).promise();
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -73,9 +73,29 @@ class PlatformAndroid extends PlatformBase {
             }
         };
         return this.sns.createPlatformApplication(params).promise();
-}
+    }
 
-    publish(pushNotification: any, numberOfUnreadNotifications:Number): any {
+    createPayload(data, numberOfUnreadNotifications) {
+        return {
+            "default": `${data.Subject}`,
+            "GCM": {
+                "notification": {
+                    "body": `${data.Message}`,
+                    "title": `${data.Subject}`
+                }
+            }
+        }
+    }
+
+    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
+        const payload = this.createPayload(pushNotification, numberOfUnreadNotifications);
+        const params = {
+            Message: JSON.stringify(payload),
+            MessageStructure: 'json',
+            TargetArn: pushNotification.Endpoint
+        };
+        console.log("@@@params: ", params);
+        return this.sns.publish(params).promise();
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -157,7 +177,7 @@ class NotificationsService {
     }
 
     async getNumberOfUnreadNotifications() {
-        let notifications = await  this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'`});
+        let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'` });
         return notifications.length;
     }
 
@@ -179,14 +199,14 @@ class NotificationsService {
         let validation = this.validateSchema(body, notificationSchema);
         if (validation.valid) {
             // replace mail by UserUUID
-            if (body.Email !== undefined) {
-                const userUUID = await this.getUserUUIDByEmail(body.Email)
+            if (body.UserEmail !== undefined) {
+                const userUUID = await this.getUserUUIDByEmail(body.UserEmail)
                 if (userUUID != undefined) {
                     body.UserUUID = userUUID;
-                    delete body.Email;
+                    delete body.UserEmail;
                 }
                 else {
-                    throw new Error(`User with Email: ${body.Email} does not exist`);
+                    throw new Error(`User with Email: ${body.UserEmail} does not exist`);
                 }
             }
             // Check that the UserUUID exists in the users list
@@ -229,7 +249,7 @@ class NotificationsService {
                 //Protection against change of properties. The only property that can change is Read
                 let currentNotification;
                 let notifications = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter({ where: `Key='${notification}'` }).toArray();
-                if(notifications != undefined && notifications.length > 0) {
+                if (notifications != undefined && notifications.length > 0) {
                     currentNotification = notifications[0]
                 }
                 if (currentNotification != undefined) {
@@ -246,7 +266,7 @@ class NotificationsService {
                 }
             }
             return readNotifications;
-        }    
+        }
         else {
             const errors = validation.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
@@ -271,7 +291,7 @@ class NotificationsService {
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const pushNotificationsPlatform = body.PlatformType == "Android"? "GCM" : "APNS_SANDBOX";
+            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS_SANDBOX";
             const awsID = process.env.AccountID;
             console.log("@@@awsID:", awsID);
             const appARN = `arn:aws:sns:us-west-2:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
@@ -481,28 +501,28 @@ class NotificationsService {
             dimxObj.Object.Key = uuid();
             dimxObj.Object.CreatorUUID = this.currentUserUUID;
 
-            // USERUUID and Email are mutually exclusive
-            let isUserEmailProvided = dimxObj.Object.Email !== undefined;
+            // USERUUID and UserEmail are mutually exclusive
+            let isUserEmailProvided = dimxObj.Object.UserEmail !== undefined;
             let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
             // consider !== as XOR
             if (isUserEmailProvided !== isUserUUIDProvided) {
                 // find user uuid by Email
-                if (dimxObj.Object.Email !== undefined) {
-                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.Email)
-                    // The Email is not compatible with any UserUUID
+                if (dimxObj.Object.UserEmail !== undefined) {
+                    const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
+                    // The UserEmail is not compatible with any UserUUID
                     if (userUUID !== undefined) {
-                        delete dimxObj.Object.Email;
+                        delete dimxObj.Object.UserEmail;
                         dimxObj.Object.UserUUID = userUUID;
                     }
                     else {
                         dimxObj.Status = Error;
-                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.Email)} faild with the following error: The given Email is not compatible with any UserUUID`
+                        dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} faild with the following error: The given Email is not compatible with any UserUUID`
                     }
                 }
             }
             else {
                 dimxObj.Status = Error;
-                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and Email are mutually exclusive`
+                dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
             }
         }
         console.log("@@@@import end body: ", body);
@@ -522,7 +542,7 @@ class NotificationsService {
                 let notifications: Notification[] = [];
                 for (let email of body.UserEmailList) {
                     let notification: Notification = {
-                        "Email": email,
+                        "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
                         "Read": false
@@ -745,8 +765,8 @@ class NotificationsService {
                 }
             );
         })
-        await Promise.all(ansArray);
-        return ansArray;
+        const ans = await Promise.all(ansArray);
+        return ans;
     }
 }
 

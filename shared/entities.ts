@@ -13,7 +13,7 @@ export interface Notification {
     Key?: string,
     Hidden?: boolean,
     UserUUID?: string,
-    Email?: string,
+    UserEmail?: string,
     CreatorUserUUID?: string,
     Read: boolean
 }
@@ -72,11 +72,11 @@ export const notificationSchema: Schema = {
         UserUUID: {
             type: "string"
         },
-        Email: {
+        UserEmail: {
             type: "string"
         }
     },
-    // Email and UserUUID are mutually exclusive
+    // UserEmail and UserUUID are mutually exclusive
     oneOf:
         [
             {
@@ -90,10 +90,10 @@ export const notificationSchema: Schema = {
                 }
             },
             {
-                $id: "Email",
+                $id: "UserEmail",
                 type: "object",
                 properties: {
-                    Email: {
+                    UserEmail: {
                         type: "string",
                         required: true
                     }
