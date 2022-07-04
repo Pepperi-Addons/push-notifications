@@ -16,11 +16,6 @@
     "Editors": [
       {
         "ParentPackageName": "Push Notifications",
-        "PackageName": "message_creator",
-        "Description": "Message Creator"
-      },
-      {
-        "ParentPackageName": "Push Notifications",
         "PackageName": "device_managment",
         "Description": "Device Managment"
       },

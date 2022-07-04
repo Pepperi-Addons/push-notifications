@@ -17,6 +17,10 @@ const routes: Routes = [
         path: `settings/:addon_uuid`,
         children: [
             {
+                path: 'message_creator',
+                component: MessageCreatorComponent
+            },
+            {
                 path: 'device_managment',
                 component: DeviceManagmentComponent
             },

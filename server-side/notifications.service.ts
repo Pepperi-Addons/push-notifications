@@ -232,12 +232,14 @@ class NotificationsService {
                 body.UserUUID = await this.getUserUUIDByEmail(body.UserEmail);
                 delete body.UserEmail;
             }
-            // Check that the UserUUID exists in the users list
-            try {
-                await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
-            }
-            catch {
-                throw new Error(`Could not find a user matching this UserUUID`);
+            else {
+                // Check that the UserUUID the client provided exists in the users list
+                try {
+                    await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
+                }
+                catch {
+                    throw new Error(`Could not find a user matching this UserUUID`);
+                }
             }
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
@@ -263,10 +265,11 @@ class NotificationsService {
         let validation = this.validateSchema(body, notificationOnUpdateSchema);
         if (validation.valid) {
             let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
-            if (notifications[0] != undefined) {
-                notifications[0].Hidden = body.Hidden
-                notifications[0].Read = body.Read
-                return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
+            let notification = notifications.length > 0 ? notifications[0] : undefined
+            if (notification) {
+                notification.Hidden = body.Hidden
+                notification.Read = body.Read
+                return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notification);
             }
             else {
                 throw new Error(`Could not find a notification matching this Key`);
@@ -456,8 +459,9 @@ class NotificationsService {
             // dist can have only one iOS & one Android platform
             let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
             if (applications.length > 0) {
-                let error = new Error("Only one iOS and one Android platforms are allowed");
-                throw new Error("Only one iOS and one Android platforms are allowed");
+                let error: any = new Error("Only one iOS and one Android platforms are allowed");
+                error.code = 403;
+                throw error;
             }
 
             let basePlatform: PlatformBase;
@@ -599,6 +603,7 @@ class NotificationsService {
         for (const dimxObj of body.DIMXObjects) {
             //upsert notifications
             if (dimxObj.Object.Key != undefined) {
+                // do nothing, forward the body to DIMX as is.
                 console.log("@@@upsert notification", dimxObj.Object);
             }
             // create notifications
