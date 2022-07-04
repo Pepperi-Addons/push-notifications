@@ -38,7 +38,9 @@ export class NotificationsLogComponent implements OnInit {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
         this.noDataMessage = this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
         if (params.searchString != undefined && params.searchString != "") {
-          notificationsList = notificationsList.filter(notification => notification.Title.toLowerCase().includes(params.searchString.toLowerCase() || notification.Body.toLowerCase().includes(params.searchString.toLowerCase())))
+          notificationsList = notificationsList.filter(notification => {
+            return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body.toLowerCase().includes(params.searchString.toLowerCase()))  
+          })
           this.noDataMessage = this.noDataMessage = this.translate.instant("No_Results_Error")
         }
        for (let notification of notificationsList) {
