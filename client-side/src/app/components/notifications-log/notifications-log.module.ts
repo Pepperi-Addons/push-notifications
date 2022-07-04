@@ -7,12 +7,14 @@ import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { TranslateService, TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { PepFileService,PepAddonService} from '@pepperi-addons/ngx-lib';
 import { HttpClient } from '@angular/common/http';
+import { PepButton, PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 
 @NgModule({
   imports: [
     CommonModule,
     PepGenericListModule,
     PepPageLayoutModule,
+    PepButtonModule,
     PepTopBarModule,
     TranslateModule.forChild({
 
