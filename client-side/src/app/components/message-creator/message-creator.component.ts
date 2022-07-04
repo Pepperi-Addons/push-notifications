@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
 import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
@@ -18,12 +18,14 @@ export class MessageCreatorComponent implements OnInit {
     Title: "",
     Body: ""
   };
+  fromNotificationsLog: boolean = false;
 
   constructor(
     private notificationsService: NotificationsService,
     private addonService: AddonService,
     public route: ActivatedRoute,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router,
   ) {
     this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
   }
@@ -34,30 +36,41 @@ export class MessageCreatorComponent implements OnInit {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
       this.message.Recipients = queryParams.UserEmailList.replace(",", ";");
+      this.fromNotificationsLog =  JSON.parse(queryParams.FromNotificationsLog )
     }
   }
 
   async sendNotifications() {
-     this.message.UserEmailList = this.message.Recipients.split(";");
-     let ans = await this.notificationsService.bulkNotifications(this.message);
-     let dialogMessage:string = undefined;
+    this.message.UserEmailList = this.message.Recipients.split(";");
+    let ans = await this.notificationsService.bulkNotifications(this.message);
+    this.showFinishDialog(ans);
+  }
 
-     for (const message of ans) {
-       if (message.Details != undefined) {
+  showFinishDialog(ansFromBulkNotifications) {
+    let dialogMessage: string = undefined;
+
+    for (const message of ansFromBulkNotifications) {
+      if (message.Details != undefined) {
         dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
-       }
-     }
+      }
+    }
 
-     if (dialogMessage === undefined) {
+    if (dialogMessage === undefined) {
       dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
-     }
+    }
 
-     let dialogData = {
+    let dialogData = {
       "Message": dialogMessage,
       "Title": "",
       "ButtonText": this.translate.instant("OK")
     }
-     this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {});
+    this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
+      if (this.fromNotificationsLog == true) {
+        this.router.navigate(['../notifications_log'], {
+          relativeTo: this.route,
+        })
+      }
+    });
   }
 
   onValueChanged(element, $event) {
