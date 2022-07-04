@@ -23,17 +23,23 @@ export class NotificationsLogComponent implements OnInit {
       this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
      }
 
-  ngOnInit() {
+  async ngOnInit() {
+    this.currentUserEmail = await this.addonService.getCurrentUserEmail()
   }
 
   noDataMessage: string;
   dataSource: IPepGenericListDataSource = this.getDataSource();
+  currentUserEmail: String;
 
   getDataSource() {
     return {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
-       // this.noDataMessage = this.translate.instant("No_Devices_Error");
+        this.noDataMessage = this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
+        if (params.searchString != undefined && params.searchString != "") {
+          notificationsList = notificationsList.filter(notification => notification.Title.toLowerCase().includes(params.searchString.toLowerCase() || notification.Body.toLowerCase().includes(params.searchString.toLowerCase())))
+          this.noDataMessage = this.noDataMessage = this.translate.instant("No_Results_Error")
+        }
        for (let notification of notificationsList) {
          let creationDate = new Date(notification.CreationDateTime);
          notification.Date = creationDate.getDate()+'/'+(creationDate.getMonth()+1)+'/'+creationDate.getFullYear();
@@ -59,7 +65,7 @@ export class NotificationsLogComponent implements OnInit {
               {
                 FieldID: 'Body',
                 Type: 'TextBox',
-                Title: this.translate.instant("Body"),
+                Title: this.translate.instant("Message_Body"),
                 Mandatory: false,
                 ReadOnly: true
               },
@@ -73,7 +79,7 @@ export class NotificationsLogComponent implements OnInit {
               {
                 FieldID: 'Date',
                 Type: 'TextBox',
-                Title: this.translate.instant("Date"),
+                Title: this.translate.instant("Time"),
                 Mandatory: false,
                 ReadOnly: true
               }
@@ -128,7 +134,15 @@ export class NotificationsLogComponent implements OnInit {
           }
       });
       }
-      
+      if(data.rows.length >= 1) {
+        actions.push({
+          title: this.translate.instant("Delete"),
+          handler: async (objs) => {
+            let ans = this.notificationsLogService.deleteNotificationsLog(objs.rows);
+            this.dataSource = this.getDataSource();
+          }
+      });
+      }
 
       return actions;
     }

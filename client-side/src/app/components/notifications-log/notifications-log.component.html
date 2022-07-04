@@ -7,14 +7,14 @@
   <ng-container pep-main-area>
       <div class="notifications-log">
         <p>
-          {{ 'Notifications_Log_Subtitle' | translate }}
+          {{ 'Notifications_Log_Subtitle' | translate }} {{currentUserEmail}}
         </p>
       </div>
       <pep-generic-list 
       [showTopBar]="true"
       [inline]="true"
       [dataSource]="dataSource"
-      [showSearch]="false"
+      [showSearch]="true"
       [actions]="actions"
       [uuidMapping]="'Key'"
       [selectionType]="'single'"

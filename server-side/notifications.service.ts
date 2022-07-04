@@ -85,7 +85,7 @@ class PlatformAddon extends PlatformBase {
 
     publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
-        this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
+        return this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
 }
 
@@ -734,6 +734,19 @@ class NotificationsService {
         };
 
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
+    }
+
+    async deleteNotificationsLog(notifications) {
+        const ansArray = notifications.map(notification => {
+            return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(
+                {
+                    'Key': notification,
+                    'Hidden': true
+                }
+            );
+        })
+        await Promise.all(ansArray);
+        return ansArray;
     }
 }
 

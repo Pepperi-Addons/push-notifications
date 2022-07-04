@@ -52,6 +52,11 @@ export class AddonService {
         }
     }
 
+    async getCurrentUserEmail() {
+        const users = await this.papiClient.users.find();
+        return users.find(u => u.UUID == this.userUUID)?.Email
+    }
+
     async get(endpoint: string): Promise<any> {
         return await this.papiClient.get(endpoint);
     }
