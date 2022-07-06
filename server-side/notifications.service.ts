@@ -238,7 +238,7 @@ class NotificationsService {
                     await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
                 }
                 catch {
-                    throw new Error(`Could not find a user matching this UserUUID`);
+                    throw new Error(`User with UserUUID: {UserUUID} does not exist`);
                 }
             }
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
@@ -276,7 +276,15 @@ class NotificationsService {
             }
         }
         else {
-            this.throwErrorFromSchema(validation);
+            const errors = validation.errors.map(error => {
+                if (error.name === 'anyOf') {
+                    return error.message = "One of the following properties is required: " + error.argument;
+                }
+                else {
+                    return error.stack.replace("instance.", "");
+                }
+            });
+            throw new Error(errors.join("\n"));
         }
     }
 
@@ -421,7 +429,7 @@ class NotificationsService {
         throw new Error(errors.join("\n"));
     }
 
-    async platformApplication(body) {
+    async upsertPlatformApplication(body) {
         if (body.Key != undefined) {
             return await this.updatePlatformApplication(body);
         }
@@ -459,7 +467,7 @@ class NotificationsService {
             // dist can have only one iOS & one Android platform
             let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
             if (applications.length > 0) {
-                let error: any = new Error("Only one iOS and one Android platforms are allowed");
+                let error: any = new Error(`Platform for '${body.Type}' already exists`);
                 error.code = 403;
                 throw error;
             }

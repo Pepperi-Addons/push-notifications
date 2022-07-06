@@ -71,7 +71,7 @@ export async function notification_inserted(client: Client, request: Request) {
 export async function platforms(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {
-        return service.platformApplication(request.body);
+        return service.upsertPlatformApplication(request.body);
     }
     if (request.method === 'GET') {
         return service.getPlatformApplication(request.query);

@@ -18,7 +18,6 @@ export class MessageCreatorComponent implements OnInit {
     Title: "",
     Body: ""
   };
-  fromNotificationsLog: boolean = false;
 
   constructor(
     private notificationsService: NotificationsService,
@@ -36,24 +35,24 @@ export class MessageCreatorComponent implements OnInit {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
       this.message.Recipients = queryParams.UserEmailList.replace(",", ";");
-      this.fromNotificationsLog =  JSON.parse(queryParams.FromNotificationsLog )
     }
   }
 
   async sendNotifications() {
     this.message.UserEmailList = this.message.Recipients.split(";");
     let ans = await this.notificationsService.bulkNotifications(this.message);
+    debugger
     this.showFinishDialog(ans);
   }
 
   showFinishDialog(ansFromBulkNotifications) {
-    let dialogMessage: string = undefined;
-
-    for (const message of ansFromBulkNotifications) {
-      if (message.Details != undefined) {
-        dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
-      }
-    }
+    debugger
+    let dialogMessage: string = JSON.parse(ansFromBulkNotifications.resultObject).errorMessage
+    // for (const message of ansFromBulkNotifications.res) {
+    //   if (message.Details != undefined) {
+    //     dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
+    //   }
+    // }
 
     if (dialogMessage === undefined) {
       dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
@@ -65,11 +64,9 @@ export class MessageCreatorComponent implements OnInit {
       "ButtonText": this.translate.instant("OK")
     }
     this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
-      if (this.fromNotificationsLog == true) {
-        this.router.navigate(['../notifications_log'], {
-          relativeTo: this.route,
-        })
-      }
+      this.router.navigate(['../notifications_log'], {
+        relativeTo: this.route,
+      })
     });
   }
 
