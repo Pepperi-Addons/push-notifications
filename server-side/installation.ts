@@ -54,9 +54,15 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
         actionUUID: client["ActionUUID"]
     });
     // need authorization to perform SNS actions that only the push-notifications lambda has
-    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
-    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_platforms').post();
-    return { success: true, resultObject: {} }
+    try {
+        await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
+        await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_platforms').post();
+        return { success: true, resultObject: {} }
+    }
+    catch (error){
+        console.log(error);
+        return { success: true, resultObject: {} }
+    }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
