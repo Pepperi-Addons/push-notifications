@@ -9,6 +9,8 @@ import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { PepSnackBarModule } from '@pepperi-addons/ngx-lib/snack-bar';
 
 @NgModule({
   imports: [
@@ -18,6 +20,8 @@ import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
     PepPageLayoutModule,
     PepTopBarModule,
     PepButtonModule,
+    MatSnackBarModule,
+    PepSnackBarModule,
     TranslateModule.forChild({
 
       loader: {
