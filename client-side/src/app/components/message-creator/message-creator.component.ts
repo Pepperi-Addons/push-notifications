@@ -45,15 +45,15 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   showFinishDialog(ansFromBulkNotifications) {
-    let dialogMessage: string = this.translate.instant("Messages_Sent_Successfuly");
-    if (ansFromBulkNotifications.resultObject != undefined) {
-      dialogMessage = JSON.parse(ansFromBulkNotifications.resultObject).errorMessage
+    let dialogMessage: string = undefined;
+    for (const message of ansFromBulkNotifications) {
+      if (message.Details != undefined) {
+        dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
+      }
     }
-    // for (const message of ansFromBulkNotifications.res) {
-    //   if (message.Details != undefined) {
-    //     dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
-    //   }
-    // }
+    if (dialogMessage === undefined) {
+      dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
+    }
 
     let dialogData = {
       "Message": dialogMessage,
