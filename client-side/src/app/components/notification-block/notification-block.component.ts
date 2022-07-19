@@ -35,12 +35,14 @@ export class NotificationBlockComponent implements OnInit {
     let notificationsItems = [];
     this.notificationsList = await this.notificationsService.getNotifications();
     for (const notification of this.notificationsList) {
+      const creator = await this.notificationsService.getUserName(notification.CreatorUUID);
       let item: INotificationItem = {
         key: notification.Key,
         date: notification.CreationDateTime,
         read: notification.Read,
         title: notification.Title,
         body: notification.Body,
+        from: creator
       }
       notificationsItems.push(item);
     }

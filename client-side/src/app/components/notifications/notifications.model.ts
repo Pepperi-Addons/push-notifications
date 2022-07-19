@@ -3,7 +3,7 @@ export interface INotificationItem {
     title: string;
     body?: string;
     read: boolean;
-    to?: string;
+    from?: string;
     date: Date;
     goToActivityName?: string;
 }
