@@ -626,7 +626,13 @@ class NotificationsService {
                 if (isUserEmailProvided !== isUserUUIDProvided) {
                     // find user uuid by Email
                     if (dimxObj.Object.UserEmail !== undefined) {
-                        const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
+                        let userUUID;
+                        try {
+                             userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail);
+                        }
+                        catch {
+                            userUUID = undefined
+                        }
                         // The UserEmail is not compatible with any UserUUID
                         if (userUUID !== undefined) {
                             delete dimxObj.Object.UserEmail;
@@ -688,7 +694,7 @@ class NotificationsService {
             const ansFromImport = await this.papiClient.post(url, file);
             const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
             if (ansFromAuditLog.success === true) {
-                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).DownloadURL;
+                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).URI;
                 return await this.DownloadResultArray(downloadURL);
             }
             return ansFromAuditLog;
