@@ -9,7 +9,7 @@ import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
 @Component({
   selector: 'app-notifications-log',
   templateUrl: './notifications-log.component.html',
-  styleUrls: ['./notifications-log.component.css']
+  styleUrls: ['./notifications-log.component.scss']
 })
 export class NotificationsLogComponent implements OnInit {
 
@@ -24,8 +24,8 @@ export class NotificationsLogComponent implements OnInit {
       this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
      }
 
-  async ngOnInit() {
-    this.currentUserEmail = await this.addonService.getCurrentUserEmail()
+  ngOnInit() {
+    this.addonService.getCurrentUserEmail().then((email) => this.currentUserEmail = email);
   }
 
   noDataMessage: string;
@@ -36,12 +36,12 @@ export class NotificationsLogComponent implements OnInit {
     return {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
-        this.noDataMessage = this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
-        if (params.searchString != undefined && params.searchString != "") {
+        this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
+        if (params.searchString) {
           notificationsList = notificationsList.filter(notification => {
-            return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body.toLowerCase().includes(params.searchString.toLowerCase()))  
+            return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body?.toLowerCase().includes(params.searchString.toLowerCase()))  
           })
-          this.noDataMessage = this.noDataMessage = this.translate.instant("No_Results_Error")
+          this.noDataMessage = this.translate.instant("No_Results_Error")
         }
        for (let notification of notificationsList) {
          let creationDate = new Date(notification.CreationDateTime);
@@ -158,16 +158,22 @@ export class NotificationsLogComponent implements OnInit {
     }
   }
 
-  goToMessageCreator(notification) {
-    this.router.navigate(['../message_creator'], {
-      relativeTo: this.route,
-      queryParams: {
-        "UserEmailList": notification.Fields[2]?.FormattedValue,
-        "Title": notification.Fields[0]?.FormattedValue,
-        "Body": notification.Fields[1]?.FormattedValue,
-        "FromNotificationsLog": true
-      }
-    })
+  goToMessageCreator(notification?) {
+    if (notification === undefined) {
+      this.router.navigate(['../message_creator'], {
+        relativeTo: this.route
+      });
+    }
+    else {
+      this.router.navigate(['../message_creator'], {
+        relativeTo: this.route,
+        queryParams: {
+          "UserEmailList": notification.Fields[2]?.FormattedValue,
+          "Title": notification.Fields[0]?.FormattedValue,
+          "Body": notification.Fields[1]?.FormattedValue,
+        }
+      })
+    }
   }
 
 }

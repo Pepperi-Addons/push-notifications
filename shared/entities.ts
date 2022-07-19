@@ -103,6 +103,28 @@ export const notificationOnUpdateSchema: Schema = {
         }
 
     },
+    "anyOf": [
+        {
+            $id: "Hidden",
+            type: "object",
+            properties: {
+                Hidden: {
+                    type: "boolean",
+                    required: true
+                }
+            }
+        },
+        {
+            $id: "Read",
+            type: "object",
+            properties: {
+                Read: {
+                    type: "boolean",
+                    required: true
+                }
+            }
+        }
+    ],
     additionalProperties: false
 }
 

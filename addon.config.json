@@ -1,6 +1,6 @@
 {
   "AddonUUID": "95025423-9096-4a4f-a8cd-d0a17548e42e",
-  "AddonVersion": "0.0.126",
+  "AddonVersion": "0.0.128",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -14,11 +14,6 @@
   "PublishConfig": {
     "ClientStack": "ng10",
     "Editors": [
-      {
-        "ParentPackageName": "Push Notifications",
-        "PackageName": "message_creator",
-        "Description": "Message Creator"
-      },
       {
         "ParentPackageName": "Push Notifications",
         "PackageName": "device_managment",
