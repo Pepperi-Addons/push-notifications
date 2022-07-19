@@ -9,6 +9,7 @@ import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepPageLayoutComponent, PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import { config } from '../../addon.config';
 
 @NgModule({
   imports: [
@@ -19,15 +20,12 @@ import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
     PepTopBarModule,
     PepButtonModule,
     TranslateModule.forChild({
-
       loader: {
-        provide: TranslateLoader,
-        useFactory: (http: HttpClient, fileService: PepFileService, addonService: PepAddonService) =>
-          PepAddonService.createDefaultMultiTranslateLoader(http, fileService, addonService),
-        deps: [HttpClient, PepFileService, PepAddonService],
-
+          provide: TranslateLoader,
+          useFactory: (addonService: PepAddonService) => 
+              PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
+          deps: [PepAddonService]
       }, isolate: false
-
     }),
   ],
   declarations: [MessageCreatorComponent]
