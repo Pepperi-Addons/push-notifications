@@ -66,7 +66,8 @@ export class MessageCreatorComponent implements OnInit {
     }
     this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
       if (this.fromNotificationsLog == true) {
-        this.router.navigate(['../notifications_log'], {
+        // this.router.navigate(['../notifications_log'], {
+        this.router.navigate(['../'], {
           relativeTo: this.route,
         })
       }

@@ -30,14 +30,16 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
     const platformApplicationResourceRes = await createPlatformApplicationResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
+    const settingsRelationsRes = await createSettingsRelation(client);
+    
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
     await service.createPNSSubscriptionForPlatformApplicationRemoval();
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success,
-        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage}, platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}`
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success,
+        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, settingsRelationsRes:  ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage}, platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}`
     };
 }
 
@@ -73,7 +75,7 @@ async function createPageBlockRelation(client: Client): Promise<any> {
             Name: blockName,
             Description: `${blockName} block`,
             Type: "NgComponent",
-            SubType: "NG11",
+            SubType: "NG14",
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: filename,
             ComponentName: `NotificationBlockComponent`,
@@ -84,6 +86,49 @@ async function createPageBlockRelation(client: Client): Promise<any> {
 
         const service = new NotificationsService(client);
         const result = await service.upsertRelation(pageComponentRelation);
+        return { success: true, resultObject: result };
+    } catch (err) {
+        return { success: false, resultObject: err, errorMessage: `Error in upsert relation. error - ${err}` };
+    }
+}
+
+async function createSettingsRelation(client: Client): Promise<any> {
+    try {
+        const service = new NotificationsService(client);
+        
+        const filename = 'notifications';
+
+        let settingsBlockRelation: Relation = {
+            RelationName: "SettingsBlock",
+            GroupName: 'Push Notifications',
+            Name: 'DeviceManagment',
+            Description: 'Device Managment',
+            Type: "NgComponent",
+            SubType: "NG14",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: filename,
+            ComponentName: `DeviceManagmentComponent`,
+            ModuleName: `DeviceManagmentModule`
+        };
+
+        let result = await service.upsertRelation(settingsBlockRelation);
+
+        settingsBlockRelation = {
+            RelationName: "SettingsBlock",
+            GroupName: 'Push Notifications',
+            Name: 'NotificationsLog',
+            Description: 'Notifications Log',
+            Type: "NgComponent",
+            SubType: "NG14",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: filename,
+            ComponentName: `NotificationsLogComponent`,
+            ModuleName: `NotificationsLogModule`
+        };
+
+        result = await service.upsertRelation(settingsBlockRelation);
+
+
         return { success: true, resultObject: result };
     } catch (err) {
         return { success: false, resultObject: err, errorMessage: `Error in upsert relation. error - ${err}` };

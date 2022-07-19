@@ -159,7 +159,8 @@ export class NotificationsLogComponent implements OnInit {
   }
 
   goToMessageCreator(notification) {
-    this.router.navigate(['../message_creator'], {
+    // this.router.navigate(['../message_creator'], {
+    this.router.navigate(['message_creator'], {
       relativeTo: this.route,
       queryParams: {
         "UserEmailList": notification.Fields[2]?.FormattedValue,
