@@ -41,22 +41,19 @@ export class MessageCreatorComponent implements OnInit {
   async sendNotifications() {
     this.message.UserEmailList = this.message.Recipients.split(";");
     let ans = await this.notificationsService.bulkNotifications(this.message);
-    debugger
     this.showFinishDialog(ans);
   }
 
   showFinishDialog(ansFromBulkNotifications) {
-    debugger
-    let dialogMessage: string = JSON.parse(ansFromBulkNotifications.resultObject).errorMessage
+    let dialogMessage: string = this.translate.instant("Messages_Sent_Successfuly");
+    if (ansFromBulkNotifications.resultObject != undefined) {
+      dialogMessage = JSON.parse(ansFromBulkNotifications.resultObject).errorMessage
+    }
     // for (const message of ansFromBulkNotifications.res) {
     //   if (message.Details != undefined) {
     //     dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
     //   }
     // }
-
-    if (dialogMessage === undefined) {
-      dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
-    }
 
     let dialogData = {
       "Message": dialogMessage,
