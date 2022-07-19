@@ -5,12 +5,9 @@
   </ng-container>
 
   <ng-container pep-main-area>
-      <div class="notifications-log">
-        <p>
-          {{ 'Notifications_Log_Subtitle' | translate }} {{currentUserEmail}}
-        </p>
-      </div>
-      <pep-generic-list 
+    <pep-top-bar class="subTitle" title="{{'Notifications_Log_Subtitle' | translate}} {{currentUserEmail}}" [inline]="true">
+    </pep-top-bar>
+      <pep-generic-list class="generic-list"
       [showTopBar]="true"
       [inline]="true"
       [dataSource]="dataSource"
@@ -19,6 +16,10 @@
       [uuidMapping]="'Key'"
       [selectionType]="'single'"
       [noDataFoundMsg]= noDataMessage>
+      <ng-container right-buttons>
+        <pep-button  class="new-message-button" [sizeType]="'sm'" [classNames]="'pep-spacing-element'" [value]="'New_Message'| translate"
+        [styleType]="'strong'" (buttonClick)="goToMessageCreator()"></pep-button>
+      </ng-container>
       </pep-generic-list>
   </ng-container>
 </pep-page-layout>

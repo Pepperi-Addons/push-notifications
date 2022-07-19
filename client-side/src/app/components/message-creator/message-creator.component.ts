@@ -1,9 +1,12 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
 import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
+import { PepSnackBarData, PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
+import { MatSnackBarRef } from '@angular/material/snack-bar';
+import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/default-snack-bar.component';
 
 @Component({
   selector: 'app-message-creator',
@@ -11,6 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./message-creator.component.css']
 })
 export class MessageCreatorComponent implements OnInit {
+  private currentSnackBar: MatSnackBarRef<PepDefaultSnackBarComponent> | null = null;
 
   message: MessageObject = {
     UserEmailList: [],
@@ -18,7 +22,6 @@ export class MessageCreatorComponent implements OnInit {
     Title: "",
     Body: ""
   };
-  fromNotificationsLog: boolean = false;
 
   constructor(
     private notificationsService: NotificationsService,
@@ -26,6 +29,7 @@ export class MessageCreatorComponent implements OnInit {
     public route: ActivatedRoute,
     private translate: TranslateService,
     private router: Router,
+    private pepSnackBarService: PepSnackBarService
   ) {
     this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
   }
@@ -35,8 +39,7 @@ export class MessageCreatorComponent implements OnInit {
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
-      this.message.Recipients = queryParams.UserEmailList.replace(",", ";");
-      this.fromNotificationsLog =  JSON.parse(queryParams.FromNotificationsLog )
+      this.message.Recipients = queryParams.UserEmailList?.replace(",", ";");
     }
   }
 
@@ -48,30 +51,37 @@ export class MessageCreatorComponent implements OnInit {
 
   showFinishDialog(ansFromBulkNotifications) {
     let dialogMessage: string = undefined;
-
     for (const message of ansFromBulkNotifications) {
       if (message.Details != undefined) {
         dialogMessage = (dialogMessage ?? "").concat(message.Details).concat("\n");
       }
     }
-
     if (dialogMessage === undefined) {
-      dialogMessage = this.translate.instant("Messages_Sent_Successfuly");
-    }
-
-    let dialogData = {
-      "Message": dialogMessage,
-      "Title": "",
-      "ButtonText": this.translate.instant("OK")
-    }
-    this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
-      if (this.fromNotificationsLog == true) {
+      let snackbarData : PepSnackBarData = {
+        title: this.translate.instant("Success"),
+        content: this.translate.instant("Messages_Sent_Successfuly")
+      }
+      this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
+      this.currentSnackBar.instance.closeClick.subscribe(() => {
         // this.router.navigate(['../notifications_log'], {
         this.router.navigate(['../'], {
           relativeTo: this.route,
         })
-      }
     });
+    }
+    else {
+      let dialogData = {
+        "Message": dialogMessage,
+        "Title": "",
+        "ButtonText": this.translate.instant("OK")
+      }
+      this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
+        // this.router.navigate(['../notifications_log'], {
+        this.router.navigate(['../'], {
+          relativeTo: this.route,
+        })
+      });
+    }
   }
 
   onValueChanged(element, $event) {

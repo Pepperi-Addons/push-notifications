@@ -1,7 +1,7 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from '../shared/entities'
 import * as encryption from '../shared/encryption-service'
@@ -232,12 +232,14 @@ class NotificationsService {
                 body.UserUUID = await this.getUserUUIDByEmail(body.UserEmail);
                 delete body.UserEmail;
             }
-            // Check that the UserUUID exists in the users list
-            try {
-                await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
-            }
-            catch {
-                throw new Error(`Could not find a user matching this UserUUID`);
+            else {
+                // Check that the UserUUID the client provided exists in the users list
+                try {
+                    await this.papiClient.get(`/users/uuid/${body.UserUUID}`)
+                }
+                catch {
+                    throw new Error(`User with UserUUID: {UserUUID} does not exist`);
+                }
             }
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
@@ -263,17 +265,26 @@ class NotificationsService {
         let validation = this.validateSchema(body, notificationOnUpdateSchema);
         if (validation.valid) {
             let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
-            if (notifications[0] != undefined) {
-                notifications[0].Hidden = body.Hidden
-                notifications[0].Read = body.Read
-                return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notifications[0]);
+            let notification = notifications.length > 0 ? notifications[0] : undefined
+            if (notification) {
+                notification.Hidden = body.Hidden
+                notification.Read = body.Read
+                return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(notification);
             }
             else {
                 throw new Error(`Could not find a notification matching this Key`);
             }
         }
         else {
-            this.throwErrorFromSchema(validation);
+            const errors = validation.errors.map(error => {
+                if (error.name === 'anyOf') {
+                    return error.message = "One of the following properties is required: " + error.argument;
+                }
+                else {
+                    return error.stack.replace("instance.", "");
+                }
+            });
+            throw new Error(errors.join("\n"));
         }
     }
 
@@ -418,7 +429,7 @@ class NotificationsService {
         throw new Error(errors.join("\n"));
     }
 
-    async platformApplication(body) {
+    async upsertPlatformApplication(body) {
         if (body.Key != undefined) {
             return await this.updatePlatformApplication(body);
         }
@@ -456,8 +467,9 @@ class NotificationsService {
             // dist can have only one iOS & one Android platform
             let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
             if (applications.length > 0) {
-                let error = new Error("Only one iOS and one Android platforms are allowed");
-                throw new Error("Only one iOS and one Android platforms are allowed");
+                let error: any = new Error(`Platform for '${body.Type}' already exists`);
+                error.code = 403;
+                throw error;
             }
 
             let basePlatform: PlatformBase;
@@ -599,6 +611,7 @@ class NotificationsService {
         for (const dimxObj of body.DIMXObjects) {
             //upsert notifications
             if (dimxObj.Object.Key != undefined) {
+                // do nothing, forward the body to DIMX as is.
                 console.log("@@@upsert notification", dimxObj.Object);
             }
             // create notifications
@@ -613,7 +626,13 @@ class NotificationsService {
                 if (isUserEmailProvided !== isUserUUIDProvided) {
                     // find user uuid by Email
                     if (dimxObj.Object.UserEmail !== undefined) {
-                        const userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail)
+                        let userUUID;
+                        try {
+                             userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail);
+                        }
+                        catch {
+                            userUUID = undefined
+                        }
                         // The UserEmail is not compatible with any UserUUID
                         if (userUUID !== undefined) {
                             delete dimxObj.Object.UserEmail;
@@ -675,7 +694,7 @@ class NotificationsService {
             const ansFromImport = await this.papiClient.post(url, file);
             const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
             if (ansFromAuditLog.success === true) {
-                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).DownloadURL;
+                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).URI;
                 return await this.DownloadResultArray(downloadURL);
             }
             return ansFromAuditLog;
@@ -697,7 +716,7 @@ class NotificationsService {
     }
 
     async uploadObject() {
-        const url = `/addons/files/${this.addonUUID}`
+        const url = `/addons/pfs/${this.addonUUID}/${PFS_TABLE_NAME}`
         let expirationDateTime = new Date();
         expirationDateTime.setDate(expirationDateTime.getDate() + 1);
         const body = {

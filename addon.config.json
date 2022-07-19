@@ -16,11 +16,6 @@
     "Editors": [
       {
         "ParentPackageName": "Push Notifications",
-        "PackageName": "message_creator",
-        "Description": "Message Creator"
-      },
-      {
-        "ParentPackageName": "Push Notifications",
         "PackageName": "device_managment",
         "Description": "Device Managment"
       },
@@ -30,7 +25,10 @@
         "Description": "Notifications Log"
       }
     ],
-    "Dependencies": {},
+    "Dependencies": {
+      "pfs": "1.0.2",
+      "dimx": "0.0.177"
+    },
     "CPISide": [
       "addon-cpi.ts"
     ]

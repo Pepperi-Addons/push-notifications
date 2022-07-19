@@ -10,7 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
+import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from '../shared/entities'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
 
@@ -29,6 +29,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const userDeviceResourceRes = await createUserDeviceResource(papiClient);
     const notificationsVariablesRes = await createNotificationsVariablesResource(papiClient, client);
     const platformApplicationResourceRes = await createPlatformApplicationResource(papiClient);
+    const pfsResourceRes = await createPFSResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
     
@@ -38,8 +39,11 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success,
-        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage}, relationsRes:  ${relationsRes.errorMessage}, settingsRelationsRes:  ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage}, platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}`
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success,
+        errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
+        notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
+         relationsRes: ${relationsRes.errorMessage}, settingsRelationsRes: ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
+         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}`
     };
 }
 
@@ -52,9 +56,15 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
         actionUUID: client["ActionUUID"]
     });
     // need authorization to perform SNS actions that only the push-notifications lambda has
-    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
-    await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_platforms').post();
-    return { success: true, resultObject: {} }
+    try {
+        await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_application_endpoints').post();
+        await papiClient.addons.api.uuid(client.AddonUUID).file('api').func('delete_all_platforms').post();
+        return { success: true, resultObject: {} }
+    }
+    catch (error){
+        console.log(error);
+        return { success: true, resultObject: {} }
+    }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
@@ -308,6 +318,29 @@ async function createNotificationsVariablesResource(papiClient: PapiClient, clie
         notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
         notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
         await papiClient.addons.data.uuid(client.AddonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(notificationsVars);
+
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+
+// PFS Scheme
+async function createPFSResource(papiClient: PapiClient) {
+    var pfsScheme : AddonDataScheme = {
+        "Name": PFS_TABLE_NAME,
+        "Type": 'pfs'
+    }
+
+    try {
+        await papiClient.addons.data.schemes.post(pfsScheme);
 
         return {
             success: true,

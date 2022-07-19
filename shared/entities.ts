@@ -4,6 +4,7 @@ import { AddonData } from '@pepperi-addons/papi-sdk'
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
+export const PFS_TABLE_NAME = 'PFSTable';
 export const PLATFORM_APPLICATION_TABLE_NAME = 'PlatformApplication';
 export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -103,6 +104,28 @@ export const notificationOnUpdateSchema: Schema = {
         }
 
     },
+    "anyOf": [
+        {
+            $id: "Hidden",
+            type: "object",
+            properties: {
+                Hidden: {
+                    type: "boolean",
+                    required: true
+                }
+            }
+        },
+        {
+            $id: "Read",
+            type: "object",
+            properties: {
+                Read: {
+                    type: "boolean",
+                    required: true
+                }
+            }
+        }
+    ],
     additionalProperties: false
 }
 

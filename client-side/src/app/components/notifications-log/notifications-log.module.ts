@@ -5,6 +5,7 @@ import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { TranslateService, TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { PepFileService,PepAddonService} from '@pepperi-addons/ngx-lib';
+import { PepButton, PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
 
@@ -17,7 +18,6 @@ export const routes: Routes = [
       component: NotificationsLogComponent
   }
 ];
-
 @NgModule({
   declarations: [
     NotificationsLogComponent
@@ -27,6 +27,7 @@ export const routes: Routes = [
     HttpClientModule,
     PepGenericListModule,
     PepPageLayoutModule,
+    PepButtonModule,
     PepTopBarModule,
     TranslateModule.forChild({
       loader: {

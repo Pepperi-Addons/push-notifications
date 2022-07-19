@@ -22,8 +22,8 @@
         <label class="title-md">{{ item.title }}</label>
         <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
         <div class="notification-item-footer body-xs color-dimmed">
-            <span *ngIf="item.to" class="">{{ item.to }}</span>
-            <span *ngIf="item.to">&#8226;</span><!--•-->
+            <span *ngIf="item.from" class="">{{ item.from }}</span>
+            <span *ngIf="item.from">&#8226;</span><!--•-->
             <span class="date-ago">{{ item.date | dateAgo }}</span>
             <span *ngIf="item.goToActivityName" class="notification-goto body-2xs">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
         </div>

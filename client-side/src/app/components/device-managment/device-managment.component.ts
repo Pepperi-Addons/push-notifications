@@ -4,6 +4,8 @@ import { UserDevicesService } from '../../services/user-devices.services';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from 'src/app/services/addon.service';
 import { ActivatedRoute } from '@angular/router';
+import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
+import { PepDialogActionButton } from '@pepperi-addons/ngx-lib/dialog';
 
 @Component({
   selector: 'app-device-managment',
@@ -12,14 +14,14 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class DeviceManagmentComponent implements OnInit {
 
-  constructor(    
+  constructor(
     private translate: TranslateService,
     private userDevicesService: UserDevicesService,
     private addonService: AddonService,
     private route: ActivatedRoute
-    ) { 
-      this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
-    }
+  ) {
+    this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
+  }
 
   ngOnInit() {
   }
@@ -100,17 +102,21 @@ export class DeviceManagmentComponent implements OnInit {
   actions: IPepGenericListActions = {
     get: async (data) => {
       const actions = [];
-      if (data.rows.length === 1 || data?.selectionType == 0){
+      if (data.rows.length === 1 || data?.selectionType == 0) {
         actions.push({
           title: this.translate.instant("Delete"),
           handler: async (objs) => {
-           await this.userDevicesService.removeUserDevices({"DevicesKeys": objs.rows});
-           this.dataSource = this.getDataSource();
+            const actionButtons = [
+            new PepDialogActionButton(this.translate.instant("Delete"), 'main strong', async() => {
+              await this.userDevicesService.removeUserDevices({ "DevicesKeys": objs.rows });
+              this.dataSource = this.getDataSource();
+            }),
+            new PepDialogActionButton(this.translate.instant("Cancel"), 'main weak')
+          ];
+            this.addonService.openDefaultDialog("", actionButtons, this.translate.instant("Delete_Device_Validate"));
           }
-      });
+        });
       }
-      
-
       return actions;
     }
   }

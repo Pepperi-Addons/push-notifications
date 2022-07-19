@@ -52,6 +52,16 @@ export class AddonService {
         }
     }
 
+    openDefaultDialog(title: string, actionButtons: Array<PepDialogActionButton>, input: any, callbackFunc?: (any) => void): void {
+        const dialogData = new PepDialogData({ title, content: input, actionsType: 'custom', actionButtons });
+        this.dialogService.openDefaultDialog(dialogData)
+          .afterClosed().subscribe(res => {
+            if (typeof res === 'function') {
+              res();
+            }
+          });
+      }
+
     async getCurrentUserEmail() {
         const users = await this.papiClient.users.find();
         return users.find(u => u.UUID == this.userUUID)?.Email
