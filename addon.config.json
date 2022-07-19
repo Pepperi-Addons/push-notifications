@@ -26,7 +26,6 @@
       }
     ],
     "Dependencies": {
-      "@pepperi-addons/papi-sdk": "^1.39.4",
       "@pepperi-addons/pfs": "^1.0.2"
     },
     "CPISide": [
