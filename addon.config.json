@@ -26,7 +26,8 @@
       }
     ],
     "Dependencies": {
-      "@pepperi-addons/pfs": "^1.0.2"
+      "pfs": "1.0.2",
+      "dimx": "0.0.177"
     },
     "CPISide": [
       "addon-cpi.ts"
