@@ -37,6 +37,6 @@
     "No_Notifications_Log_Error": "No Notifications Log found",
     "Notifications_Log_Deleted_Successfuly": "The Notifications Log Deleted Successfuly",
     "No_Results_Error": "No results found",
-    "New_Message": "Send New Message"
-    
+    "New_Message": "Send New Message",
+    "Delete_Device_Validate": "Are you sure you want to delete this device?"
 }

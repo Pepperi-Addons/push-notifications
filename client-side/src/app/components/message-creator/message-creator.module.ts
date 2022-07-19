@@ -6,7 +6,7 @@ import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } fr
 import { PepFileService, PepAddonService} from '@pepperi-addons/ngx-lib';
 import { HttpClient } from '@angular/common/http';
 import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
-import { PepPageLayoutComponent, PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
+import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 
