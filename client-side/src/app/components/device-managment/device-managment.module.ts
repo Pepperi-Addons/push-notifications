@@ -37,6 +37,10 @@ export const routes: Routes = [
       }, isolate: false
     }),
     RouterModule.forChild(routes)
+  ],
+  providers: [
+    TranslateStore,
+    // When loading this module from route we need to add this here (because only this module is loading).
   ]
 })
 export class DeviceManagmentModule {

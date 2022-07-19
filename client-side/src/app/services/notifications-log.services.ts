@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { config } from '../addon.config';
 import { AddonService } from './addon.service';
 
 @Injectable({
@@ -11,7 +12,7 @@ export class NotificationsLogService {
         private addonService: AddonService,
         private route: ActivatedRoute
     ) {
-        this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
+        this.addonService.addonUUID = config.AddonUUID;
     }
 
     getNotificationsLog() {

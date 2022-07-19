@@ -111,7 +111,7 @@ async function createSettingsRelation(client: Client): Promise<any> {
         let settingsBlockRelation: Relation = {
             RelationName: "SettingsBlock",
             GroupName: 'Push Notifications',
-            Name: 'DeviceManagment',
+            Name: 'device_managment',
             Description: 'Device Managment',
             Type: "NgComponent",
             SubType: "NG14",
@@ -126,7 +126,7 @@ async function createSettingsRelation(client: Client): Promise<any> {
         settingsBlockRelation = {
             RelationName: "SettingsBlock",
             GroupName: 'Push Notifications',
-            Name: 'NotificationsLog',
+            Name: 'notifications_log',
             Description: 'Notifications Log',
             Type: "NgComponent",
             SubType: "NG14",

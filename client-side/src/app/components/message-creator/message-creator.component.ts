@@ -7,6 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { PepSnackBarData, PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/default-snack-bar.component';
+import { config } from '../../addon.config';
 
 @Component({
   selector: 'app-message-creator',
@@ -31,7 +32,7 @@ export class MessageCreatorComponent implements OnInit {
     private router: Router,
     private pepSnackBarService: PepSnackBarService
   ) {
-    this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
+    this.addonService.addonUUID = config.AddonUUID;
   }
 
   ngOnInit() {
@@ -66,6 +67,7 @@ export class MessageCreatorComponent implements OnInit {
         // this.router.navigate(['../notifications_log'], {
         this.router.navigate(['../'], {
           relativeTo: this.route,
+          queryParamsHandling: 'merge',
         })
     });
     }
@@ -79,6 +81,7 @@ export class MessageCreatorComponent implements OnInit {
         // this.router.navigate(['../notifications_log'], {
         this.router.navigate(['../'], {
           relativeTo: this.route,
+          queryParamsHandling: 'merge',
         })
       });
     }

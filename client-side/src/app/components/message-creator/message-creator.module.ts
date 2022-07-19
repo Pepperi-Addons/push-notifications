@@ -11,10 +11,19 @@ import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { PepSnackBarModule } from '@pepperi-addons/ngx-lib/snack-bar';
+import { RouterModule, Routes } from '@angular/router';
 
-import { config } from '../../addon.config';
+export const routes: Routes = [
+  {
+      path: 'message_creator',
+      component: MessageCreatorComponent,
+  }
+];
 
 @NgModule({
+  declarations: [
+    MessageCreatorComponent
+  ],
   imports: [
     CommonModule,
     PepTextboxModule,
@@ -24,16 +33,9 @@ import { config } from '../../addon.config';
     PepButtonModule,
     MatSnackBarModule,
     PepSnackBarModule,
-    TranslateModule.forChild({
-      loader: {
-          provide: TranslateLoader,
-          useFactory: (addonService: PepAddonService) => 
-              PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
-          deps: [PepAddonService]
-      }, isolate: false
-    }),
-  ],
-  declarations: [MessageCreatorComponent]
+    TranslateModule.forChild(),
+    RouterModule.forChild(routes)
+  ]
 })
 export class MessageCreatorModule {
   constructor(

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
-import { TranslateService, TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
 import { PepFileService,PepAddonService} from '@pepperi-addons/ngx-lib';
 import { PepButton, PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -11,16 +11,16 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { NotificationsLogComponent } from './notifications-log.component';
 import { config } from '../../addon.config';
-
+import { MessageCreatorModule } from '../message-creator/message-creator.module';
 export const routes: Routes = [
   {
       path: '',
-      component: NotificationsLogComponent
+      component: NotificationsLogComponent,
   }
 ];
 @NgModule({
   declarations: [
-    NotificationsLogComponent
+    NotificationsLogComponent,
   ],
   imports: [
     CommonModule,
@@ -29,6 +29,7 @@ export const routes: Routes = [
     PepPageLayoutModule,
     PepButtonModule,
     PepTopBarModule,
+    MessageCreatorModule,
     TranslateModule.forChild({
       loader: {
           provide: TranslateLoader,
@@ -38,6 +39,10 @@ export const routes: Routes = [
       }, isolate: false
     }),
     RouterModule.forChild(routes)
+  ],
+  providers: [
+    TranslateStore,
+    // When loading this module from route we need to add this here (because only this module is loading).
   ]
 })
 export class NotificationsLogModule { 
