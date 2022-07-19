@@ -52,8 +52,8 @@ export class AddonService {
         }
     }
 
-    openDefaultDialog(title: string, actionButtons: Array<PepDialogActionButton>, input: any, callbackFunc?: (any) => void): void {
-        const dialogData = new PepDialogData({ title, content: input, actionsType: 'custom', actionButtons });
+    openDefaultDialog(title: string, actionButtons: Array<PepDialogActionButton>, input: any): void {
+        const dialogData = new PepDialogData({title:  title, content: input, actionsType: 'custom', actionButtons: actionButtons });
         this.dialogService.openDefaultDialog(dialogData)
           .afterClosed().subscribe(res => {
             if (typeof res === 'function') {

@@ -5,15 +5,14 @@
   </ng-container>
 
   <ng-container pep-main-area>
-    <pep-generic-list 
+    <pep-generic-list #glist1
     [showTopBar]="true"
     [inline]="true"
     [dataSource]="dataSource"
     [showSearch]="false"
     [actions]="actions"
     [uuidMapping]="'Key'"
-    [selectionType]="'single'"
-    [noDataFoundMsg]= noDataMessage>
+    [selectionType]="'single'">
     </pep-generic-list>
   </ng-container>
 </pep-page-layout>

@@ -30,10 +30,10 @@ export class DeviceManagmentComponent implements OnInit {
   dataSource: IPepGenericListDataSource = this.getDataSource();
 
   getDataSource() {
+    this.noDataMessage = this.translate.instant("No_Devices_Error");
     return {
       init: async (params: any) => {
         let devicesList = await this.userDevicesService.getUserDevices();
-        this.noDataMessage = this.translate.instant("No_Devices_Error");
 
         return Promise.resolve({
           dataView: {
@@ -92,7 +92,8 @@ export class DeviceManagmentComponent implements OnInit {
             pager: {
               type: 'scroll'
             },
-            selectionType: 'multi'
+            selectionType: 'multi',
+            noDataFoundMsg: this.noDataMessage
           }
         );
       },
