@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { IPepGenericListActions, IPepGenericListDataSource, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,12 +12,12 @@ import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
   styleUrls: ['./notifications-log.component.scss']
 })
 export class NotificationsLogComponent implements OnInit {
+  @ViewChild('glist1') glist1: GenericListComponent | undefined;
 
   constructor(    
     private translate: TranslateService,
     private notificationsLogService: NotificationsLogService,
     private addonService: AddonService,
-    private genericListService: PepGenericListService,
     private route: ActivatedRoute,
     private router: Router,
     ) {
@@ -33,10 +33,10 @@ export class NotificationsLogComponent implements OnInit {
   currentUserEmail: String;
 
   getDataSource() {
+    this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
     return {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
-        this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
         if (params.searchString) {
           notificationsList = notificationsList.filter(notification => {
             return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body?.toLowerCase().includes(params.searchString.toLowerCase()))  
@@ -118,7 +118,8 @@ export class NotificationsLogComponent implements OnInit {
             pager: {
               type: 'scroll'
             },
-            selectionType: 'multi'
+            selectionType: 'multi',
+            noDataFoundMsg:this.noDataMessage
           }
         );
       },
@@ -132,7 +133,7 @@ export class NotificationsLogComponent implements OnInit {
         actions.push({
           title: this.translate.instant("Duplicate"),
           handler: async (objs) => {
-            let notification = this.genericListService.getItemById(objs.rows[0]);
+            let notification = this.glist1.getItemById(objs.rows[0]);
             this.goToMessageCreator(notification);
           }
       });
