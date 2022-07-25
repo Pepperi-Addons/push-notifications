@@ -76,6 +76,7 @@ class PlatformAndroid extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
+        let id = NotificationsService.hashCode(data.Key)
         return {
             "default": `${data.Subject}`,
             "GCM": JSON.stringify(
@@ -83,7 +84,8 @@ class PlatformAndroid extends PlatformBase {
                     "data": {
                         "body": `${data.Message}`,
                         "title": `${data.Subject}`,
-                        "badge": `${numberOfUnreadNotifications}`
+                        "badge": `${numberOfUnreadNotifications}`,
+                        "id": `${id}`
                     }
                 }
             )
@@ -203,6 +205,22 @@ class NotificationsService {
     async getNumberOfUnreadNotifications() {
         let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'` });
         return notifications.length;
+    }
+
+    public static hashCode(str) {
+        let hash = 0, i, chr;
+        if (str.length === 0) return hash;
+        for (i = 0; i < str.length; i++) {
+          chr   = str.charCodeAt(i);
+          hash  = ((hash << 5) - hash) + chr;
+          hash |= 0; // Convert to 32bit integer
+        }     
+        // check if hashCode is positive number
+        if (hash < 0) {
+            // make it positive number
+            hash = hash * -1;
+        }   
+        return hash;
     }
 
     // For page block template
@@ -395,6 +413,7 @@ class NotificationsService {
                         let pushNotification = {
                             Message: notification.Body ?? "",
                             Subject: notification.Title,
+                            Key: notification.Key,
                             Endpoint: device.Endpoint,
                             DeviceType: device.DeviceType,
                             PlatformType: device.PlatformType
