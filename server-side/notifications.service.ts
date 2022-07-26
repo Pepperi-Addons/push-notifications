@@ -1,10 +1,11 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
+import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
-} from '../shared/entities'
-import * as encryption from '../shared/encryption-service'
+} from 'shared'
+import * as encryption from 'shared/encryption-service'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -121,6 +122,7 @@ class NotificationsService {
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
+    currentUserName: string = "";
 
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
@@ -138,6 +140,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
+        this.getUserName(this.currentUserUUID).then(res => this.currentUserName = res ?? "");
 
         this.sns = new AWS.SNS();
     }
@@ -194,6 +197,13 @@ class NotificationsService {
         }
         else {
             throw new Error(`User with Email: ${userEmail} does not exist`);
+        }
+    }
+
+    async getUserName(userUUID: string) {
+        const user: User = await this.papiClient.users.uuid(userUUID).get();
+        if (user != undefined) {
+            return (user.FirstName ?? "") + (user.LastName ?? "") 
         }
     }
 
@@ -262,6 +272,7 @@ class NotificationsService {
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
             body.CreatorUUID = this.currentUserUUID;
+            body.CreatorName = this.currentUserName;
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
