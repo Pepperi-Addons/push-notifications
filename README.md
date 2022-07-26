@@ -19,6 +19,7 @@ A template for creating a pepperi addon with an angular app for the client-side 
 npm init @pepperi-addons
 ```
 or 
+
 ``` bash
 npx @pepperi-addons/create
 ```
