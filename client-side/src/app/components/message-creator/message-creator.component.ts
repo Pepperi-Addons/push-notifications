@@ -84,6 +84,12 @@ export class MessageCreatorComponent implements OnInit {
 
   onValueChanged(element, $event) {
   }
+
+  onBackButtonClicked() {
+    this.router.navigate(['../notifications_log'], {
+      relativeTo: this.route
+    });
+  }
 }
 
 export type MessageObject = {
