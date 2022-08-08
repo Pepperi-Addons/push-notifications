@@ -5,7 +5,7 @@ import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from 'shared'
-import * as encryption from 'shared/encryption-service'
+import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -140,7 +140,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        this.getUserName(this.currentUserUUID).then(res => this.currentUserName = res ?? "");
+        this.getUserName(this.currentUserUUID).then((res) => this.currentUserName = res ?? "");
 
         this.sns = new AWS.SNS();
     }
@@ -700,6 +700,7 @@ class NotificationsService {
                         "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
+                        "CreatorName": this.currentUserName,
                         "Read": body.Read ?? false
                     }
                     notifications.push(notification);
