@@ -91,8 +91,10 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   onBackButtonClicked() {
-    this.router.navigate(['../notifications_log'], {
-      relativeTo: this.route
+    // this.router.navigate(['../notifications_log'], {
+    this.router.navigate(['../'], {
+          relativeTo: this.route,
+          queryParamsHandling: 'merge',
     });
   }
 }

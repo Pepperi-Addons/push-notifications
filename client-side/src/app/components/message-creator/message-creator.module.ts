@@ -13,12 +13,12 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { PepSnackBarModule } from '@pepperi-addons/ngx-lib/snack-bar';
 import { RouterModule, Routes } from '@angular/router';
 
-export const routes: Routes = [
-  {
-      path: 'message_creator',
-      component: MessageCreatorComponent,
-  }
-];
+// export const routes: Routes = [
+//   {
+//       path: 'message_creator',
+//       component: MessageCreatorComponent,
+//   }
+// ];
 
 @NgModule({
   declarations: [
@@ -34,7 +34,7 @@ export const routes: Routes = [
     MatSnackBarModule,
     PepSnackBarModule,
     TranslateModule.forChild(),
-    RouterModule.forChild(routes)
+    // RouterModule.forChild(routes)
   ]
 })
 export class MessageCreatorModule {

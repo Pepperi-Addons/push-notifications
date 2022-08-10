@@ -3,9 +3,11 @@ import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { SettingsComponent } from './settings.component';
 
-import { MessageCreatorComponent } from '../message-creator/message-creator.component';
+// import { MessageCreatorComponent } from '../message-creator/message-creator.component';
 import { DeviceManagmentComponent } from '../device-managment/device-managment.component';
-import { NotificationsLogComponent } from '../notifications-log/notifications-log.component';
+import { NotificationsLogComponent } from '../notifications-log';
+import { MessageCreatorComponent } from '../message-creator';
+// import { NotificationsLogComponent } from '../notifications-log/notifications-log.component';
 
 // Important for single spa
 @Component({
@@ -16,20 +18,27 @@ export class EmptyRouteComponent {}
 
 const routes: Routes = [
     {
-        path: ':settingsSectionName/:addonUUID',// /:slugName
+        path: ':settingsSectionName/:addonUUID', // /:slugName'
         component: SettingsComponent,
         children: [
-            {
-                path: 'message_creator',
-                component: MessageCreatorComponent
-            },
             {
                 path: 'device_managment',
                 component: DeviceManagmentComponent
             },
             {
                 path: 'notifications_log',
-                component: NotificationsLogComponent
+                component: NotificationsLogComponent,
+                // loadChildren: () => import('../notifications-log/notifications-log.module').then(m => m.NotificationsLogModule),
+                // children: [{
+                //     path: 'message_creator',
+                //     component: MessageCreatorComponent,
+                //     // loadChildren: () => import('../message-creator/message-creator.module').then(m => m.MessageCreatorModule),
+                // }]
+            },
+            {
+                path: 'notifications_log/message_creator',
+                component: MessageCreatorComponent,
+                // loadChildren: () => import('../message-creator/message-creator.module').then(m => m.MessageCreatorModule),
             },
             { path: '**', component: EmptyRouteComponent }
         ]

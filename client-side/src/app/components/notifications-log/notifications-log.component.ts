@@ -159,7 +159,7 @@ export class NotificationsLogComponent implements OnInit {
       return actions;
     }
   }
-
+  
   goToMessageCreator(notification?) {
     if (notification === undefined) {
       // this.router.navigate(['../message_creator'], {

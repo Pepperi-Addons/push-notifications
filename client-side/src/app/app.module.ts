@@ -21,6 +21,7 @@ import { AppRoutingModule } from './app.routes';
 import { AppComponent } from './app.component';
 
 import { config } from './addon.config';
+import { SettingsComponent } from './components/settings';
 
 @NgModule({
     declarations: [	
@@ -71,7 +72,7 @@ export class AppModule implements DoBootstrap {
         this.pepAddonService.defineCustomElement(`notifications-element-${config.AddonUUID}`, NotificationBlockComponent, this.injector);
         this.pepAddonService.defineCustomElement(`notifications-editor-element-${config.AddonUUID}`, NotificationBlockEditorComponent, this.injector);
 
-        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, DeviceManagmentComponent, this.injector);
-        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, NotificationsLogComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, SettingsComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, SettingsComponent, this.injector);
     }
 }

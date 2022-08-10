@@ -7,15 +7,33 @@ import { PepAddonService, PepNgxLibModule } from '@pepperi-addons/ngx-lib';
 import { SettingsComponent } from './settings.component';
 import { SettingsRoutingModule } from './settings.routes';
 
+import { DeviceManagmentModule } from '../device-managment';
+import { NotificationsLogModule } from '../notifications-log';
+
+import { config } from '../../addon.config';
+
 @NgModule({
     declarations: [
-        SettingsComponent
+        SettingsComponent,
     ],
     imports: [
         CommonModule,
         PepNgxLibModule,
         SettingsRoutingModule,
-        TranslateModule.forChild(),
+        DeviceManagmentModule,
+        NotificationsLogModule,
+        TranslateModule.forChild({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: (addonService: PepAddonService) => 
+                    PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
+                deps: [PepAddonService]
+            }, isolate: false
+        }),
+    ],
+    providers: [
+        TranslateStore,
+        // When loading this module from route we need to add this here (because only this module is loading).
     ]
 })
 export class SettingsModule {
