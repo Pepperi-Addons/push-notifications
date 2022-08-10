@@ -21,7 +21,7 @@ import { AppRoutingModule } from './app.routes';
 import { AppComponent } from './app.component';
 
 import { config } from './addon.config';
-import { SettingsComponent } from './components/settings';
+import { SettingsComponent, SettingsModule } from './components/settings';
 
 @NgModule({
     declarations: [	
@@ -34,6 +34,7 @@ import { SettingsComponent } from './components/settings';
         HttpClientModule,
         // AddonModule,
         AppRoutingModule,
+        SettingsModule,
         NotificationBlockModule,
         NotificationBlockEditorModule,
         MessageCreatorModule,
