@@ -68,6 +68,8 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
+    const relationsRes = await createPageBlockRelation(client);
+    const settingsRelationsRes = await createSettingsRelation(client);
     return { success: true, resultObject: {} }
 }
 
@@ -91,7 +93,10 @@ async function createPageBlockRelation(client: Client): Promise<any> {
             ComponentName: `NotificationBlockComponent`,
             ModuleName: `NotificationBlockModule`,
             EditorComponentName: `NotificationBlockEditorComponent`,
-            EditorModuleName: `NotificationBlockEditorModule`
+            EditorModuleName: `NotificationBlockEditorModule`,
+            ElementsModule: 'WebComponents',
+            ElementName: `notifications-element-${client.AddonUUID}`,
+            EditorElementName: `notifications-editor-element-${client.AddonUUID}`,
         };
 
         const service = new NotificationsService(client);
@@ -111,14 +116,17 @@ async function createSettingsRelation(client: Client): Promise<any> {
         let settingsBlockRelation: Relation = {
             RelationName: "SettingsBlock",
             GroupName: 'Push Notifications',
-            Name: 'device_managment',
+            SlugName: 'device_managment',
+            Name: 'DeviceManagment',
             Description: 'Device Managment',
             Type: "NgComponent",
             SubType: "NG14",
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: filename,
             ComponentName: `DeviceManagmentComponent`,
-            ModuleName: `DeviceManagmentModule`
+            ModuleName: `DeviceManagmentModule`,
+            ElementsModule: 'WebComponents',
+            ElementName: `device-managment-element-${client.AddonUUID}`,
         };
 
         let result = await service.upsertRelation(settingsBlockRelation);
@@ -126,14 +134,17 @@ async function createSettingsRelation(client: Client): Promise<any> {
         settingsBlockRelation = {
             RelationName: "SettingsBlock",
             GroupName: 'Push Notifications',
-            Name: 'notifications_log',
+            SlugName: 'notifications_log',
+            Name: 'NotificationsLog',
             Description: 'Notifications Log',
             Type: "NgComponent",
             SubType: "NG14",
             AddonUUID: client.AddonUUID,
             AddonRelativeURL: filename,
             ComponentName: `NotificationsLogComponent`,
-            ModuleName: `NotificationsLogModule`
+            ModuleName: `NotificationsLogModule`,
+            ElementsModule: 'WebComponents',
+            ElementName: `notifications-log-element-${client.AddonUUID}`,
         };
 
         result = await service.upsertRelation(settingsBlockRelation);
