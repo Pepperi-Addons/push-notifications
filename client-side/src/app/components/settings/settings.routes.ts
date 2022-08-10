@@ -28,17 +28,10 @@ const routes: Routes = [
             {
                 path: 'notifications_log',
                 component: NotificationsLogComponent,
-                // loadChildren: () => import('../notifications-log/notifications-log.module').then(m => m.NotificationsLogModule),
-                // children: [{
-                //     path: 'message_creator',
-                //     component: MessageCreatorComponent,
-                //     // loadChildren: () => import('../message-creator/message-creator.module').then(m => m.MessageCreatorModule),
-                // }]
             },
             {
                 path: 'notifications_log/message_creator',
                 component: MessageCreatorComponent,
-                // loadChildren: () => import('../message-creator/message-creator.module').then(m => m.MessageCreatorModule),
             },
             { path: '**', component: EmptyRouteComponent }
         ]
