@@ -37,14 +37,16 @@ class PlatformIOS extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
+        let jsonData = JSON.stringify({ Notification: data.Notification})
         return {
-            "default": `${data.Subject}`,
+            "default": `${data.Notification.Title}`,
             "APNS": JSON.stringify({
                 "aps": {
+                    "eventData": jsonData,
                     "badge": numberOfUnreadNotifications,
                     "alert": {
-                        "title": `${data.Subject}`,
-                        "body": `${data.Message}`
+                        "title": `${data.Notification.Title}`,
+                        "body": `${data.Notification.Body}`,
                     }
                 }
             })
@@ -77,16 +79,18 @@ class PlatformAndroid extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
-        let id = NotificationsService.hashCode(data.Key)
+        console.log("@@@Android payload data", data)
+        let id = NotificationsService.hashCode(data.Notification.Key)
+        let jsonData = JSON.stringify({ Notification: data.Notification})
+        console.log("@@@Android jsonData", jsonData)
         return {
-            "default": `${data.Subject}`,
+            "default": `${data.Notification.Title}`,
             "GCM": JSON.stringify(
                 {
                     "data": {
-                        "body": `${data.Message}`,
-                        "title": `${data.Subject}`,
                         "badge": `${numberOfUnreadNotifications}`,
-                        "id": `${id}`
+                        "id": `${id}`,
+                        "eventData": jsonData
                     }
                 }
             )
@@ -414,6 +418,7 @@ class NotificationsService {
         console.log("@@@pushNotification body: ", body);
         for (const object of body.Message.ModifiedObjects) {
             try {
+                console.log("@@@pushNotification object: ", object);
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
                 //get user devices by user uuid
                 const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
@@ -422,9 +427,7 @@ class NotificationsService {
                     // for each user device send push notification
                     for (const device of userDevicesList) {
                         let pushNotification = {
-                            Message: notification.Body ?? "",
-                            Subject: notification.Title,
-                            Key: notification.Key,
+                            Notification: notification,
                             Endpoint: device.Endpoint,
                             DeviceType: device.DeviceType,
                             PlatformType: device.PlatformType
@@ -552,11 +555,13 @@ class NotificationsService {
             case "Addon":
                 return body.AddonRelativeURL;
             default:
+                console.log("@@@createApplicationEndpoint: body :", body);
                 const params = {
                     PlatformApplicationArn: body.PlatformApplicationArn,
                     Token: body.DeviceToken
                 };
                 const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
+                console.log("@@@Endpoint:", Endpoint);
                 return Endpoint.EndpointArn;
         }
     }
