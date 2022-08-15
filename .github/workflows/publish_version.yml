@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - 'DI-20860---Notifications-device-UI-populated-after-a-long-time---iOS'
 
 jobs:
   publish-addon:
