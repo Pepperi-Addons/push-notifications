@@ -17,6 +17,7 @@ export interface Notification {
     UserUUID?: string,
     UserEmail?: string,
     CreatorUserUUID?: string,
+    CreatorName?: string,
     Read: boolean
 }
 
