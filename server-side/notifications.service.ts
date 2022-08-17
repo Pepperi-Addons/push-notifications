@@ -1,10 +1,11 @@
 import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
+import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
-} from '../shared/entities'
-import * as encryption from '../shared/encryption-service'
+} from 'shared'
+import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -36,14 +37,16 @@ class PlatformIOS extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
+        let jsonData = JSON.stringify({ Notification: data.Notification})
         return {
-            "default": `${data.Subject}`,
+            "default": `${data.Notification.Title}`,
             "APNS": JSON.stringify({
                 "aps": {
+                    "eventData": jsonData,
                     "badge": numberOfUnreadNotifications,
                     "alert": {
-                        "title": `${data.Subject}`,
-                        "body": `${data.Message}`
+                        "title": `${data.Notification.Title}`,
+                        "body": `${data.Notification.Body}`,
                     }
                 }
             })
@@ -76,14 +79,18 @@ class PlatformAndroid extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
+        console.log("@@@Android payload data", data)
+        let id = NotificationsService.hashCode(data.Notification.Key)
+        let jsonData = JSON.stringify({ Notification: data.Notification})
+        console.log("@@@Android jsonData", jsonData)
         return {
-            "default": `${data.Subject}`,
+            "default": `${data.Notification.Title}`,
             "GCM": JSON.stringify(
                 {
                     "data": {
-                        "body": `${data.Message}`,
-                        "title": `${data.Subject}`,
-                        "badge": `${numberOfUnreadNotifications}`
+                        "badge": `${numberOfUnreadNotifications}`,
+                        "id": `${id}`,
+                        "eventData": jsonData
                     }
                 }
             )
@@ -119,6 +126,7 @@ class NotificationsService {
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
+    currentUserName: string = "";
 
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
@@ -136,6 +144,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
+        this.getUserName(this.currentUserUUID).then((res) => this.currentUserName = res ?? "");
 
         this.sns = new AWS.SNS();
     }
@@ -195,6 +204,13 @@ class NotificationsService {
         }
     }
 
+    async getUserName(userUUID: string) {
+        const user: User = await this.papiClient.users.uuid(userUUID).get();
+        if (user != undefined) {
+            return (user.FirstName ?? "") + (user.LastName ?? "") 
+        }
+    }
+
     getExpirationDateTime(days: number) {
         const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         return new Date(Date.now() + daysToAdd)
@@ -203,6 +219,22 @@ class NotificationsService {
     async getNumberOfUnreadNotifications() {
         let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'` });
         return notifications.length;
+    }
+
+    public static hashCode(str) {
+        let hash = 0, i, chr;
+        if (str.length === 0) return hash;
+        for (i = 0; i < str.length; i++) {
+          chr   = str.charCodeAt(i);
+          hash  = ((hash << 5) - hash) + chr;
+          hash |= 0; // Convert to 32bit integer
+        }     
+        // check if hashCode is positive number
+        if (hash < 0) {
+            // make it positive number
+            hash = hash * -1;
+        }   
+        return hash;
     }
 
     // For page block template
@@ -244,6 +276,7 @@ class NotificationsService {
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
             body.CreatorUUID = this.currentUserUUID;
+            body.CreatorName = this.currentUserName;
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
@@ -385,6 +418,7 @@ class NotificationsService {
         console.log("@@@pushNotification body: ", body);
         for (const object of body.Message.ModifiedObjects) {
             try {
+                console.log("@@@pushNotification object: ", object);
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
                 //get user devices by user uuid
                 const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
@@ -393,8 +427,7 @@ class NotificationsService {
                     // for each user device send push notification
                     for (const device of userDevicesList) {
                         let pushNotification = {
-                            Message: notification.Body ?? "",
-                            Subject: notification.Title,
+                            Notification: notification,
                             Endpoint: device.Endpoint,
                             DeviceType: device.DeviceType,
                             PlatformType: device.PlatformType
@@ -522,11 +555,13 @@ class NotificationsService {
             case "Addon":
                 return body.AddonRelativeURL;
             default:
+                console.log("@@@createApplicationEndpoint: body :", body);
                 const params = {
                     PlatformApplicationArn: body.PlatformApplicationArn,
                     Token: body.DeviceToken
                 };
                 const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
+                console.log("@@@Endpoint:", Endpoint);
                 return Endpoint.EndpointArn;
         }
     }
@@ -670,6 +705,7 @@ class NotificationsService {
                         "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
+                        "CreatorName": this.currentUserName,
                         "Read": body.Read ?? false
                     }
                     notifications.push(notification);

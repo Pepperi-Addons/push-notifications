@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { User } from '@pepperi-addons/papi-sdk';
 import { AddonService } from './addon.service';
 
 @Injectable({
@@ -26,12 +25,5 @@ export class NotificationsService {
 
     bulkNotifications(notifications) {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/bulk_notifications`, notifications).toPromise()
-    }
-
-    async getUserName(userUUID: string) {
-        const user: User = await this.addonService.papiClient.users.uuid(userUUID).get();
-        if (user != undefined) {
-            return user.FirstName + user.LastName;
-        }
     }
 }
