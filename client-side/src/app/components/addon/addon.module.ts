@@ -1,65 +1,65 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
+// import { NgModule } from '@angular/core';
+// import { CommonModule } from '@angular/common';
+// import { RouterModule, Routes } from '@angular/router';
+// import { HttpClientModule } from '@angular/common/http';
 
-import { PepNgxLibModule, PepAddonService } from '@pepperi-addons/ngx-lib';
-import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
-import { PepSizeDetectorModule } from '@pepperi-addons/ngx-lib/size-detector';
-import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
-import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/icon';
+// import { PepNgxLibModule, PepAddonService } from '@pepperi-addons/ngx-lib';
+// import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
+// import { PepSizeDetectorModule } from '@pepperi-addons/ngx-lib/size-detector';
+// import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
+// import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/icon';
 
-import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
-import { NotificationsModule } from '../notifications/notifications.module';
-import { AddonService } from '../../services/addon.service';
-import { AddonComponent } from './index';
+// import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
+// import { NotificationsModule } from '../notifications/notifications.module';
+// import { AddonService } from '../../services/addon.service';
+// import { AddonComponent } from './index';
 
-const pepIcons = [
-    pepIconSystemClose,
-];
+// const pepIcons = [
+//     pepIconSystemClose,
+// ];
 
-export const routes: Routes = [
-    {
-        path: '',
-        component: AddonComponent
-    }
-];
+// export const routes: Routes = [
+//     {
+//         path: '',
+//         component: AddonComponent
+//     }
+// ];
 
-@NgModule({
-    declarations: [
-        AddonComponent,
-    ],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        PepNgxLibModule,
-        PepSizeDetectorModule,
-        PepTopBarModule,
-        PepPageLayoutModule,
-        NotificationsModule,
-        TranslateModule.forChild({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: PepAddonService.createMultiTranslateLoader,
-                deps: [PepAddonService]
-            }, isolate: false
-        }),
-        RouterModule.forChild(routes)
-    ],
-    exports:[AddonComponent],
-    providers: [
-        TranslateStore,
-        // When loading this module from route we need to add this here (because only this module is loading).
-        AddonService
-    ]
-})
-export class AddonModule {
-    constructor(
-        translate: TranslateService,
-        private pepIconRegistry: PepIconRegistry,
-        private pepAddonService: PepAddonService
-    ) {
-        this.pepAddonService.setDefaultTranslateLang(translate);
-        this.pepIconRegistry.registerIcons(pepIcons);
-    }
-}
+// @NgModule({
+//     declarations: [
+//         AddonComponent,
+//     ],
+//     imports: [
+//         CommonModule,
+//         HttpClientModule,
+//         PepNgxLibModule,
+//         PepSizeDetectorModule,
+//         PepTopBarModule,
+//         PepPageLayoutModule,
+//         NotificationsModule,
+//         TranslateModule.forChild({
+//             loader: {
+//                 provide: TranslateLoader,
+//                 useFactory: PepAddonService.createMultiTranslateLoader,
+//                 deps: [PepAddonService]
+//             }, isolate: false
+//         }),
+//         RouterModule.forChild(routes)
+//     ],
+//     exports:[AddonComponent],
+//     providers: [
+//         TranslateStore,
+//         // When loading this module from route we need to add this here (because only this module is loading).
+//         AddonService
+//     ]
+// })
+// export class AddonModule {
+//     constructor(
+//         translate: TranslateService,
+//         private pepIconRegistry: PepIconRegistry,
+//         private pepAddonService: PepAddonService
+//     ) {
+//         this.pepAddonService.setDefaultTranslateLang(translate);
+//         this.pepIconRegistry.registerIcons(pepIcons);
+//     }
+// }
