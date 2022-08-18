@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { NotificationBlockEditorComponent } from './notification-block-editor.component';
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 import { PepAddonService, PepFileService} from '@pepperi-addons/ngx-lib';
-import { HttpClient } from '@angular/common/http';
 
 import { config } from '../../addon.config';
 
@@ -13,11 +12,11 @@ import { config } from '../../addon.config';
     TranslateModule.forChild({
       loader: {
           provide: TranslateLoader,
-          useFactory: (http: HttpClient, fileService: PepFileService, addonService: PepAddonService) => 
-              PepAddonService.createDefaultMultiTranslateLoader(http, fileService, addonService, config.AddonUUID),
-          deps: [HttpClient, PepFileService, PepAddonService],
+          useFactory: (addonService: PepAddonService) => 
+              PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
+          deps: [PepAddonService]
       }, isolate: false
-  })
+    })
   ],
   exports: [NotificationBlockEditorComponent],
   providers: [

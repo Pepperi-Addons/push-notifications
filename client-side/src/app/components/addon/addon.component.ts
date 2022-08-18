@@ -1,35 +1,35 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
-import { TranslateService } from '@ngx-translate/core';
+// import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+// import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+// import { TranslateService } from '@ngx-translate/core';
 
-import { AddonService } from "../../services/addon.service";
+// import { AddonService } from "../../services/addon.service";
 
-@Component({
-    selector: 'addon-module',
-    templateUrl: './addon.component.html',
-    styleUrls: ['./addon.component.scss']
-})
-export class AddonComponent implements OnInit {
-    @Input() hostObject: any;
+// @Component({
+//     selector: 'addon-module',
+//     templateUrl: './addon.component.html',
+//     styleUrls: ['./addon.component.scss']
+// })
+// export class AddonComponent implements OnInit {
+//     @Input() hostObject: any;
     
-    @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
+//     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
     
-    screenSize: PepScreenSizeType;
+//     screenSize: PepScreenSizeType;
 
-    constructor(
-        public addonService: AddonService,
-        public layoutService: PepLayoutService,
-        public translate: TranslateService
-    ) {
-        this.layoutService.onResize$.subscribe(size => {
-            this.screenSize = size;
-        });
-    }
+//     constructor(
+//         public addonService: AddonService,
+//         public layoutService: PepLayoutService,
+//         public translate: TranslateService
+//     ) {
+//         this.layoutService.onResize$.subscribe(size => {
+//             this.screenSize = size;
+//         });
+//     }
 
-    ngOnInit() {
-    }
+//     ngOnInit() {
+//     }
 
-    openDialog() {
+//     openDialog() {
         
-    }
-}
+//     }
+// }

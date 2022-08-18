@@ -5,6 +5,7 @@ import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationsLogService } from '../../services/notifications-log.services';
 import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
+import { config } from '../../addon.config';
 
 @Component({
   selector: 'app-notifications-log',
@@ -21,7 +22,7 @@ export class NotificationsLogComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     ) {
-      this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
+      this.addonService.addonUUID = config.AddonUUID;
      }
 
   ngOnInit() {
@@ -158,16 +159,20 @@ export class NotificationsLogComponent implements OnInit {
       return actions;
     }
   }
-
+  
   goToMessageCreator(notification?) {
     if (notification === undefined) {
-      this.router.navigate(['../message_creator'], {
-        relativeTo: this.route
+      // this.router.navigate(['../message_creator'], {
+        this.router.navigate(['message_creator'], {
+        relativeTo: this.route,
+        queryParamsHandling: 'merge',
       });
     }
     else {
-      this.router.navigate(['../message_creator'], {
+      // this.router.navigate(['../message_creator'], {
+      this.router.navigate(['message_creator'], {
         relativeTo: this.route,
+        queryParamsHandling: 'merge',
         queryParams: {
           "UserEmailList": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,

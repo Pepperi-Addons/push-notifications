@@ -6,6 +6,7 @@ import { AddonService } from 'src/app/services/addon.service';
 import { ActivatedRoute } from '@angular/router';
 import { PopupDialogComponent } from '../popup-dialog/popup-dialog.component';
 import { PepDialogActionButton } from '@pepperi-addons/ngx-lib/dialog';
+import { config } from '../../addon.config';
 
 @Component({
   selector: 'app-device-managment',
@@ -20,7 +21,7 @@ export class DeviceManagmentComponent implements OnInit {
     private addonService: AddonService,
     private route: ActivatedRoute
   ) {
-    this.addonService.addonUUID = this.route.snapshot.params.addon_uuid;
+    this.addonService.addonUUID = config.AddonUUID;
   }
 
   ngOnInit() {
