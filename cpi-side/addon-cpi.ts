@@ -34,24 +34,14 @@ async function navigateToNotificationsSlug(data: any) {
 }
 
 async function sync(client: Client) {
-    debugger;
     const syncOptions = {    
         "showHud": true
     };
-    
-    //const res = await client.sync(syncOptions);
-    // if (res.canceled) {
-    //     console.log('HUD canceled');
-    //     console.log('blockResult :>> ', await res.result);
-    // } else {
-    //     console.log('HUD finished with result :>> ', res.result);
-    // }
-}
-
-function sleep(ms: number) : Promise<void>{
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, ms)
-    })
+    const res = await client["sync"](syncOptions);
+    if (res.success) {
+        console.log('HUD finished with result :>> ', res.result);
+    } else {
+        console.log('HUD canceled');
+        console.log('blockResult :>> ', await res.result);
+    }
 }
