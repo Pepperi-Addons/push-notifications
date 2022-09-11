@@ -176,7 +176,7 @@ async function createNotificationsResource(papiClient: PapiClient) {
             Read: {
                 Type: 'Bool'
             },
-            NavigatePath: {
+            NavigationPath: {
                 Type: 'String'
             }
         }

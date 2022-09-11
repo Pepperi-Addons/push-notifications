@@ -5,5 +5,6 @@ export interface INotificationItem {
     read: boolean;
     from?: string;
     date: Date;
+    navigationPath: string;
     goToActivityName?: string;
 }

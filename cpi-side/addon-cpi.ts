@@ -6,9 +6,9 @@ export async function load(configuration: any) {
         const main = async (data) => {
             await sync(data.client);
             console.log("Received notification:" ,data.Notification)
-            if (data.Notification?.NavigatePath != undefined) {
+            if (data.Notification?.NavigationPath != undefined) {
                 data.client?.navigateTo({
-                    url: data.Notification?.NavigatePath,
+                    url: data.Notification?.NavigationPath,
                     history: "ClearAll",
                   });
             }

@@ -4,6 +4,7 @@ import { AddonService } from '../../services/addon.service';
 import { INotificationItem } from '../notifications/notifications.model';
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { config } from '../../addon.config';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-notification-block',
@@ -16,6 +17,7 @@ export class NotificationBlockComponent implements OnInit {
   screenSize: PepScreenSizeType;
 
   constructor(
+    private translate: TranslateService,
     private notificationsService: NotificationsService,
     private addonService: AddonService,
     public layoutService: PepLayoutService
@@ -41,7 +43,9 @@ export class NotificationBlockComponent implements OnInit {
         read: notification.Read,
         title: notification.Title,
         body: notification.Body,
-        from: notification.CreatorName
+        from: notification.CreatorName,
+        navigationPath: notification.NavigationPath,
+        goToActivityName: this.translate.instant("Go_To_Activity_Name")
       }
       notificationsItems.push(item);
     }

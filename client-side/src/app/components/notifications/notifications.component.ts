@@ -8,7 +8,7 @@ import { INotificationItem } from './notifications.model';
     styleUrls: ['./notifications.component.scss']
 })
 export class NotificationsComponent implements OnInit {
-    
+
     private _items: INotificationItem[] = [];
     @Input()
     set items(value: INotificationItem[]) {
@@ -24,7 +24,7 @@ export class NotificationsComponent implements OnInit {
 
     @Output()
     itemClick: EventEmitter<INotificationItem> = new EventEmitter<INotificationItem>();
-    
+
     @Output()
     itemReadClick: EventEmitter<INotificationItem> = new EventEmitter<INotificationItem>();
 
@@ -48,7 +48,7 @@ export class NotificationsComponent implements OnInit {
 
     onNotificationItemClick(item: INotificationItem) {
         console.log('onNotificationItemClick');
-        
+
         // Mark as read only if this notification is unread.
         if (!item.read) {
             item.read = true;
@@ -69,4 +69,25 @@ export class NotificationsComponent implements OnInit {
         this.itemReadClick.emit(item);
     }
 
+    onGoToBtnClick(item: INotificationItem) {
+        this.emitEvent({
+            "Notification": {
+                "NavigationPath": item.navigationPath
+            }
+        });
+    }
+
+    emitEvent(e: any): void {
+        const eventData = {
+            detail: {
+                eventKey: 'PushNotificationReceived',
+                // the data for the event
+                eventData: {
+                    data: e
+                },
+            },
+        };
+        const event = new CustomEvent('emit-event', eventData);
+        window.dispatchEvent(event);
+    }
 }

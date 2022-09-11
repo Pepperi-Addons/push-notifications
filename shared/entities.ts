@@ -19,7 +19,7 @@ export interface Notification {
     CreatorUserUUID?: string,
     CreatorName?: string,
     Read: boolean,
-    NavigatePath?: string
+    NavigationPath?: string
 }
 
 export interface NotificationLog extends AddonData {
