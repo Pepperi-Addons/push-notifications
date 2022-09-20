@@ -3,15 +3,14 @@ import { CommonModule } from '@angular/common';
 import { MessageCreatorComponent } from './message-creator.component';
 import { PepTextboxModule } from '@pepperi-addons/ngx-lib/textbox';
 import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
-import { PepFileService, PepAddonService} from '@pepperi-addons/ngx-lib';
-import { HttpClient } from '@angular/common/http';
+import { PepAddonService} from '@pepperi-addons/ngx-lib';
 import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { PepSnackBarModule } from '@pepperi-addons/ngx-lib/snack-bar';
-import { RouterModule, Routes } from '@angular/router';
+import { PepChipsModule } from '@pepperi-addons/ngx-lib/chips';
 
 // export const routes: Routes = [
 //   {
@@ -33,6 +32,7 @@ import { RouterModule, Routes } from '@angular/router';
     PepButtonModule,
     MatSnackBarModule,
     PepSnackBarModule,
+    PepChipsModule,
     TranslateModule.forChild(),
     // RouterModule.forChild(routes)
   ]
