@@ -24,7 +24,7 @@ export class MessageCreatorComponent implements OnInit {
   @ViewChild('chipsComp') chipsComp: PepChipsComponent;
 
   message: MessageObject = {
-    UsersUUID: [],
+    UserEmailList: [],
     Title: "",
     Body: ""
   };
@@ -53,7 +53,7 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   async sendNotifications() {
-    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.value)
+    this.message.UserEmailList = this.chipsComp.chips.map(chips => chips.value)
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
   }
@@ -92,7 +92,6 @@ export class MessageCreatorComponent implements OnInit {
       });
     }
   }
-  
   onBackButtonClicked() {
     this.router.navigate(['../'], {
           relativeTo: this.route,
@@ -110,15 +109,17 @@ export class MessageCreatorComponent implements OnInit {
       },
       hostEventsCallback: ($event) => {
         if($event.action == 'on-save'){
-          let newChips: any[]  = [];
-          $event.data.selectedObjectKeys.forEach(chip => {
-            let chipObj = { 
-              value: chip 
-            }
-            if(!this.chipsComp.chips.includes(chipObj))
-            newChips.push(chipObj)
+          this.notificationsService.getUsersEmails($event.data.selectedObjectKeys).then((users) => {
+            let newChips: any[]  = [];
+            users.forEach(user => {
+                let chipObj = { 
+                value: user.Email 
+              }
+              if(!this.chipsComp.chips.includes(chipObj)) 
+              newChips.push(chipObj)
+            });
+            this.chipsComp.addChipsToList(newChips); 
           });
-          this.chipsComp.addChipsToList(newChips);  
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -130,7 +131,7 @@ export class MessageCreatorComponent implements OnInit {
 }
 
 export type MessageObject = {
-  UsersUUID?: string[],
+  UserEmailList?: string[],
   Title: string,
   Body: string
 } 

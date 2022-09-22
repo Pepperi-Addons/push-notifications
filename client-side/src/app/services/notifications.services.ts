@@ -26,4 +26,8 @@ export class NotificationsService {
     bulkNotifications(notifications) {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/bulk_notifications`, notifications).toPromise()
     }
+
+    getUsersEmails(usersUUID) {
+        return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/getUsersEmailsByUUIDs`, usersUUID).toPromise()
+    }
 }

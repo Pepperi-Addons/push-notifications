@@ -172,7 +172,7 @@ export class NotificationsLogComponent implements OnInit {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "UsersUUID": notification.Fields[2]?.FormattedValue,
+          "UserEmailList": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,
           "Body": notification.Fields[1]?.FormattedValue,
         }

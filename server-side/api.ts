@@ -156,6 +156,16 @@ export async function import_notifications_source(client: Client, request: Reque
 }
 
 //called from client side
+export async function getUsersEmailsByUUIDs(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+    if (request.method == 'POST') {
+        return service.getUsersEmailsByUUIDs(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function bulk_notifications(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'POST') {

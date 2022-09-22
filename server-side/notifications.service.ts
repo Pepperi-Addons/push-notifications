@@ -1,4 +1,4 @@
-import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonData, SearchBody } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
@@ -209,6 +209,16 @@ class NotificationsService {
         if (user != undefined) {
             return (user.FirstName ?? "") + (user.LastName ?? "") 
         }
+    }
+
+    // get list of users emails for the chips in message-creator
+    async getUsersEmailsByUUIDs(uuids: string[]) {
+        const body: any = {
+            Fields: ['Email'],
+            KeyList: uuids,
+        }
+       let users = await this.papiClient.resources.resource("users").search(body) as any;
+       return users.Objects;
     }
 
     getExpirationDateTime(days: number) {
@@ -694,15 +704,15 @@ class NotificationsService {
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
 
-        if (body.UsersUUID != undefined) {
-            if (body.UsersUUID.length > 100) {
+        if (body.UserEmailList != undefined) {
+            if (body.UserEmailList.length > 100) {
                 throw new Error('Max 100 hard coded users');
             }
             else {
                 let notifications: Notification[] = [];
-                for (let uuid of body.UsersUUID) {
+                for (let email of body.UserEmailList) {
                     let notification: Notification = {
-                        "UserUUID": uuid,
+                        "UserEmail": email,
                         "Title": body.Title,
                         "Body": body.Body,
                         "CreatorName": this.currentUserName,
@@ -907,11 +917,10 @@ class NotificationsService {
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': body.UsersUUID,
+            'UsersList': body.UserEmailList,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()
-
         };
 
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).upsert(notificationLog);
