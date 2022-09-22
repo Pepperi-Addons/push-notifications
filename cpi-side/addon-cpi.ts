@@ -4,13 +4,18 @@ import { Client } from '@pepperi-addons/cpi-node/build/cpi-side/events';
 export async function load(configuration: any) {
     pepperi.events.intercept("PushNotificationReceived" as any, {}, async (data, next) => {
         const main = async (data) => {
-            await sync(data.client);
             console.log("Received notification:" ,data.Notification)
             if (data.Notification?.NavigationPath != undefined) {
-                data.client?.navigateTo({
-                    url: data.Notification?.NavigationPath,
-                    history: "ClearAll",
-                  });
+                let res = await sync(data.client);
+                if (res.success == true) {
+                    data.client?.navigateTo({
+                        url: data.Notification?.NavigationPath,
+                        history: "ClearAll",
+                      });
+                }
+                else {
+                    console.log("sync action failed")
+                }
             }
             else {
                await navigateToNotificationsSlug(data);
@@ -35,13 +40,7 @@ async function navigateToNotificationsSlug(data: any) {
 
 async function sync(client: Client) {
     const syncOptions = {    
-        "showHud": true
+        "allowContinueInBackground": false
     };
-    const res = await client["sync"](syncOptions);
-    if (res.success) {
-        console.log('HUD finished with result :>> ', res.result);
-    } else {
-        console.log('HUD canceled');
-        console.log('blockResult :>> ', await res.result);
-    }
+    return await client["sync"](syncOptions);
 }
