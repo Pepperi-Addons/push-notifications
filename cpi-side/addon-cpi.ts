@@ -42,5 +42,5 @@ async function sync(client: Client) {
     const syncOptions = {    
         "allowContinueInBackground": false
     };
-    return await client["sync"](syncOptions);
+    return client.sync(syncOptions);
 }
