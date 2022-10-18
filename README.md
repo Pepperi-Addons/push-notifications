@@ -1,106 +1,48 @@
-# @pepperi-addons Typescript Template
+# Push Notification
 
-A template for creating a pepperi addon with an angular app for the client-side & a typescript nodejs app for the server-side
+Push notifications are clickable pop-up messages of information from a software application that appear on the users' mobile without a specific request from the user.
+In Notifications addon we also have a notifications screen that shows all the messages from the last 30 days.
 
-* debugging server side right in vscode 
-* a build script for creating all compiled files for addon
-* a publish script for uploading the addon
+# Addon Purpose
 
+We want to enable our clients to send push notifications to their users.
+The notification object can be related to a user in multiple ways:
+* Activity that the user is a part of 
+* Direct message to user 
+* Broadcast notifications 
+The notifications is supported for both Pepperi app and private label apps and can be sent from both  the api and managment addon screen.
 
-## Installation
----
+# Key Implementation Details 
+
+* SNS Service :
+
+We use Amazon SNS Push Notification - A Service that give us the ability to send push notification messages directly to apps on mobile devices.
+In order to send notification we need to:
+1. Create 'Platform applications' for the app. for the Pepperi App we are create this platform application and for label apps the admins are responsible for creating this platform app(we have api calls for this).
+2. Create an 'Endpoint' for each device that a user logs in to and has also confirmed receipt of notifications(we do it automatically in our native apps).
+
+* DIMX Service:
+
+We use this service when notifications are sent to several users at the same time - we create notifications in ADAL and with the help of PNS the notifications sent to the devices.
+
+* PNS Service:
+
+We use this service in many places, for example:
+1. When a notification is created in ADAL we use PNS to call the SNS 'Publish' func in order to send the notifications to the devices.
+2. When a device id removed from ADAL (can be from the addon UI or because the user logged out from the app), it use the PNS to remove the endpoint from the SNS service when its expiration date is arrvied. 
+3. When a platform application is removed, it also use the PNS to remove the Platform application from the SNS service when its expiration date is arrvied. 
+
+* CPI- Node Service:
+
+We use cpi-node for sync the app everytime a user click on notification pop-up and there is NavigationPath related to the notification object.
+We also use cpi-node slugs in order to navigate to the related screen when the notification pop-up clicked.
+
+# Future Plans:
+
+* There is a branch with the implementation of using chips and a resource list, which changes the way of choosing users to send messages (branch name: v 1.1)
+* 
+
 #### System Requirements
-`node --version` > 12.0.0
-
-`npm --version` > 6.0.0
-
-#### Install by running 
-``` bash
-npm init @pepperi-addons
-```
-or 
-
-``` bash
-npx @pepperi-addons/create
-```
-
-## Project structure
----
-The following is an overview of the project structure. 
-The node_modules folder is in use by `npm`
-
-#### Folders
-|Folder | Description |
-| ---:  | :---       |
-| .vscode | vscode tasks & launch |
-| client-side | an angular app that is the UI of the plugin |
-| server-side | a typescripe node.js app for writing an addon API |
-| publish | all files to be published to the addon are created in this folder |
-| publish/api | the api endpoints created |
-| publish/assets | put any assets you might need for the front end (eg. translation files, images) |
-
-#### Additional files
-`addon.config.json` contains information for publishing the addon
-
-`var_sk` put the var API secret key here, for publishing the addon. Make sure not to commit this file. How to get the secret you ask? It's a secret!
-
-`README.md` This file. You can file info here regarding your project.
-
-## Debugging
----
-To debug your addon in `Visual Studio Code`, press `F5` or `Run->Start Debugging`.
-You can then checkout your *API* at http://localhost:4400/api/foo. Be sure to supply a JWT for it to work.
-
-To view the addon UI, open https://app.pepperi.com/settings/your-app-uuid/editor?dev=true
-
-If you haven't created the addon yet you can use our placeholder plugin: 
-https://app.sandbox.pepperi.com/settings/a8f4698f-eb75-4a75-bdf6-1524eb9f6baf/editor?dev=true
-
-Open the browser inspector to make sure that the editor file is served locally
-
-
-## Publishing
----
-When you are ready to publish your addon. Update the `addon.config.json` file, with your addons info (AddonUUID etc.). Change the `AddonVersion` to 1.0.0. The publish script will automatically bump the version patch number every time you publish the app. (eg. the next version will be 1.0.1).
-
-To publish your addon you will need the secret-key. It is unique per addon. Put it in the var_sk file.
-
-Then run: 
-``` bash 
-npm run publish-addon
-```
-
-## Addon API
----
-An addon API is a javascript file that exports functions that can be called through the api.
-For example in `server-side/api.ts` we export a function `foo` like so:
-``` typescript
-export async function foo(client: Client, request: Request) {
-    const service = new NotoficationsService(client)
-    const res = await service.getAddons()
-    return res
-};
-```
-This function will run for the following API call:
-https://papi.pepperi.com/v1.0/addons/api/a8f4698f-eb75-4a75-bdf6-1524eb9f6baf/api/foo
-
-You can acess the API call method, query and body in `request.method` `request.query` and `request.body` respectfully.
-
-You can add as many files as you like in both typescript & javascript. These can `require` other files & packags. The build script will create a output file for every endpoint specified in: `addon.config.json` *Endpoints* field.
-
-To debug these api's locally, just press F5, and call:
-http://localhost:4400/api/foo
-
-
-## Addon Editor
----
-The editor is the addon's UI and is developed as an Angular app.
-
-## Contributions
----
-This project is far from being complete, and is missing in tooling, documentation, examples and more. We are also interested in creating other templates like a html-css-js front-end with a vanilla node.js backend. You are welcome to contribute at: 
-https://github.com/Pepperi-Addons/create-addon
-
-Please create your on addon in a repo under:
-https://github.com/Pepperi-Addons
-so that we can all learn from each other
+`cpi node --version` > 1.0.6
+`pfs --version` > 1.0.2
+`dimx --version` > 0.0.177
