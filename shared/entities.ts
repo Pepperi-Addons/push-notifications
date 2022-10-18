@@ -18,7 +18,8 @@ export interface Notification {
     UserEmail?: string,
     CreatorUserUUID?: string,
     CreatorName?: string,
-    Read: boolean
+    Read: boolean,
+    NavigationPath?: string
 }
 
 export interface NotificationLog extends AddonData {
@@ -59,6 +60,9 @@ export const notificationOnCreateSchema: Schema = {
             type: "string"
         },
         UserEmail: {
+            type: "string"
+        },
+        NavigationPath: {
             type: "string"
         }
     },

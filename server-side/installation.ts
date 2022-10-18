@@ -175,6 +175,9 @@ async function createNotificationsResource(papiClient: PapiClient) {
             },
             Read: {
                 Type: 'Bool'
+            },
+            NavigationPath: {
+                Type: 'String'
             }
         }
     };
