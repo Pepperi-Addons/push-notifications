@@ -22,6 +22,7 @@
 		"json-schema": "^0.4.0",
 		"json-scheme": "^0.4.8",
 		"jsonschema": "^1.4.0",
-		"pfs": "^3.0.0"
+		"pfs": "^3.0.0",
+		"cpi-node": "1.0.6"
 	}
 }
