@@ -35,7 +35,7 @@ export class NotificationBlockComponent implements OnInit {
 
   async configureItems() {
     let notificationsItems = [];
-    this.notificationsList = await this.notificationsService.getNotifications();
+    this.notificationsList = await this.notificationsService.getNotifications(`where=UserUUID='${this.addonService.userUUID}`);
     for (const notification of this.notificationsList) {
       let item: INotificationItem = {
         key: notification.Key,
