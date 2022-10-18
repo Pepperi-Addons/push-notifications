@@ -25,7 +25,7 @@
             <span *ngIf="item.from" class="">{{ item.from }}</span>
             <span *ngIf="item.from">&#8226;</span><!--•-->
             <span class="date-ago">{{ item.date | dateAgo }}</span>
-            <span *ngIf="item.goToActivityName" class="notification-goto body-2xs">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
+            <span *ngIf="item.goToActivityName" class="notification-goto body-2xs" (click)="onGoToBtnClick(item)">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
         </div>
     </div>
     <pep-button [title]="(item.read ? 'ACTIONS.MARK_AS_UNREAD' : 'ACTIONS.MARK_AS_READ') | translate" 
