@@ -27,7 +27,8 @@
     ],
     "Dependencies": {
       "pfs": "1.0.2",
-      "dimx": "0.0.177"
+      "dimx": "0.0.177",
+      "cpi-node": "1.0.6"
     },
     "CPISide": [
       "addon-cpi.ts"
