@@ -35,7 +35,7 @@ export class NotificationBlockComponent implements OnInit {
 
   async configureItems() {
     let notificationsItems = [];
-    this.notificationsList = await this.notificationsService.getNotifications(`where=UserUUID='${this.addonService.userUUID}`);
+    this.notificationsList = await this.notificationsService.getNotifications(`UserUUID='${this.addonService.userUUID}'`);
     for (const notification of this.notificationsList) {
       let item: INotificationItem = {
         key: notification.Key,
@@ -45,7 +45,7 @@ export class NotificationBlockComponent implements OnInit {
         body: notification.Body,
         from: notification.CreatorName,
         navigationPath: notification.NavigationPath,
-        goToActivityName: this.translate.instant("Go_To_Activity_Name")
+        goToActivityName: notification.NavigationPath != undefined ? this.translate.instant("Go_To_Activity_Name") : undefined
       }
       notificationsItems.push(item);
     }
