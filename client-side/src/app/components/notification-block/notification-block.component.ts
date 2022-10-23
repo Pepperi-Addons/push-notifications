@@ -45,7 +45,7 @@ export class NotificationBlockComponent implements OnInit {
         body: notification.Body,
         from: notification.CreatorName,
         navigationPath: notification.NavigationPath,
-        goToActivityName: this.translate.instant("Go_To_Activity_Name")
+        goToActivityName: notification.NavigationPath != undefined ? this.translate.instant("Go_To_Activity_Name") : undefined
       }
       notificationsItems.push(item);
     }
