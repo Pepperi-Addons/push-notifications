@@ -83,7 +83,7 @@ export class NotificationsComponent implements OnInit {
                 eventKey: 'PushNotificationReceived',
                 // the data for the event
                 eventData: {
-                    Notification: e
+                    data: e
                 },
             },
         };

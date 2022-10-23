@@ -4,12 +4,13 @@ import { Client } from '@pepperi-addons/cpi-node/build/cpi-side/events';
 export async function load(configuration: any) {
     pepperi.events.intercept("PushNotificationReceived" as any, {}, async (data, next) => {
         const main = async (data) => {
-            console.log("Received notification:" ,data.Notification)
-            if (data.Notification?.NavigationPath != undefined) {
+            let notification = data.data.Notification
+            console.log("Received notification:" ,notification)
+            if (notification?.NavigationPath != undefined) {
                 let res = await sync(data.client);
                 if (res.success == true) {
                     data.client?.navigateTo({
-                        url: data.Notification?.NavigationPath,
+                        url: notification?.NavigationPath,
                         history: "ClearAll",
                       });
                 }
