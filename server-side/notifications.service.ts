@@ -421,21 +421,26 @@ class NotificationsService {
                 console.log("@@@pushNotification object: ", object);
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
                 //get user devices by user uuid
-                const userDevicesList = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
+                const userDevicesList: UserDevice[] = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
                 console.log("@@@pushNotification userDevicesList: ", userDevicesList);
                 if (userDevicesList != undefined) {
                     // for each user device send push notification
-                    for (const device of userDevicesList) {
-                        let pushNotification = {
-                            Notification: notification,
-                            Endpoint: device.Endpoint,
-                            DeviceType: device.DeviceType,
-                            PlatformType: device.PlatformType
+                    await Promise.all(userDevicesList.map(async(device) => {
+                        try {
+                            let pushNotification = {
+                                Notification: notification,
+                                Endpoint: device.Endpoint,
+                                DeviceType: device.DeviceType,
+                                PlatformType: device.PlatformType
+                            }
+                            console.log("@@@pushNotification: ", pushNotification);
+                            const ans = await this.publish(pushNotification);
+                            console.log("@@@ans from publish: ", ans);
                         }
-                        console.log("@@@pushNotification: ", pushNotification);
-                        const ans = await this.publish(pushNotification);
-                        console.log("@@@ans from publish: ", ans);
-                    }
+                        catch(error) {
+                            console.log("@@@error single publish faild", error);
+                        }
+                    }));
                 }
             }
             catch (error) {

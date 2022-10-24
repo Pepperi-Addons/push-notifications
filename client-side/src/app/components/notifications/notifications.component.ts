@@ -82,9 +82,7 @@ export class NotificationsComponent implements OnInit {
             detail: {
                 eventKey: 'PushNotificationReceived',
                 // the data for the event
-                eventData: {
-                    data: e
-                },
+                eventData: e,
             },
         };
         const event = new CustomEvent('emit-event', eventData);
