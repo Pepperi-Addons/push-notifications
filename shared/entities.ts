@@ -40,7 +40,8 @@ export interface UserDevice {
     Token: string,
     Endpoint: string,
     Key: string,
-    ExpirationDateTime: Date
+    ExpirationDateTime: Date,
+    PlatformType: string
 }
 
 export const notificationOnCreateSchema: Schema = {
