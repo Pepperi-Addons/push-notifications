@@ -13,9 +13,9 @@ export class NotificationsService {
     }
 
     getNotifications(whereClause?: string) {
-        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications`
+        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications?order_by=CreationDateTime desc`
         if (whereClause) {
-            url = url + '?where=' + whereClause;
+            url = url + '&where=' + whereClause;
         }
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }

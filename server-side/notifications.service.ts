@@ -236,15 +236,6 @@ class NotificationsService {
         }   
         return hash;
     }
-    // From new to old
-    public sortByCreationDate(array) {
-        return array.sort((first: AddonData, second: AddonData) => {
-            let firstCreationDate = new Date(first.CreationDateTime ?? "")
-            let secondCreationDate = new Date(second.CreationDateTime ?? "")
-            return secondCreationDate.getTime() - firstCreationDate.getTime();
-    
-        });
-    }
 
     // For page block template
     upsertRelation(relation): Promise<any> {
@@ -252,11 +243,7 @@ class NotificationsService {
     }
 
     async getNotifications(query) {
-        let notifications = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray() as any
-        if (notifications.length > 1) {
-            notifications = this.sortByCreationDate(notifications)
-        }
-        return notifications
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
     }
 
     async upsertNotification(body) {
