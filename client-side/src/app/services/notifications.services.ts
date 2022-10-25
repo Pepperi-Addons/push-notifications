@@ -12,10 +12,10 @@ export class NotificationsService {
 
     }
 
-    getNotifications(query?: string) {
-        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications`
-        if (query) {
-            url = url + query;
+    getNotifications(whereClause?: string) {
+        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications?order_by=CreationDateTime desc`
+        if (whereClause) {
+            url = url + '&where=' + whereClause;
         }
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
