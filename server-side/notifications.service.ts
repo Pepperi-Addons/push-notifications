@@ -349,6 +349,7 @@ class NotificationsService {
         if (validation.valid) {
             body.UserUUID = this.currentUserUUID;
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
+            body.LastRegistrationDate = new Date().toISOString();
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
             const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
