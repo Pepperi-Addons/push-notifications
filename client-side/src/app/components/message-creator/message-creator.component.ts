@@ -1,4 +1,4 @@
-import { Component, DebugElement, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -8,11 +8,6 @@ import { PepSnackBarData, PepSnackBarService } from '@pepperi-addons/ngx-lib/sna
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/default-snack-bar.component';
 import { config } from '../../addon.config';
-import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
-import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-
-
 
 @Component({
   selector: 'app-message-creator',
@@ -21,15 +16,13 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 })
 export class MessageCreatorComponent implements OnInit {
   private currentSnackBar: MatSnackBarRef<PepDefaultSnackBarComponent> | null = null;
-  @ViewChild('chipsComp') chipsComp: PepChipsComponent;
 
   message: MessageObject = {
-    UsersUUID: [],
+    UserEmailList: [],
+    Recipients: "",
     Title: "",
     Body: ""
   };
-  chips: any[] = [];
-  dialogRef: MatDialogRef<any> 
 
   constructor(
     private notificationsService: NotificationsService,
@@ -37,9 +30,7 @@ export class MessageCreatorComponent implements OnInit {
     public route: ActivatedRoute,
     private translate: TranslateService,
     private router: Router,
-    private pepSnackBarService: PepSnackBarService,
-    private addonBlockService: PepAddonBlockLoaderService,
-    private viewContainerRef: ViewContainerRef
+    private pepSnackBarService: PepSnackBarService
   ) {
     this.addonService.addonUUID = config.AddonUUID;
   }
@@ -49,11 +40,12 @@ export class MessageCreatorComponent implements OnInit {
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
+      this.message.Recipients = queryParams.UserEmailList?.replace(",", ";");
     }
   }
 
   async sendNotifications() {
-    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.value)
+    this.message.UserEmailList = this.message.Recipients.split(";");
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
   }
@@ -72,6 +64,7 @@ export class MessageCreatorComponent implements OnInit {
       }
       this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
       this.currentSnackBar.instance.closeClick.subscribe(() => {
+        // this.router.navigate(['../notifications_log'], {
         this.router.navigate(['../'], {
           relativeTo: this.route,
           queryParamsHandling: 'merge',
@@ -85,6 +78,7 @@ export class MessageCreatorComponent implements OnInit {
         "ButtonText": this.translate.instant("OK")
       }
       this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
+        // this.router.navigate(['../notifications_log'], {
         this.router.navigate(['../'], {
           relativeTo: this.route,
           queryParamsHandling: 'merge',
@@ -92,45 +86,22 @@ export class MessageCreatorComponent implements OnInit {
       });
     }
   }
-  
+
+  onValueChanged(element, $event) {
+  }
+
   onBackButtonClicked() {
+    // this.router.navigate(['../notifications_log'], {
     this.router.navigate(['../'], {
           relativeTo: this.route,
           queryParamsHandling: 'merge',
     });
   }
-
-  externalSourceClicked() {
-    this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
-      container: this.viewContainerRef,
-      name: 'ResourceSelection',
-      hostObject: {
-        resource: "users",
-        selectionMode: 'multi'
-      },
-      hostEventsCallback: ($event) => {
-        if($event.action == 'on-save'){
-          let newChips: any[]  = [];
-          $event.data.selectedObjectKeys.forEach(chip => {
-            let chipObj = { 
-              value: chip 
-            }
-            if(!this.chipsComp.chips.includes(chipObj))
-            newChips.push(chipObj)
-          });
-          this.chipsComp.addChipsToList(newChips);  
-          this.dialogRef.close();
-        }
-        if($event.action == 'on-cancel'){
-          this.dialogRef.close();
-        }
-      }
-    })
-  }
 }
 
 export type MessageObject = {
-  UsersUUID?: string[],
+  UserEmailList?: string[],
+  Recipients: string,
   Title: string,
   Body: string
 } 

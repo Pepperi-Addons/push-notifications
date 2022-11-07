@@ -162,17 +162,19 @@ export class NotificationsLogComponent implements OnInit {
   
   goToMessageCreator(notification?) {
     if (notification === undefined) {
+      // this.router.navigate(['../message_creator'], {
         this.router.navigate(['message_creator'], {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
       });
     }
     else {
+      // this.router.navigate(['../message_creator'], {
       this.router.navigate(['message_creator'], {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "UsersUUID": notification.Fields[2]?.FormattedValue,
+          "UserEmailList": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,
           "Body": notification.Fields[1]?.FormattedValue,
         }
