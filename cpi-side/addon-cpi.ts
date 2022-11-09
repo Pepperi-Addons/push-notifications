@@ -41,7 +41,8 @@ async function navigateToNotificationsSlug(data: any) {
 
 async function sync(client: Client) {
     const syncOptions = {    
-        "allowContinueInBackground": false
+        "allowContinueInBackground": false,
+        "abortExisting": false,
     };
     return await client["sync"](syncOptions);
 }
