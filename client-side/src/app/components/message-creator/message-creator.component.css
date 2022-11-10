@@ -1,6 +1,7 @@
 .message-creator {
     width: 80%;
     margin-top: 20px;
+    padding-left: 5px;
 }
 
 .sendButton {
@@ -10,4 +11,8 @@
 .back-button {
     margin-left: 5px;
     margin-right: 10px;
+}
+
+.subject{
+    padding-top: 10px;
 }

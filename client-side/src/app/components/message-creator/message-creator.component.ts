@@ -103,7 +103,7 @@ export class MessageCreatorComponent implements OnInit {
   externalSourceClicked() {
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
-      name: 'ResourceSelection',
+      name: 'ResourcePicker',
       hostObject: {
         resource: "users",
         selectionMode: 'multi'
