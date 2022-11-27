@@ -1,6 +1,6 @@
 {
   "AddonUUID": "95025423-9096-4a4f-a8cd-d0a17548e42e",
-  "AddonVersion": "1.1.2",
+  "AddonVersion": "1.2.1",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -17,12 +17,17 @@
       {
         "ParentPackageName": "Push Notifications",
         "PackageName": "device_managment",
-        "Description": "Device Managment"
+        "Description": "Device Settings"
       },
       {
         "ParentPackageName": "Push Notifications",
         "PackageName": "notifications_log",
-        "Description": "Notifications Log"
+        "Description": "Messages"
+      },
+      {
+        "ParentPackageName": "Push Notifications",
+        "PackageName": "notifications_setup",
+        "Description": "Notifications Setup"
       }
     ],
     "Dependencies": {

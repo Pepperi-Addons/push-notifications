@@ -204,6 +204,13 @@ class NotificationsService {
         }
     }
 
+    async getUserEmailByUUID(uuid){
+        const user: User = await this.papiClient.users.uuid(uuid).get();
+        if (user != undefined) {
+            return (user.Email) 
+        }
+    }
+
     async getUserName(userUUID: string) {
         const user: User = await this.papiClient.users.uuid(userUUID).get();
         if (user != undefined) {
@@ -913,7 +920,7 @@ class NotificationsService {
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': body.UsersUUID,
+            'UsersList': body.Email,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()

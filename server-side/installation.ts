@@ -149,6 +149,24 @@ async function createSettingsRelation(client: Client): Promise<any> {
 
         result = await service.upsertRelation(settingsBlockRelation);
 
+        settingsBlockRelation = {
+            RelationName: "SettingsBlock",
+            GroupName: 'Notifications Setup',
+            SlugName: 'notifications_setup',
+            Name: 'NotificationsSetup',
+            Description: 'Notifications Setup',
+            Type: "NgComponent",
+            SubType: "NG14",
+            AddonUUID: client.AddonUUID,
+            AddonRelativeURL: filename,
+            ComponentName: `NotificationsSetupComponent`,
+            ModuleName: `NotificationsSetupModule`,
+            ElementsModule: 'WebComponents',
+            ElementName: `notifications-setup-element-${client.AddonUUID}`,
+        };
+        
+        result = await service.upsertRelation(settingsBlockRelation);
+
 
         return { success: true, resultObject: result };
     } catch (err) {

@@ -6,6 +6,7 @@ import { SettingsComponent } from './settings.component';
 // import { MessageCreatorComponent } from '../message-creator/message-creator.component';
 import { DeviceManagmentComponent } from '../device-managment/device-managment.component';
 import { NotificationsLogComponent } from '../notifications-log';
+import { NotificationsSetupComponent } from '../notifications-setup';
 import { MessageCreatorComponent } from '../message-creator';
 // import { NotificationsLogComponent } from '../notifications-log/notifications-log.component';
 
@@ -32,6 +33,10 @@ const routes: Routes = [
             {
                 path: 'notifications_log/message_creator',
                 component: MessageCreatorComponent,
+            },
+            {
+                path: 'notifications_setup',
+                component: NotificationsSetupComponent,
             },
             { path: '**', component: EmptyRouteComponent }
         ]
