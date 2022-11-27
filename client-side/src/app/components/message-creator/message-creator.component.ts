@@ -118,13 +118,10 @@ export class MessageCreatorComponent implements OnInit {
               value: await this.addonService.getUserEmailByUUID(chip),
               key: chip
             }
-            console.log("chipObj",chipObj)
             if(!this.chipsComp.chips.includes(chipObj))
             newChips.push(chipObj)
           }))
-          this.chipsComp.addChipsToList(newChips); 
-          console.log("chipsComp",this.chipsComp.chips) 
-        
+          this.chipsComp.addChipsToList(newChips);  
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
