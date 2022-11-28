@@ -17,7 +17,7 @@
                 <pep-textbox [label]="'Subject' | translate" [(value)]="message.Title" [disabled]="false" [readonly]="false"></pep-textbox>
             </div>
             <div class="body">
-                <pep-textarea [label]="'body' | translate" [(value)]="message.Body" [readonly]="false" [rowSpan]="2"  ></pep-textarea>
+                <pep-textarea [label]="'Body' | translate" [(value)]="message.Body" [readonly]="false" [rowSpan]="2"  ></pep-textarea>
             </div>
             <pep-button  class="sendButton" [sizeType]="'sm'" [classNames]="'pep-spacing-element'" [value]="'Send'| translate"
             [styleType]="'strong'" (buttonClick)="sendNotifications()"></pep-button>
