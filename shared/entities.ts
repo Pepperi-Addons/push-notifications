@@ -41,7 +41,8 @@ export interface UserDevice {
     Endpoint: string,
     Key: string,
     ExpirationDateTime: Date,
-    PlatformType: string
+    PlatformType: string,
+    LastRegistrationDate: Date
 }
 
 export const notificationOnCreateSchema: Schema = {

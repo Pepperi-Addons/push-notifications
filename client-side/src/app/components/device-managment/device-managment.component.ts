@@ -61,7 +61,7 @@ export class DeviceManagmentComponent implements OnInit {
                 ReadOnly: true
               },
               {
-                FieldID: 'ExpirationDateTime',
+                FieldID: 'LastRegistrationDate',
                 Type: 'TextBox',
                 Title: this.translate.instant("Last_Use_Date"),
                 Mandatory: false,
