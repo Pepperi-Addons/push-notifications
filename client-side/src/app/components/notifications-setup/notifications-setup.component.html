@@ -2,11 +2,42 @@
     <ng-container pep-top-area>
         <pep-top-bar [title]="('Notifications_Setup_Title' | translate)">
         </pep-top-bar>
-        <p >Manage the list for selecting users to send messages to</p>
+        <p class="pep-spacing-element-negative">Manage the list for selecting users to send messages to</p>
     </ng-container>
 
     <ng-container pep-main-area>
-        <pep-top-bar class="subTitle" title="{{'Notifications_Setup_Subtitle' | translate}}" [inline]="true">
-        </pep-top-bar>
+        <pep-generic-list #glist1
+        [dataSource]="dataSource"
+        [actions]="actions"
+        [title]="'Send To'"
+        [disabled]="false"
+        [addPadding]="true"
+        [showSearch]="false"
+        [showTopBar]="true">
+        <ng-container right-buttons>
+            <pep-button class="pep-spacing-element" value="Add a list" styleType="strong" sizeType="sm" (buttonClick)="addList()"></pep-button>
+        </ng-container>
+        </pep-generic-list>
     </ng-container>
-</pep-page-layout>
+    </pep-page-layout>
+
+<ng-template #listForm>
+    <!-- <pep-generic-form
+    [dataSource]="dataSource"
+    [dataView]="dataView"
+    [isLocked]="false"
+    [inline]="false"
+    [showTopBar]="true"
+    [addPadding]="true"
+    (valueChange)="valueChange($event)"
+    (fieldClick)="fieldClick($event)"
+    (formValidationChange)="formValidationChange($event)">
+    </pep-generic-form> -->
+    <ng-container>
+        <p>Hello This is dialog</p>
+        <div class="pep-spacing-element-negative" style="display: flex;">
+            <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
+            <pep-button class="pep-spacing-element" value="Save" styleType="strong" sizeType="sm" (buttonClick)="saveList()"></pep-button>
+        </div>
+    </ng-container>
+</ng-template>
