@@ -61,7 +61,7 @@ export class NotificationsComponent implements OnInit {
     onNotificationItemReadClick(btnEvent: IPepButtonClickEvent, item: INotificationItem) {
         console.log('onNotificationItemReadClick');
         item.read = !item.read;
-        this.showMarkAllAsRead=item.read;
+        this.calcShowMarkAllAsRead();
 
         // stopPropagation for not to trigger onNotificationItemClick
         btnEvent.event?.stopPropagation();
