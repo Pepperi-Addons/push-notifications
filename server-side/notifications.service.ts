@@ -321,7 +321,15 @@ class NotificationsService {
         }
     }
 
-    async updateNotificationReadStatus(body) {
+    async updateNotificationReadStatus(body){
+        let notification: Notification = {
+            "Key": body.Key,
+            "Read": body.Read,
+        }
+        return await this.updateNotification(notification)
+    }
+
+    async updateNotificationsReadStatus(body) {
         let notifications: Notification[] = [];
         for (let key of body.Keys) {
             let notification: Notification = {
