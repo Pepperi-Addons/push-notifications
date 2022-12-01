@@ -25,6 +25,7 @@ export class MessageCreatorComponent implements OnInit {
 
   message: MessageObject = {
     UsersUUID: [],
+    Email: [],
     Title: "",
     Body: ""
   };
@@ -53,7 +54,8 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   async sendNotifications() {
-    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.value)
+    this.message.Email = this.chipsComp.chips.map(chips => chips.value)
+    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
   }
@@ -108,16 +110,17 @@ export class MessageCreatorComponent implements OnInit {
         resource: "users",
         selectionMode: 'multi'
       },
-      hostEventsCallback: ($event) => {
+      hostEventsCallback: async ($event) => {
         if($event.action == 'on-save'){
           let newChips: any[]  = [];
-          $event.data.selectedObjectKeys.forEach(chip => {
+          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
             let chipObj = { 
-              value: chip 
+              value: await this.addonService.getUserEmailByUUID(chip),
+              key: chip
             }
             if(!this.chipsComp.chips.includes(chipObj))
             newChips.push(chipObj)
-          });
+          }))
           this.chipsComp.addChipsToList(newChips);  
           this.dialogRef.close();
         }
@@ -131,6 +134,7 @@ export class MessageCreatorComponent implements OnInit {
 
 export type MessageObject = {
   UsersUUID?: string[],
+  Email: string[],
   Title: string,
   Body: string
 } 
