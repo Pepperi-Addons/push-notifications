@@ -921,7 +921,7 @@ class NotificationsService {
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': body.UsersUUID,
+            'UsersList': body.Email,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()
