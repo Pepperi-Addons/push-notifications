@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, USERS_LISTS_TABLE_NAME
 } from 'shared'
 import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
@@ -253,6 +253,38 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
     }
 
+    async getResourceLists(query){
+        let resourceList: string[] = []
+        let resources = await this.papiClient.userDefinedCollections.schemes.iter().toArray()
+        for(let resource in resources){
+            resourceList.push(resources[resource]['Name'])
+        }
+        return resourceList
+    }
+
+    async getNotificationsUsersLists(query){
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).iter(query).toArray();
+    }
+
+    async setNotificationsUsersLists(body){
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(body);
+    }
+
+    async deleteNotificationsUsersLists(lists){
+        for (let list of lists) {
+            let deleteJson = {
+                UUID:list.uuid,
+                Hidden: true
+            }
+            try {
+                this.setNotificationsUsersLists(deleteJson)
+            }
+            catch{
+                throw new Error(`Could not delete list with UUID ${list.uuid}`)
+            }
+        }
+    }
+
     async upsertNotification(body) {
         if (body.Key != undefined) {
             return await this.updateNotification(body);
@@ -328,7 +360,15 @@ class NotificationsService {
         }
     }
 
-    async updateNotificationReadStatus(body) {
+    async updateNotificationReadStatus(body){
+        let notification: Notification = {
+            "Key": body.Key,
+            "Read": body.Read,
+        }
+        return await this.updateNotification(notification)
+    }
+
+    async updateNotificationsReadStatus(body) {
         let notifications: Notification[] = [];
         for (let key of body.Keys) {
             let notification: Notification = {

@@ -23,7 +23,51 @@ export async function unread_notifications(client: Client, request: Request) {
     }
 }
 
+export async function notifications_users_lists(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'GET') {
+        return service.getNotificationsUsersLists(request.query);
+    }
+    if (request.method === 'POST') {
+        return service.setNotificationsUsersLists(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function delete_notifications_users_lists(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'POST') {
+        return service.deleteNotificationsUsersLists(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function get_resource_lists(client:Client, request:Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'GET') {
+    return service.getResourceLists(request.query);
+    }
+}
+
 export async function update_notifications_read_status(client: Client, request: Request) {
+    const service = new NotificationsService(client)
+
+    if (request.method === 'POST') {
+        return service.updateNotificationsReadStatus(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function update_notification_read_status(client: Client, request: Request) {
     const service = new NotificationsService(client)
 
     if (request.method === 'POST') {
@@ -33,6 +77,7 @@ export async function update_notifications_read_status(client: Client, request: 
         throw new Error(`Method ${request.method} not supported`);
     }
 }
+
 export async function notifications_soft_limt(client: Client, request: Request) {
     const service = new NotificationsService(client)
 

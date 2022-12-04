@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { TranslateService, TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
@@ -27,6 +28,7 @@ export const routes: Routes = [
       CommonModule,
       HttpClientModule,
       PepGenericListModule,
+      PepGenericFormModule,
       PepPageLayoutModule,
       PepButtonModule,
       PepTopBarModule,

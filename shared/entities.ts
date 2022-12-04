@@ -4,6 +4,7 @@ import { AddonData } from '@pepperi-addons/papi-sdk'
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
 export const USER_DEVICE_TABLE_NAME = 'UserDevice';
+export const USERS_LISTS_TABLE_NAME = 'NotificationsUsersLists';
 export const PFS_TABLE_NAME = 'PFSTable';
 export const PLATFORM_APPLICATION_TABLE_NAME = 'PlatformApplication';
 export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
@@ -43,6 +44,14 @@ export interface UserDevice {
     ExpirationDateTime: Date,
     PlatformType: string,
     LastRegistrationDate: Date
+}
+
+export interface UsersLists{
+    ResourceListKey: string;
+    SelectionViewUUID: string;
+    DisplayTitleField: string;
+    MappingResourceUUID: string
+    UserReferenceField: string;
 }
 
 export const notificationOnCreateSchema: Schema = {
@@ -172,6 +181,33 @@ export const userDeviceSchema: Schema = {
             type: "string",
             required: true,
             enum: ["iOS", "Android", "Addon"]
+        }
+    }
+}
+
+export const usersListsSchema: Schema = {
+    $id: "/NotificationsUsersLists",
+    type: "object",
+    properties: {
+        ResourceListKey: {
+            type: "string",
+            required: true
+        },
+        SelectionViewUUID: {
+            type: "string",
+            required: true
+        },
+        DisplayTitleField: {
+            type: "string",
+            required: true
+        },
+        MappingResourceUUID: {
+            type: "string",
+            required: true
+        },
+        UserReferenceField: {
+            type: "string",
+            required: true
         }
     }
 }

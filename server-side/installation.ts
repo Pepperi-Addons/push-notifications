@@ -10,6 +10,7 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
+import {USERS_LISTS_TABLE_NAME} from  'shared'
 import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from 'shared'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
@@ -32,6 +33,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const pfsResourceRes = await createPFSResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
+    const notificationsUsersListsRes = await createUsersListsResource(papiClient);
     
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -39,11 +41,11 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success,
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success && notificationsUsersListsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
         notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
          relationsRes: ${relationsRes.errorMessage}, settingsRelationsRes: ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
-         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}`
+         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}, notificationsUsersListsRes: ${notificationsUsersListsRes.errorMessage}`
     };
 }
 
@@ -203,6 +205,45 @@ async function createNotificationsResource(papiClient: PapiClient) {
     try {
         await papiClient.addons.data.schemes.post(notificationsScheme);
 
+        return {
+            success: true,
+            errorMessage: ""
+        }
+    }
+    catch (err) {
+        return {
+            success: false,
+            errorMessage: err ? err : 'Unknown Error Occured',
+        }
+    }
+}
+
+async function createUsersListsResource(papiClient:PapiClient) {
+    var notificationsUsersListsScheme: AddonDataScheme={
+        Name: USERS_LISTS_TABLE_NAME,
+        Type: 'meta_data',
+        Fields: {
+   
+            ResourceListUUID: {
+                Type: 'String'
+            },
+            SelectionViewUUID: {
+                Type: 'String'
+            },
+            DisplayTitleField: {
+                Type: 'String'
+            },
+            MappingResourceUUID: {
+                Type: 'String'
+            },
+            UserReferenceField: {
+                Type: 'String'
+            }
+        }
+        
+    };
+    try {
+        await papiClient.addons.data.schemes.post(notificationsUsersListsScheme);
         return {
             success: true,
             errorMessage: ""
