@@ -9,6 +9,7 @@ import { SettingsRoutingModule } from './settings.routes';
 
 import { DeviceManagmentModule } from '../device-managment';
 import { NotificationsLogModule } from '../notifications-log';
+import { NotificationsSetupModule } from '../notifications-setup';
 
 import { config } from '../../addon.config';
 
@@ -22,6 +23,7 @@ import { config } from '../../addon.config';
         SettingsRoutingModule,
         DeviceManagmentModule,
         NotificationsLogModule,
+        NotificationsSetupModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
