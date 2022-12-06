@@ -14,6 +14,7 @@ import {USERS_LISTS_TABLE_NAME} from  'shared'
 import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from 'shared'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
+import { NOTIFICATION_SETUP_ELEMENT } from 'shared';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
@@ -164,7 +165,7 @@ async function createSettingsRelation(client: Client): Promise<any> {
             ComponentName: `NotificationsSetupComponent`,
             ModuleName: `NotificationsSetupModule`,
             ElementsModule: 'WebComponents',
-            ElementName: `notifications-setup-element-${client.AddonUUID}`,
+            ElementName: NOTIFICATION_SETUP_ELEMENT,
         };
         
         result = await service.upsertRelation(settingsBlockRelation);

@@ -1,5 +1,6 @@
 import { Schema } from 'jsonschema';
 import { AddonData } from '@pepperi-addons/papi-sdk'
+import { AddonUUID } from '../addon.config.json';
 
 export const NOTIFICATIONS_TABLE_NAME = 'Notifications';
 export const NOTIFICATIONS_LOGS_TABLE_NAME = 'NotificationsLogView';
@@ -8,6 +9,7 @@ export const USERS_LISTS_TABLE_NAME = 'NotificationsUsersLists';
 export const PFS_TABLE_NAME = 'PFSTable';
 export const PLATFORM_APPLICATION_TABLE_NAME = 'PlatformApplication';
 export const NOTIFICATIONS_VARS_TABLE_NAME = 'NotificationsVariables';
+export const NOTIFICATION_SETUP_ELEMENT=`notifications-setup-element-${AddonUUID}`;
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export interface Notification {
