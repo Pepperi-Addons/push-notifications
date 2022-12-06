@@ -13,6 +13,7 @@ import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.com
 import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import {NOTIFICATION_SETUP_ELEMENT} from '../../../shared'
 
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 
@@ -77,6 +78,6 @@ export class AppModule implements DoBootstrap {
 
         this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, SettingsComponent, this.injector);
         this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, SettingsComponent, this.injector);
-        this.pepAddonService.defineCustomElement(`notifications-setup-element-${config.AddonUUID}`, SettingsComponent, this.injector);
+        this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, SettingsComponent, this.injector);
     }
 }

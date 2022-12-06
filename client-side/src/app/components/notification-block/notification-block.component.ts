@@ -53,7 +53,7 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   async MarkAllAsReadClick() {
-    await this.notificationsService.updateNotificationReadStatus(
+    await this.notificationsService.updateNotificationsReadStatus(
       {
         "Read": true,
         "Keys": this.notificationsList.map(notification => {
@@ -66,7 +66,7 @@ export class NotificationBlockComponent implements OnInit {
     await this.notificationsService.updateNotificationReadStatus(
       {
         "Read": event.read,
-        "Keys": [event.key]
+        "Key": event.key
       });
   }
 }

@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import jwt from 'jwt-decode';
-import { PapiClient } from '@pepperi-addons/papi-sdk';
+import { PapiClient, User } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 import { ComponentType } from '@angular/cdk/overlay';
 import { PepDialogData, PepDialogService, PepDialogActionButton } from '@pepperi-addons/ngx-lib/dialog';
@@ -65,6 +65,13 @@ export class AddonService {
     async getCurrentUserEmail() {
         const users = await this.papiClient.users.find();
         return users.find(u => u.UUID == this.userUUID)?.Email
+    }
+
+    async getUserEmailByUUID(UUID: string){
+        const user:User = await this.papiClient.users.uuid(UUID).get();
+        if (user != undefined) {
+            return user.Email
+        }
     }
 
     async get(endpoint: string): Promise<any> {
