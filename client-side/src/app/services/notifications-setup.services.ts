@@ -14,4 +14,8 @@ export class NotificationsSetupService {
     ) {
         this.addonService.addonUUID = config.AddonUUID;
     }
+
+    deleteSendToList(sendTolists){
+        
+    }
 }
