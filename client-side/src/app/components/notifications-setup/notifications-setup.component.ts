@@ -23,8 +23,6 @@ export class NotificationsSetupComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         private dialogService: PepDialogService,
-        // private dialogActions: PepDialogActionsType='cancel-ok',
-        // private templateRef: TemplateRef<'list-form.component.html'>,
         ) {
           this.addonService.addonUUID = config.AddonUUID;
          }
