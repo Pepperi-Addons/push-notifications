@@ -25,6 +25,7 @@ export class PopupDialogComponent implements OnInit {
   }
 
   onCloseFormClicked() {
+    debugger;
     this.dialogRef.close();
   }
 

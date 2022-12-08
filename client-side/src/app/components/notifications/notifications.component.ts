@@ -32,8 +32,7 @@ export class NotificationsComponent implements OnInit {
 
     constructor() { }
 
-    ngOnInit() {
-    }
+    ngOnInit() {}
 
     private calcShowMarkAllAsRead() {
         this.showMarkAllAsRead = this._items.some(item => !item.read);
@@ -44,6 +43,10 @@ export class NotificationsComponent implements OnInit {
         this._items.forEach(item => item.read = true);
         this.calcShowMarkAllAsRead();
         this.markAllAsReadClick.emit();
+    }
+
+    onCloseClick(){
+        console.log('onCloseClick');
     }
 
     onNotificationItemClick(item: INotificationItem) {

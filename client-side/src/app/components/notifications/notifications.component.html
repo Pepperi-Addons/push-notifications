@@ -1,34 +1,41 @@
  <div class="notifications-menu" (click)="$event.stopPropagation()">
         <div class="notifications-header">
-            <div class="title">
-                <span>{{ 'NOTIFICATIONS' | translate }}</span>
-                <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button>
+            <div class="pep-border-bottom">
+                <div class="left-cont">
+                    <pep-button class="close_button" spacing-element [sizeType]="'sm'" [classNames]="'pep-spacing-element'" iconName="system_close" [styleType]="'weak'" (click)="onCloseClick()"></pep-button>
+                    <div class="title-lg pep-spacing-element">{{ 'NOTIFICATIONS' | translate }}</div>
             </div>
-            <div class="separator pep-border-bottom"></div>
+            <span *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</span>
+            <!-- <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button> -->
+            </div>
         </div>
         <ul class="notifications-items">
-            <li *ngFor="let item of items" mat-menu-item class="notification-item" (click)="onNotificationItemClick(item)">
+            <li *ngFor="let item of items" mat-menu-item  (click)="onNotificationItemClick(item)">
                 <ng-container *ngTemplateOutlet="notificationItemTemplate; context: {item: item}"></ng-container>
             </li>
         </ul>
         <div class="notifications-footer">
+            <img [src]="'http://localhost:4400/assets/images/Flags.png'">
             <span class="footer-text body-sm">
                 {{ 'NOTIFICATIONS_FOOTER_LINE' | translate }}
             </span>
         </div>
     </div>
 <ng-template #notificationItemTemplate let-item="item">
-    <div class="msg-wrapper">
-        <label class="title-md">{{ item.title }}</label>
-        <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
-        <div class="notification-item-footer body-xs color-dimmed">
-            <span *ngIf="item.from" class="">{{ item.from }}</span>
-            <span *ngIf="item.from">&#8226;</span><!--•-->
-            <span class="date-ago">{{ item.date | dateAgo }}</span>
-            <span *ngIf="item.goToActivityName" class="notification-goto body-2xs" (click)="onGoToBtnClick(item)">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
+    <div class="notification-item pep-border-bottom">
+        <div class="msg-wrapper">
+            <label class="body-md">{{ item.title }}</label>
+            <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
+            <div class="notification-item-footer body-xs color-dimmed">
+                <span *ngIf="item.from" class="">{{ item.from }}</span>
+                <span *ngIf="item.from">&#8226;</span><!--•-->
+                <span class="date-ago">{{ item.date | dateAgo }}</span>
+                <span *ngIf="item.goToActivityName" class="notification-goto body-2xs" (click)="onGoToBtnClick(item)">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
+            </div>
         </div>
-    </div>
-    <pep-button [title]="(item.read ? 'ACTIONS.MARK_AS_UNREAD' : 'ACTIONS.MARK_AS_READ') | translate" 
-        class="notification-read keep-background-on-focus" [classNames]="item.read ? 'read': 'unread'" 
-        sizeType="xs" (buttonClick)="onNotificationItemReadClick($event, item)" ></pep-button>
+
+        <pep-button [title]="(item.read ? 'ACTIONS.MARK_AS_UNREAD' : 'ACTIONS.MARK_AS_READ') | translate" 
+            class="notification-read keep-background-on-focus" [classNames]="item.read ? 'read': 'unread'" 
+            sizeType="xs" (buttonClick)="onNotificationItemReadClick($event, item)" ></pep-button>
+</div>
 </ng-template>
