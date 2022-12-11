@@ -195,7 +195,7 @@ class NotificationsService {
 
     async getUserUUIDByEmail(userEmail) {
         const users = await this.papiClient.users.find();
-        let userUUID = users.find(u => u.Email == userEmail)?.UUID
+        let userUUID = users.find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
         if (userUUID != undefined) {
             return userUUID;
         }
@@ -321,7 +321,15 @@ class NotificationsService {
         }
     }
 
-    async updateNotificationReadStatus(body) {
+    async updateNotificationReadStatus(body){
+        let notification: Notification = {
+            "Key": body.Key,
+            "Read": body.Read,
+        }
+        return await this.updateNotification(notification)
+    }
+
+    async updateNotificationsReadStatus(body) {
         let notifications: Notification[] = [];
         for (let key of body.Keys) {
             let notification: Notification = {
@@ -349,6 +357,7 @@ class NotificationsService {
         if (validation.valid) {
             body.UserUUID = this.currentUserUUID;
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
+            body.LastRegistrationDate = new Date().toISOString();
 
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
             const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
@@ -661,7 +670,7 @@ class NotificationsService {
 
                 // USERUUID and UserEmail are mutually exclusive
                 let isUserEmailProvided = dimxObj.Object.UserEmail !== undefined;
-                let isUserUUIDProvided = dimxObj.Object.USERUUID !== undefined;
+                let isUserUUIDProvided = dimxObj.Object.UserUUID !== undefined;
                 // consider !== as XOR
                 if (isUserEmailProvided !== isUserUUIDProvided) {
                     // find user uuid by Email
@@ -699,15 +708,15 @@ class NotificationsService {
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
 
-        if (body.UserEmailList != undefined) {
-            if (body.UserEmailList.length > 100) {
+        if (body.UsersUUID != undefined) {
+            if (body.UsersUUID.length > 100) {
                 throw new Error('Max 100 hard coded users');
             }
             else {
                 let notifications: Notification[] = [];
-                for (let email of body.UserEmailList) {
+                for (let uuid of body.UsersUUID) {
                     let notification: Notification = {
-                        "UserEmail": email,
+                        "UserUUID": uuid,
                         "Title": body.Title,
                         "Body": body.Body,
                         "CreatorName": this.currentUserName,
@@ -912,7 +921,7 @@ class NotificationsService {
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': body.UserEmailList,
+            'UsersList': body.Email,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()
