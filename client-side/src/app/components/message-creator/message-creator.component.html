@@ -11,13 +11,13 @@
     <ng-container pep-main-area>
         <div class="message-creator">
             <div class="to">
-                <pep-textbox [label]="'To' | translate" [(value)]="message.Recipients" [disabled]="false" [readonly]="false" (valueChange)="onValueChanged('To', $event)"></pep-textbox>
+                <pep-chips #chipsComp [type]="'select'" [chips]="chips" [styleType]="'weak'" [orientation] ="'vertical'" [placeholder]="'Add Recipient'" (fieldClick)="externalSourceClicked()"></pep-chips>
             </div>
             <div class="subject">
-                <pep-textbox [label]="'Subject' | translate" [(value)]="message.Title" [disabled]="false" [readonly]="false" (valueChange)="onValueChanged('Subject', $event)"></pep-textbox>
+                <pep-textbox [label]="'Subject' | translate" [(value)]="message.Title" [disabled]="false" [readonly]="false"></pep-textbox>
             </div>
             <div class="body">
-                <pep-textarea [label]="'body' | translate" [(value)]="message.Body" [readonly]="false" [rowSpan]="2"  ></pep-textarea>
+                <pep-textarea [label]="'Body' | translate" [(value)]="message.Body" [readonly]="false" [rowSpan]="2"  ></pep-textarea>
             </div>
             <pep-button  class="sendButton" [sizeType]="'sm'" [classNames]="'pep-spacing-element'" [value]="'Send'| translate"
             [styleType]="'strong'" (buttonClick)="sendNotifications()"></pep-button>
