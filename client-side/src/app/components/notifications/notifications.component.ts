@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, Renderer2 } from '@angular/core';
+import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { IPepButtonClickEvent } from '@pepperi-addons/ngx-lib/button';
+import { config } from 'src/app/addon.config';
 import { INotificationItem } from './notifications.model';
 
 @Component({
@@ -29,10 +31,13 @@ export class NotificationsComponent implements OnInit {
     itemReadClick: EventEmitter<INotificationItem> = new EventEmitter<INotificationItem>();
 
     showMarkAllAsRead: boolean = false;
+    flagSImageSRC = '';
 
-    constructor() { }
+    constructor(private pepAddonService: PepAddonService) { }
 
-    ngOnInit() {}
+    ngOnInit() {
+        this.flagSImageSRC = this.pepAddonService.getAddonStaticFolder(config.AddonUUID) + 'assets/images/Flags.png';
+    }
 
     private calcShowMarkAllAsRead() {
         this.showMarkAllAsRead = this._items.some(item => !item.read);
