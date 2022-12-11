@@ -5,7 +5,7 @@
                     <pep-button class="close_button" spacing-element [sizeType]="'sm'" [classNames]="'pep-spacing-element'" iconName="system_close" [styleType]="'weak'" (click)="onCloseClick()"></pep-button>
                     <div class="title-lg pep-spacing-element">{{ 'NOTIFICATIONS' | translate }}</div>
             </div>
-            <span *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</span>
+            <div *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</div>
             <!-- <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button> -->
             </div>
         </div>

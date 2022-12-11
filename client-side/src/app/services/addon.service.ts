@@ -47,7 +47,6 @@ export class AddonService {
         this.dialogRef = this.dialogService.openDialog(content, input, dialogConfig);
         if (callbackFunc) {
             this.dialogRef.afterClosed().subscribe(res => {
-                debugger;
                 callbackFunc(res);
             });
         }

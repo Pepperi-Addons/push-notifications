@@ -18,10 +18,16 @@
             .left-cont{
                 display: flex;
                 align-items: center;
+
+                pep-button{
+                    display: none;
+                }
             }
 
             .color-link{
                 cursor: pointer;
+                display: flex;
+                align-items: center;
             }
         }
     }
@@ -122,6 +128,12 @@
     }
     .body-sm{
         font-size: variables.$fs-md !important;
+    }
+
+    .left-cont{
+        pep-button{
+            display: block !important;
+        }
     }
 }
   
