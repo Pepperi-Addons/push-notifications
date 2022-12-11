@@ -1,13 +1,14 @@
-import { Component, OnInit, ViewChild, TemplateRef} from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef,Inject, Injector} from '@angular/core';
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationsSetupService } from '../../services/notifications-setup.services';
 import { config } from '../../addon.config';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef,MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
 import { IPepGenericFormDataView } from '@pepperi-addons/ngx-composite-lib/generic-form';
+import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-form';
 @Component({
   selector: 'app-notifications-setup',
   templateUrl: './notifications-setup.component.html',
@@ -15,7 +16,13 @@ import { IPepGenericFormDataView } from '@pepperi-addons/ngx-composite-lib/gener
 })
 
 export class NotificationsSetupComponent implements OnInit {
+    dataView
+    formDataSource
+    dialogData
+    optValues: {Key: string, Value: string}[] = []
     constructor(    
+        private injector: Injector,
+        // @Inject(MAT_DIALOG_DATA) public incoming: any,
         private translate: TranslateService,
         private notificationsSetupService: NotificationsSetupService,
         private addonService: AddonService,
@@ -29,9 +36,12 @@ export class NotificationsSetupComponent implements OnInit {
          }
     dialogRef: MatDialogRef<any>
     @ViewChild('listForm', { read: TemplateRef }) listForm:TemplateRef<any>;
+    @ViewChild(GenericFormComponent) genericForm  
  
       ngOnInit() {
-        
+        this.dataView = this.getDataView()
+        this.formDataSource = this.getFormDataSource()
+        this.optValues = this.getOptValues()
       }
     
       cancel(){
@@ -42,26 +52,38 @@ export class NotificationsSetupComponent implements OnInit {
         console.log('Save clicked')
         this.dialogRef.close()
       }
-
-      formDataSource = this.getFormDataSource();
+      
+      getOptValues(){
+        return [{Key:"1",Value:"1"},{Key:"2",Value:"2"}]
+      }
       dataSource: IPepGenericListDataSource = this.getListDataSource()
 
       // dataView: IPepGenericFormDataView = this.getDataView();
 
-      get dataView() : IPepGenericFormDataView {
-        return this.getDataView();
-      }
-
       getFormDataSource(){
-        return {AddGroupList:'',ResourceListKey:'',SelectionViewUUID:'',DisplayTitleField:'',MappingResourceUUID:'',UserReferenceField:''}
+        let fakeData: any =
+
+        
+          {AddGroupList:"",
+          ResourceListKey:"",
+          SelectionViewUUID:"",
+          DisplayTitleField:"",
+          MappingResourceUUID:"",
+          UserReferenceField:'',
+          }
+
+        return fakeData
+          
       }
 
       getListDataSource(){
         return null
       }
 
-      valueChange(){
-
+      valueChange($event){
+        const selectionList = this.optValues?.find(selectionList => selectionList.Key == $event.Value)
+      this.formDataSource.optValues = selectionList.Value
+      this.formDataSource.optValues = selectionList.Key
       }
 
       fieldClick(){
@@ -69,7 +91,7 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       getDataView(){
-        const dataViewFields:IPepGenericFormDataView = {
+        return {
           Type: 'Form',
           Hidden: false,
           Columns: [],
@@ -109,10 +131,11 @@ export class NotificationsSetupComponent implements OnInit {
             },
             {
               FieldID: "ResourceListKey",
-              Type: "TextBox",
+              OptionalValues: this.getOptValues(),
+              Type: "ComboBox",
               Title: "Selection Resource List",
               Mandatory: true,
-              ReadOnly: false,
+              ReadOnly:  false,
               Layout: {
                 Origin: {
                   X: 1,
@@ -225,8 +248,6 @@ export class NotificationsSetupComponent implements OnInit {
           ],
           Rows: []
         }
-
-        return dataViewFields
       }
 
       actions: IPepGenericListActions = {
@@ -249,5 +270,7 @@ export class NotificationsSetupComponent implements OnInit {
       addList(){
         this.dialogRef = this.dialogService.openDialog(this.listForm,'',{disableClose:false, height: '50%',
         width: '80%'})
+        this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
+      
 }

@@ -23,9 +23,9 @@
 
 <ng-template #listForm>
     <ng-container class="formContainer">
-        <pep-generic-form [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange()" (fieldClick)="fieldClick()">
+        <pep-generic-form [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
         </pep-generic-form>
-        <div class="pep-spacing-element-negative" style="display: flex;">
+        <div class="pep-spacing-element-negative" style="display: flex; align-content:flex-start;">
             <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
             <pep-button class="pep-spacing-element" value="Save" styleType="strong" sizeType="sm" [disabled]="true" (buttonClick)="saveList()"></pep-button>
         </div>

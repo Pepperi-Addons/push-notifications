@@ -22,4 +22,5 @@ module.exports = {
         ...webpackConfig.output,
         uniqueName: filename,
     },
+    resolve:{fallback:{ crypto: false }}
 };
