@@ -2,7 +2,6 @@
         <div class="notifications-header">
             <div class="pep-border-bottom">
                 <div class="left-cont">
-                    <pep-button class="close_button" spacing-element [sizeType]="'sm'" [classNames]="'pep-spacing-element'" iconName="system_close" [styleType]="'weak'" (click)="onCloseClick()"></pep-button>
                     <div class="title-lg pep-spacing-element">{{ 'NOTIFICATIONS' | translate }}</div>
             </div>
             <div *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</div>

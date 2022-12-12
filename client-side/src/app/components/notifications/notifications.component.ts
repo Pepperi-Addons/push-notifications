@@ -50,19 +50,6 @@ export class NotificationsComponent implements OnInit {
         this.markAllAsReadClick.emit();
     }
 
-    onCloseClick(){
-        console.log('onCloseClick');
-        const eventData = {
-            detail: {
-                key: 'CloseChat',
-                data: {
-                }
-            },
-        };
-        const event = new CustomEvent('emit-event', eventData);
-        window.dispatchEvent(event);
-    }
-
     onNotificationItemClick(item: INotificationItem) {
         console.log('onNotificationItemClick');
 
