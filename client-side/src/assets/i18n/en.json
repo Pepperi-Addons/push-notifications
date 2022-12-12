@@ -1,9 +1,9 @@
 {
     "NOTIFICATIONS": "Notifications",
-    "NOTIFICATIONS_FOOTER_LINE": "That's all your notifications from the last 30 days",
+    "NOTIFICATIONS_FOOTER_LINE": "Those are all of your notifications from the last 30 days",
     "ACTIONS": {
         "MARK_ALL_AS_READ": "Mark all as read",
-        "MARK_AS_READ": "Mark as read",
+        "MARK_AS_READ": "Mark as Read",
         "MARK_AS_UNREAD": "Mark as Unread",
         "GO_TO_TEXT": "Go to"
     },
@@ -15,7 +15,7 @@
     "Title": "Title",
     "Message_Body": "Message Body",
     "Read": "Read",
-    "Mark_As_Read": "Mark as read",
+    "Mark_As_Read": "Mark as Read",
     "Notifications_Form_Title": "Notifications form",
     "To": "To",
     "Subject": "Subject",
@@ -35,10 +35,10 @@
     "Sent_To": "Sent To",
     "Time": "Time",
     "Duplicate": "Duplicate",
-    "Messages_Sent_Successfuly": "All the messages sent successfully",
+    "Messages_Sent_Successfuly": "All messages sent successfully",
     "OK": "OK",
     "No_Notifications_Log_Error": "No Notifications Log found",
-    "Notifications_Log_Deleted_Successfuly": "The Notifications Log Deleted Successfuly",
+    "Notifications_Log_Deleted_Successfuly": "Notifications Log deleted successfuly",
     "No_Results_Error": "No results found",
     "New_Message": "Send New Message",
     "Delete_Device_Validate": "Are you sure you want to delete this device?",

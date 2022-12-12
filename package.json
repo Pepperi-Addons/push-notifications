@@ -21,7 +21,7 @@
 		"fetch": "^1.1.0",
 		"json-schema": "^0.4.0",
 		"json-scheme": "^0.4.8",
-		"jsonschema": "^1.4.0",
+		"jsonschema": "^1.4.1",
 		"pfs": "^3.0.0"
 	}
 }
