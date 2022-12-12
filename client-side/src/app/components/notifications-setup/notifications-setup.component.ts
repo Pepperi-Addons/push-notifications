@@ -19,7 +19,8 @@ export class NotificationsSetupComponent implements OnInit {
     dataView
     formDataSource
     dialogData
-    optValues: {Key: string, Value: string}[] = []
+    optValues
+    resources
     constructor(    
         private injector: Injector,
         private translate: TranslateService,
@@ -35,10 +36,11 @@ export class NotificationsSetupComponent implements OnInit {
     @ViewChild('listForm', { read: TemplateRef }) listForm:TemplateRef<any>;
     @ViewChild(GenericFormComponent) genericForm  
  
-      ngOnInit() {
-        this.dataView = this.getDataView()
+      async ngOnInit() {
+        this.dataView = await this.getDataView()
         this.formDataSource = this.getFormDataSource()
-        this.optValues = this.getOptValues()
+        this.getOptValues().then((resources) =>{this.optValues = resources});
+        console.log(this.optValues)
       }
     
       cancel(){
@@ -50,8 +52,14 @@ export class NotificationsSetupComponent implements OnInit {
         this.dialogRef.close()
       }
       
-      getOptValues(){
-        return [{Key:"1",Value:"1"},{Key:"2",Value:"2"}]
+      async getOptValues(){
+        let resources = []
+        debugger;
+        this.resources = await this.notificationsSetupService.get_resource_list()
+        this.resources.forEach(resource => {
+          resources.push({Key:resource,Value:resource})
+        });
+        return resources
       }
       dataSource: IPepGenericListDataSource = this.getListDataSource()
 
@@ -81,7 +89,7 @@ export class NotificationsSetupComponent implements OnInit {
 
       }
 
-      getDataView(){
+      async getDataView(){
         return {
           Type: 'Form',
           Hidden: false,
@@ -122,7 +130,7 @@ export class NotificationsSetupComponent implements OnInit {
             },
             {
               FieldID: "ResourceListKey",
-              OptionalValues: this.getOptValues(),
+              OptionalValues: await this.getOptValues().then(resources=> {return resources}),
               Type: "ComboBox",
               Title: "Selection Resource List",
               Mandatory: true,

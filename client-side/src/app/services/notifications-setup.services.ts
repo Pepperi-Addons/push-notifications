@@ -20,7 +20,7 @@ export class NotificationsSetupService {
         return this.addonService.pepPost(encodeURI(url),sendTolists).toPromise();
     }
 
-    get_resource_list(){
+    async get_resource_list(){
         let url = `/addons/api/${this.addonService.addonUUID}/api/get_resource_lists`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
