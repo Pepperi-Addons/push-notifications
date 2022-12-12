@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - v1.1
+      - releases/*
 
 jobs:
   publish-addon:

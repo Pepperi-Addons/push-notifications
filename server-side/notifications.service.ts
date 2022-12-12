@@ -195,7 +195,7 @@ class NotificationsService {
 
     async getUserUUIDByEmail(userEmail) {
         const users = await this.papiClient.users.find();
-        let userUUID = users.find(u => u.Email == userEmail)?.UUID
+        let userUUID = users.find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
         if (userUUID != undefined) {
             return userUUID;
         }
