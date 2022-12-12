@@ -260,20 +260,23 @@ class NotificationsService {
     }
 
     async setNotificationsUsersLists(body){
+        body.Key = uuid();
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(body);
     }
+
+    
 
     async deleteNotificationsUsersLists(lists){
         for (let list of lists) {
             let deleteJson = {
-                UUID:list.uuid,
+                Key:list.Key,
                 Hidden: true
             }
             try {
-                this.setNotificationsUsersLists(deleteJson)
+                return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(deleteJson)
             }
             catch{
-                throw new Error(`Could not delete list with UUID ${list.uuid}`)
+                throw new Error(`Could not delete list with UUID ${list.Key}`)
             }
         }
     }

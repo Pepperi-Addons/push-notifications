@@ -66,7 +66,6 @@ export class NotificationsSetupComponent implements OnInit {
         
           {AddGroupList:"",
           ResourceListKey:"",
-          SelectionViewUUID:"",
           DisplayTitleField:"",
           MappingResourceUUID:"",
           UserReferenceField:'',
@@ -136,29 +135,6 @@ export class NotificationsSetupComponent implements OnInit {
               Title: "Selection Resource List",
               Mandatory: true,
               ReadOnly:  false,
-              Layout: {
-                Origin: {
-                  X: 1,
-                  Y: 2
-                },
-                Size: {
-                  Width: 1,
-                  Height: 0
-                }
-              },
-              Style: {
-                Alignment: {
-                  Horizontal: "Stretch",
-                  Vertical: "Stretch"
-                }
-              }
-            },
-            {
-              FieldID: "SelectionViewUUID",
-              Type: "MapDataDropDown",
-              Title: "Selection View",
-              Mandatory: true,
-              ReadOnly: false,
               Layout: {
                 Origin: {
                   X: 1,

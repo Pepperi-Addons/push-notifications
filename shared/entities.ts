@@ -49,8 +49,9 @@ export interface UserDevice {
 }
 
 export interface UsersLists{
+    Key: string;
     ResourceListKey: string;
-    SelectionViewUUID: string;
+    SelectionViewUUID?: string;
     DisplayTitleField: string;
     MappingResourceUUID: string
     UserReferenceField: string;
@@ -197,7 +198,7 @@ export const usersListsSchema: Schema = {
         },
         SelectionViewUUID: {
             type: "string",
-            required: true
+            required: false
         },
         DisplayTitleField: {
             type: "string",
