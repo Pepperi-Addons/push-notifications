@@ -22,15 +22,12 @@ export class NotificationsSetupComponent implements OnInit {
     optValues: {Key: string, Value: string}[] = []
     constructor(    
         private injector: Injector,
-        // @Inject(MAT_DIALOG_DATA) public incoming: any,
         private translate: TranslateService,
         private notificationsSetupService: NotificationsSetupService,
         private addonService: AddonService,
         private route: ActivatedRoute,
         private router: Router,
         private dialogService: PepDialogService,
-        // private dialogActions: PepDialogActionsType='cancel-ok',
-        // private templateRef: TemplateRef<'list-form.component.html'>,
         ) {
           this.addonService.addonUUID = config.AddonUUID;
          }
@@ -58,21 +55,16 @@ export class NotificationsSetupComponent implements OnInit {
       }
       dataSource: IPepGenericListDataSource = this.getListDataSource()
 
-      // dataView: IPepGenericFormDataView = this.getDataView();
 
       getFormDataSource(){
         let fakeData: any =
-
-        
           {AddGroupList:"",
           ResourceListKey:"",
           DisplayTitleField:"",
           MappingResourceUUID:"",
           UserReferenceField:'',
           }
-
         return fakeData
-          
       }
 
       getListDataSource(){

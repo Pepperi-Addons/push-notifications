@@ -45,7 +45,6 @@ export const routes: Routes = [
     ],
     providers: [
       TranslateStore,
-      // When loading this module from route we need to add this here (because only this module is loading).
     ]
   })
 
