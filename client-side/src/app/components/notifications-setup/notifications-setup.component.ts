@@ -48,7 +48,7 @@ export class NotificationsSetupComponent implements OnInit {
         this.dialogRef.close()
       }
       
-      async getOptValues(){
+      async getSelectionResources(){
         let resources = []
         let res = await this.notificationsSetupService.getResourceList()
         res.forEach(resource => {
@@ -217,7 +217,7 @@ export class NotificationsSetupComponent implements OnInit {
           ],
           Rows: []
         }
-        dataView.Fields[1]["OptionalValues"] = await this.getOptValues()
+        dataView.Fields[1]["OptionalValues"] = await this.getSelectionResources()
         return dataView
       }
 
