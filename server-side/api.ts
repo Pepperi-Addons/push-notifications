@@ -1,4 +1,5 @@
 import NotificationsService from './notifications.service'
+import UsersListsService from './users-list.service'
 import { Client, Request } from '@pepperi-addons/debug-server'
 
 export async function notifications(client: Client, request: Request) {
@@ -24,13 +25,13 @@ export async function unread_notifications(client: Client, request: Request) {
 }
 
 export async function notifications_users_lists(client: Client, request: Request) {
-    const service = new NotificationsService(client)
+    const usersListsService = new UsersListsService(client)
 
     if (request.method === 'GET') {
-        return service.getNotificationsUsersLists(request.query);
+        return usersListsService.getNotificationsUsersLists(request.query);
     }
     if (request.method === 'POST') {
-        return service.setNotificationsUsersLists(request.body);
+        return usersListsService.upsertNotificationsUsersLists(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
@@ -38,10 +39,10 @@ export async function notifications_users_lists(client: Client, request: Request
 }
 
 export async function delete_notifications_users_lists(client: Client, request: Request) {
-    const service = new NotificationsService(client)
+    const usersListsService = new UsersListsService(client)
 
     if (request.method === 'POST') {
-        return service.deleteNotificationsUsersLists(request.body);
+        return usersListsService.deleteNotificationsUsersLists(request.body);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
@@ -49,10 +50,10 @@ export async function delete_notifications_users_lists(client: Client, request: 
 }
 
 export async function get_resource_lists(client:Client, request:Request) {
-    const service = new NotificationsService(client)
+    const usersListsService = new UsersListsService(client)
 
     if (request.method === 'GET') {
-    return service.getResourceLists(request.query);
+    return usersListsService.getResourceLists(request.query);
     }
 }
 
