@@ -30,6 +30,7 @@
     "dependencies": {
         "@pepperi-addons/debug-server": "*",
         "@pepperi-addons/papi-sdk": "^1.39.4",
+        "semver": "^7.3.8",
         "shared": "file:../shared"
     }
 }

@@ -3,11 +3,11 @@ import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addo
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AddonData,FormDataView } from '@pepperi-addons/papi-sdk';
 import { NotificationsSetupService } from '../../services/notifications-setup.services';
 import { config } from '../../addon.config';
 import { MatDialogRef,MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
-import { IPepGenericFormDataView } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-form';
 @Component({
   selector: 'app-notifications-setup',
@@ -16,11 +16,9 @@ import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-
 })
 
 export class NotificationsSetupComponent implements OnInit {
-    dataView
-    formDataSource
-    dialogData
-    optValues
-    resources
+    dataView:FormDataView
+    formDataSource:AddonData ={}
+    dialogData: any
     constructor(    
         private injector: Injector,
         private translate: TranslateService,
@@ -39,8 +37,6 @@ export class NotificationsSetupComponent implements OnInit {
       async ngOnInit() {
         this.dataView = await this.getDataView()
         this.formDataSource = this.getFormDataSource()
-        this.getOptValues().then((resources) =>{this.optValues = resources});
-        console.log(this.optValues)
       }
     
       cancel(){
@@ -54,9 +50,8 @@ export class NotificationsSetupComponent implements OnInit {
       
       async getOptValues(){
         let resources = []
-        debugger;
-        this.resources = await this.notificationsSetupService.get_resource_list()
-        this.resources.forEach(resource => {
+        let res = await this.notificationsSetupService.getResourceList()
+        res.forEach(resource => {
           resources.push({Key:resource,Value:resource})
         });
         return resources
@@ -80,18 +75,17 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       valueChange($event){
-        const selectionList = this.optValues?.find(selectionList => selectionList.Key == $event.Value)
-      this.formDataSource.optValues = selectionList.Value
-      this.formDataSource.optValues = selectionList.Key
+      const selectionList = this.dataView.Fields[1]["OptionalValues"].find(selectionList => selectionList.Key == $event.Value)
+      this.formDataSource.resource = selectionList.Key
       }
 
       fieldClick(){
 
       }
 
-      async getDataView(){
-        return {
-          Type: 'Form',
+      async getDataView():Promise<FormDataView>{
+        let dataView:FormDataView = {
+          Type: "Form",
           Hidden: false,
           Columns: [],
           Context: {
@@ -130,7 +124,6 @@ export class NotificationsSetupComponent implements OnInit {
             },
             {
               FieldID: "ResourceListKey",
-              OptionalValues: await this.getOptValues().then(resources=> {return resources}),
               Type: "ComboBox",
               Title: "Selection Resource List",
               Mandatory: true,
@@ -224,6 +217,8 @@ export class NotificationsSetupComponent implements OnInit {
           ],
           Rows: []
         }
+        dataView.Fields[1]["OptionalValues"] = await this.getOptValues()
+        return dataView
       }
 
       actions: IPepGenericListActions = {

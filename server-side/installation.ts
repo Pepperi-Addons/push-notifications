@@ -10,14 +10,16 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
-import {USERS_LISTS_TABLE_NAME} from  'shared'
 import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from 'shared'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
+import UsersListsService from './users-list.service'
 import { NOTIFICATION_SETUP_ELEMENT } from 'shared';
+import semver from 'semver';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
+    const usersListsService = new UsersListsService(client)
     const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -34,7 +36,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const pfsResourceRes = await createPFSResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
-    const notificationsUsersListsRes = await createUsersListsResource(papiClient);
+    const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -71,9 +73,26 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
+
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
-    return { success: true, resultObject: {} }
+
+    // Creating new scheme of users lists only if the current version is older than 1.2.0
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') < 0){
+        const papiClient = new PapiClient({
+        baseURL: client.BaseURL,
+        token: client.OAuthAccessToken,
+        addonUUID: client.AddonUUID,
+        addonSecretKey: client.AddonSecretKey,
+        actionUUID: client["ActionUUID"]
+        });
+        const usersListsService = new UsersListsService(client)
+        const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
+        return { success: notificationsUsersListsRes.success && relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+    }
+    else{
+        return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+    }
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
@@ -206,45 +225,6 @@ async function createNotificationsResource(papiClient: PapiClient) {
     try {
         await papiClient.addons.data.schemes.post(notificationsScheme);
 
-        return {
-            success: true,
-            errorMessage: ""
-        }
-    }
-    catch (err) {
-        return {
-            success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
-        }
-    }
-}
-
-async function createUsersListsResource(papiClient:PapiClient) {
-    var notificationsUsersListsScheme: AddonDataScheme={
-        Name: USERS_LISTS_TABLE_NAME,
-        Type: 'meta_data',
-        Fields: {
-   
-            ResourceListUUID: {
-                Type: 'String'
-            },
-            SelectionViewUUID: {
-                Type: 'String'
-            },
-            DisplayTitleField: {
-                Type: 'String'
-            },
-            MappingResourceUUID: {
-                Type: 'String'
-            },
-            UserReferenceField: {
-                Type: 'String'
-            }
-        }
-        
-    };
-    try {
-        await papiClient.addons.data.schemes.post(notificationsUsersListsScheme);
         return {
             success: true,
             errorMessage: ""

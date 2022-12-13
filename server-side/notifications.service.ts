@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, USERS_LISTS_TABLE_NAME
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
 } from 'shared'
 import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
@@ -244,41 +244,6 @@ class NotificationsService {
 
     async getNotifications(query) {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
-    }
-
-    async getResourceLists(query){
-        let resourceList: string[] = []
-        let resources = await this.papiClient.userDefinedCollections.schemes.iter().toArray()
-        for(let resource in resources){
-            resourceList.push(resources[resource]['Name'])
-        }
-        return resourceList
-    }
-
-    async getNotificationsUsersLists(query){
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).iter(query).toArray();
-    }
-
-    async setNotificationsUsersLists(body){
-        body.Key = uuid();
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(body);
-    }
-
-    
-
-    async deleteNotificationsUsersLists(lists){
-        for (let list of lists) {
-            let deleteJson = {
-                Key:list.Key,
-                Hidden: true
-            }
-            try {
-                return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(deleteJson)
-            }
-            catch{
-                throw new Error(`Could not delete list with UUID ${list.Key}`)
-            }
-        }
     }
 
     async upsertNotification(body) {
