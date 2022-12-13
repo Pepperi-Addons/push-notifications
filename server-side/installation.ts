@@ -13,10 +13,13 @@ import { AddonDataScheme, PapiClient } from '@pepperi-addons/papi-sdk'
 import { NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION } from 'shared'
 import { Relation } from '@pepperi-addons/papi-sdk'
 import NotificationsService from './notifications.service';
+import UsersListsService from './users-list.service'
 import { NOTIFICATION_SETUP_ELEMENT } from 'shared';
+import semver from 'semver';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
+    const usersListsService = new UsersListsService(client)
     const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -33,6 +36,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const pfsResourceRes = await createPFSResource(papiClient);
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
+    const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -40,11 +44,11 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success,
+        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success && notificationsUsersListsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
         notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
          relationsRes: ${relationsRes.errorMessage}, settingsRelationsRes: ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
-         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}`
+         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}, notificationsUsersListsRes: ${notificationsUsersListsRes.errorMessage}`
     };
 }
 
@@ -69,9 +73,26 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
+
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
-    return { success: true, resultObject: {} }
+
+    // Creating new scheme of users lists only if the current version is older than 1.2.0
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') < 0){
+        const papiClient = new PapiClient({
+        baseURL: client.BaseURL,
+        token: client.OAuthAccessToken,
+        addonUUID: client.AddonUUID,
+        addonSecretKey: client.AddonSecretKey,
+        actionUUID: client["ActionUUID"]
+        });
+        const usersListsService = new UsersListsService(client)
+        const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
+        return { success: notificationsUsersListsRes.success && relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+    }
+    else{
+        return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+    }
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {

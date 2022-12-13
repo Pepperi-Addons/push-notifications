@@ -1,14 +1,14 @@
-import { Component, OnInit, ViewChild, ViewContainerRef , TemplateRef} from '@angular/core';
-import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { Component, OnInit, ViewChild, TemplateRef,Inject, Injector} from '@angular/core';
+import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AddonData,FormDataView } from '@pepperi-addons/papi-sdk';
 import { NotificationsSetupService } from '../../services/notifications-setup.services';
-import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 import { config } from '../../addon.config';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef,MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
+import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-form';
 @Component({
   selector: 'app-notifications-setup',
   templateUrl: './notifications-setup.component.html',
@@ -16,7 +16,12 @@ import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 })
 
 export class NotificationsSetupComponent implements OnInit {
+    dataView:FormDataView
+    formDataSource:AddonData ={}
+    dialogData: any
+    optValues: {Key: string, Value: string}[] = []
     constructor(    
+        private injector: Injector,
         private translate: TranslateService,
         private notificationsSetupService: NotificationsSetupService,
         private addonService: AddonService,
@@ -28,9 +33,12 @@ export class NotificationsSetupComponent implements OnInit {
          }
     dialogRef: MatDialogRef<any>
     @ViewChild('listForm', { read: TemplateRef }) listForm:TemplateRef<any>;
+    @ViewChild(GenericFormComponent) genericForm  
  
-      ngOnInit() {
-        
+      async ngOnInit() {
+        this.dataView = await this.getDataView()
+        this.formDataSource = this.getFormDataSource()
+        this.optValues = this.getOptValues()
       }
     
       cancel(){
@@ -41,11 +49,174 @@ export class NotificationsSetupComponent implements OnInit {
         console.log('Save clicked')
         this.dialogRef.close()
       }
+      
+      getOptValues(){
+        return [{Key:"1",Value:"1"},{Key:"2",Value:"2"}]
+      }
+      dataSource: IPepGenericListDataSource = this.getListDataSource()
 
-      dataSource: IPepGenericListDataSource = this.getDataSource();
 
-      getDataSource(){
+      getFormDataSource(){
+        let fakeData: any =
+          {AddGroupList:"",
+          ResourceListKey:"",
+          DisplayTitleField:"",
+          MappingResourceUUID:"",
+          UserReferenceField:'',
+          }
+        return fakeData
+      }
+
+      getListDataSource(){
         return null
+      }
+
+      valueChange($event){
+        const selectionList = this.optValues?.find(selectionList => selectionList.Key == $event.Value)
+      this.formDataSource.optValues = selectionList.Value
+      this.formDataSource.optValues = selectionList.Key
+      }
+
+      fieldClick(){
+
+      }
+
+      async getDataView():Promise<FormDataView>{
+        let dataView:FormDataView = {
+          Type: "Form",
+          Hidden: false,
+          Columns: [],
+          Context: {
+            Object: {
+              Resource: "transactions",
+              InternalID: 0,
+              Name: "Object Name"
+            },
+            Name: '',
+            Profile: { },
+            ScreenSize: 'Tablet'
+          },
+          Fields: [
+            {
+              FieldID: "AddGroupList",
+              Type: "Separator",
+              Title: "Add Group List",
+              Mandatory: true,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 1,
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "ResourceListKey",
+              Type: "ComboBox",
+              Title: "Selection Resource List",
+              Mandatory: true,
+              ReadOnly:  false,
+              Layout: {
+                Origin: {
+                  X: 1,
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "DisplayTitleField",
+              Type: "MapDataDropDown",
+              Title: "Selection Display Title Field",
+              Mandatory: true,
+              ReadOnly: false,
+              Layout: {
+                Origin: {
+                  X: 1,
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "MappingResourceUUID",
+              Type: "MapDataDropDown",
+              Title: "Choose Mapping Resource",
+              Mandatory: true,
+              ReadOnly: false,
+              Layout: {
+                Origin: {
+                  X: 1,
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "UserReferenceField",
+              Type: "MapDataDropDown",
+              Title: "User Reference Field",
+              Mandatory: true,
+              ReadOnly: false,
+              Layout: {
+                Origin: {
+                  X: 1,
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            }
+          ],
+          Rows: []
+        }
+        dataView.Fields[1]["OptionalValues"] = await this.getOptValues()
+        return dataView
       }
 
       actions: IPepGenericListActions = {
@@ -56,7 +227,7 @@ export class NotificationsSetupComponent implements OnInit {
               title: this.translate.instant("Delete"),
               handler: async (objs) => {
                 await this.notificationsSetupService.deleteSendToList(objs.rows);
-                this.dataSource = this.getDataSource();
+                this.dataSource = this.getListDataSource();
               }
           });
           }
@@ -66,6 +237,9 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       addList(){
-        this.dialogRef = this.dialogService.openDialog(this.listForm,'',{disableClose:false})
+        this.dialogRef = this.dialogService.openDialog(this.listForm,'',{disableClose:false, height: '50%',
+        width: '80%'})
+        this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
+      
 }

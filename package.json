@@ -14,7 +14,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@pepperi-addons/papi-sdk": "^1.39.4",
+		"@pepperi-addons/papi-sdk": "^1.43.2",
 		"@pepperi-addons/scripts": "^2.0.12",
 		"aws-sdk": "^2.1092.0",
 		"cryptr": "^6.0.3",
@@ -22,6 +22,7 @@
 		"json-schema": "^0.4.0",
 		"json-scheme": "^0.4.8",
 		"jsonschema": "^1.4.1",
-		"pfs": "^3.0.0"
+		"pfs": "^3.0.0",
+		"semver": "^7.3.8"
 	}
 }

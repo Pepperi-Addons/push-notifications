@@ -16,6 +16,12 @@ export class NotificationsSetupService {
     }
 
     deleteSendToList(sendTolists){
-        
+        let url = `/addons/api/${this.addonService.addonUUID}/api/delete_notifications_users_lists`
+        return this.addonService.pepPost(encodeURI(url),sendTolists).toPromise();
+    }
+
+    getResourceList(){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_resource_lists`
+        return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
 }

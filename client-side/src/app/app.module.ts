@@ -13,7 +13,7 @@ import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.com
 import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
-import {NOTIFICATION_SETUP_ELEMENT} from '../../../shared'
+import {NOTIFICATION_SETUP_ELEMENT} from 'shared'
 
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 

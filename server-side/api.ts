@@ -1,4 +1,5 @@
 import NotificationsService from './notifications.service'
+import UsersListsService from './users-list.service'
 import { Client, Request } from '@pepperi-addons/debug-server'
 
 export async function notifications(client: Client, request: Request) {
@@ -20,6 +21,39 @@ export async function unread_notifications(client: Client, request: Request) {
 
     if (request.method === 'GET') {
         return service.getNumberOfUnreadNotifications();
+    }
+}
+
+export async function notifications_users_lists(client: Client, request: Request) {
+    const usersListsService = new UsersListsService(client)
+
+    if (request.method === 'GET') {
+        return usersListsService.getNotificationsUsersLists(request.query);
+    }
+    if (request.method === 'POST') {
+        return usersListsService.upsertNotificationsUsersLists(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function delete_notifications_users_lists(client: Client, request: Request) {
+    const usersListsService = new UsersListsService(client)
+
+    if (request.method === 'POST') {
+        return usersListsService.deleteNotificationsUsersLists(request.body);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
+export async function get_resource_lists(client:Client, request:Request) {
+    const usersListsService = new UsersListsService(client)
+
+    if (request.method === 'GET') {
+    return usersListsService.getResourceLists(request.query);
     }
 }
 
