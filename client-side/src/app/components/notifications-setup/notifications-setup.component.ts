@@ -19,7 +19,6 @@ export class NotificationsSetupComponent implements OnInit {
     dataView:FormDataView
     formDataSource:AddonData ={}
     dialogData: any
-    optValues: {Key: string, Value: string}[] = []
     constructor(    
         private injector: Injector,
         private translate: TranslateService,
@@ -38,7 +37,6 @@ export class NotificationsSetupComponent implements OnInit {
       async ngOnInit() {
         this.dataView = await this.getDataView()
         this.formDataSource = this.getFormDataSource()
-        this.optValues = this.getOptValues()
       }
     
       cancel(){
@@ -50,8 +48,13 @@ export class NotificationsSetupComponent implements OnInit {
         this.dialogRef.close()
       }
       
-      getOptValues(){
-        return [{Key:"1",Value:"1"},{Key:"2",Value:"2"}]
+      async getSelectionResources(){
+        let resources = []
+        let res = await this.notificationsSetupService.getResourceList()
+        res.forEach(resource => {
+          resources.push({Key:resource,Value:resource})
+        });
+        return resources
       }
       dataSource: IPepGenericListDataSource = this.getListDataSource()
 
@@ -72,9 +75,8 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       valueChange($event){
-        const selectionList = this.optValues?.find(selectionList => selectionList.Key == $event.Value)
-      this.formDataSource.optValues = selectionList.Value
-      this.formDataSource.optValues = selectionList.Key
+      const selectionList = this.dataView.Fields[1]["OptionalValues"].find(selectionList => selectionList.Key == $event.Value)
+      this.formDataSource.resource = selectionList.Key
       }
 
       fieldClick(){
@@ -215,7 +217,7 @@ export class NotificationsSetupComponent implements OnInit {
           ],
           Rows: []
         }
-        dataView.Fields[1]["OptionalValues"] = await this.getOptValues()
+        dataView.Fields[1]["OptionalValues"] = await this.getSelectionResources()
         return dataView
       }
 
