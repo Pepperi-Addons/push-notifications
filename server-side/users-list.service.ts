@@ -56,12 +56,23 @@ class UsersListsService {
         return resourceList
     }
 
+    async getResourceFields(body){
+        let fields:string[] = []
+        let resource = await this.papiClient.resources.resource('resources').search(body)
+        for(let field in resource[0]["Fields"]){
+            fields.push(field)
+        }
+        return fields
+    }
+
     async createUsersListsResource(papiClient:PapiClient) {
         const notificationsUsersListsScheme: AddonDataScheme={
             Name: USERS_LISTS_TABLE_NAME,
             Type: 'meta_data',
             Fields: {
-       
+                ListName: {
+                    Type: 'String'
+                },
                 ResourceListUUID: {
                     Type: 'String'
                 },
