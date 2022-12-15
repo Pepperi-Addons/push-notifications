@@ -86,6 +86,19 @@ class UsersListsService {
         return mappingCollections
     }
 
+    async getReferenceFields(body){
+        let fields:string[] = []
+        let resources = await this.papiClient.resources.resource('resources').search(body)
+        resources.map(resource=>{
+            Object.keys(resource.Fields).map(key=>{
+                if(resource.Fields[key]["Type"] == 'Resource' && resource.Fields[key]["Resource"]=='users'){
+                    fields.push(key)
+                } 
+            })
+        })
+        return fields
+    }
+
     async createUsersListsResource(papiClient:PapiClient) {
         const notificationsUsersListsScheme: AddonDataScheme={
             Name: USERS_LISTS_TABLE_NAME,

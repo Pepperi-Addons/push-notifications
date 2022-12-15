@@ -39,6 +39,11 @@ export class NotificationsSetupService {
         return this.addonService.pepPost(encodeURI(url),resource).toPromise();
     }
 
+    getUserReferenceFields(resource){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_user_reference_fields`
+        return this.addonService.pepPost(encodeURI(url),resource).toPromise();
+    }
+
     getUsersLists(){
         let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
         return this.addonService.pepGet(encodeURI(url)).toPromise();

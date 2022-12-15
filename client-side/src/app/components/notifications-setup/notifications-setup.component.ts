@@ -76,6 +76,14 @@ export class NotificationsSetupComponent implements OnInit {
         });
         return Fields
       }
+      async getUserReferenceFields(resource ){
+        let Fields = []
+        let res = await this.notificationsSetupService.getUserReferenceFields({Where:"Name = "+resource})
+        res.map(field => {
+          Fields.push({Key:field,Value:field})
+        });
+        return Fields
+      }
       dataSource: IPepGenericListDataSource = this.getListDataSource()
 
 
@@ -196,6 +204,12 @@ export class NotificationsSetupComponent implements OnInit {
           selectionList.MappingResourceUUID = $event.Value
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
           this.dataView.Fields[5].ReadOnly = false
+          this.dataView.Fields[5]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
+        }
+        if($event.ApiName == "UserReferenceField"){
+          selectionList.UserReferenceField = $event.Value
+          this.formDataSource.UserReferenceField = selectionList.UserReferenceField
+          this.is_disabled
         }
 
       // update the data view with the desired data
