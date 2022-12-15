@@ -48,4 +48,9 @@ export class NotificationsSetupService {
         let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
+
+    saveList(list){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
+        return this.addonService.pepPost(encodeURI(url),list).toPromise();
+    }
 }

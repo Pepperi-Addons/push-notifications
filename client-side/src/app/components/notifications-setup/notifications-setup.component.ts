@@ -20,6 +20,7 @@ export class NotificationsSetupComponent implements OnInit {
     formDataSource:AddonData ={}
     dialogData: any
     is_disabled: boolean = true
+    dataSource: IPepGenericListDataSource
     constructor(    
         private injector: Injector,
         private translate: TranslateService,
@@ -38,15 +39,18 @@ export class NotificationsSetupComponent implements OnInit {
       async ngOnInit() {
         this.dataView = await this.getDataView()
         this.formDataSource = this.getFormDataSource()
+        this.dataSource = await this.getListDataSource()
       }
     
       cancel(){
         this.dialogRef.close()
       }
 
-      saveList(){
-        console.log('Save clicked')
+      async saveList(){
+        await this.notificationsSetupService.saveList(this.formDataSource)
+        this.formDataSource=this.getFormDataSource()
         this.dialogRef.close()
+        this.dataSource = await this.getListDataSource()
       }
       
       async getSelectionResources(){
@@ -84,21 +88,19 @@ export class NotificationsSetupComponent implements OnInit {
         });
         return Fields
       }
-      dataSource: IPepGenericListDataSource = this.getListDataSource()
-
 
       getFormDataSource(){
-        let fakeData: any =
-          {AddGroupList:"",
+        let defaultData: any =
+          {ListName:"",
           ResourceListKey:"",
           DisplayTitleField:"",
           MappingResourceUUID:"",
           UserReferenceField:'',
           }
-        return fakeData
+        return defaultData
       }
 
-      getListDataSource(){
+      async getListDataSource(){
         return {
           init: async (params: any) => {
             let notificationsUsersLists = await this.notificationsSetupService.getUsersLists();
@@ -187,7 +189,6 @@ export class NotificationsSetupComponent implements OnInit {
 
       async valueChange($event){
         let selectionList:any = {}
-        console.log($event.ApiName)
         if($event.ApiName == "ResourceListKey"){
           selectionList.ResourceListKey =  $event.Value
           this.formDataSource.ResourceListKey = selectionList.ResourceListKey
@@ -209,7 +210,7 @@ export class NotificationsSetupComponent implements OnInit {
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
           this.formDataSource.UserReferenceField = selectionList.UserReferenceField
-          this.is_disabled
+          this.is_disabled = false
         }
 
       // update the data view with the desired data
