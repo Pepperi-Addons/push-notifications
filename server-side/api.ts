@@ -65,6 +65,13 @@ export async function get_resource_fields(client:Client, request:Request) {
     }
 }
 
+export async function get_mapping_collections(client:Client, request:Request) {
+    const usersListsService = new UsersListsService(client)
+
+    if (request.method === 'POST') {
+    return usersListsService.getMappingCollections(request.body);
+    }
+}
 export async function update_notifications_read_status(client: Client, request: Request) {
     const service = new NotificationsService(client)
 

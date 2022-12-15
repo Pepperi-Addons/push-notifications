@@ -34,6 +34,11 @@ export class NotificationsSetupService {
         return this.addonService.pepPost(encodeURI(url),resource).toPromise();
     }
 
+    getMappingCollections(resource){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_mapping_collections`
+        return this.addonService.pepPost(encodeURI(url),resource).toPromise();
+    }
+
     getUsersLists(){
         let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
         return this.addonService.pepGet(encodeURI(url)).toPromise();

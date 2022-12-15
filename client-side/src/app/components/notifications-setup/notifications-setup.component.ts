@@ -19,6 +19,7 @@ export class NotificationsSetupComponent implements OnInit {
     dataView:FormDataView
     formDataSource:AddonData ={}
     dialogData: any
+    is_disabled: boolean = true
     constructor(    
         private injector: Injector,
         private translate: TranslateService,
@@ -50,6 +51,7 @@ export class NotificationsSetupComponent implements OnInit {
       
       async getSelectionResources(){
         let resources = []
+
         let res = await this.notificationsSetupService.getResourceList()
         res.map(resource => {
           resources.push({Key:resource,Value:resource})
@@ -60,6 +62,15 @@ export class NotificationsSetupComponent implements OnInit {
       async getResourceFields(resource ){
         let Fields = []
         let res = await this.notificationsSetupService.getResourceFields({Where:"Name = "+resource})
+        res.map(field => {
+          Fields.push({Key:field,Value:field})
+        });
+        return Fields
+      }
+
+      async getMappingCollections(resource ){
+        let Fields = []
+        let res = await this.notificationsSetupService.getMappingCollections({resource:resource})
         res.map(field => {
           Fields.push({Key:field,Value:field})
         });
@@ -122,7 +133,7 @@ export class NotificationsSetupComponent implements OnInit {
                   {
                     FieldID: 'MappingResourceUUID',
                     Type: 'TextBox',
-                    Title: this.translate.instant("Script"),
+                    Title: this.translate.instant("Mapping Resource"),
                     Mandatory: false,
                     ReadOnly: true
                   }
@@ -167,18 +178,24 @@ export class NotificationsSetupComponent implements OnInit {
       
 
       async valueChange($event){
+        let selectionList:any = {}
         console.log($event.ApiName)
         if($event.ApiName == "ResourceListKey"){
-          const selectionList = this.dataView.Fields[2]["OptionalValues"].find(selectionList => selectionList.Key == $event.Value)
-          this.formDataSource.resource = selectionList.Key
+          selectionList.ResourceListKey =  $event.Value
+          this.formDataSource.ResourceListKey = selectionList.ResourceListKey
           this.dataView.Fields[3].ReadOnly = false
-          this.dataView.Fields[3]["OptionalValues"]=await this.getResourceFields(this.formDataSource.resource)
+          this.dataView.Fields[3]["OptionalValues"]=await this.getResourceFields(this.formDataSource.ResourceListKey)
         }
         if($event.ApiName == "DisplayTitleField"){
-          const selectionList = this.dataView.Fields[3]["OptionalValues"].find(selectionList => selectionList.Key == $event.Value)
-          this.formDataSource.resource = selectionList.Key
+          selectionList.DisplayTitleField = $event.Value
+          this.formDataSource.DisplayTitleField = selectionList.DisplayTitleField
           this.dataView.Fields[4].ReadOnly = false
-          // this.dataView.Fields[4]["OptionalValues"]=await this.getResourceFields(this.formDataSource.resource)
+          this.dataView.Fields[4]["OptionalValues"]=await this.getMappingCollections(this.formDataSource.ResourceListKey)
+        }
+        if($event.ApiName == "MappingResourceUUID"){
+          selectionList.MappingResourceUUID = $event.Value
+          this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
+          this.dataView.Fields[5].ReadOnly = false
         }
 
       // update the data view with the desired data
@@ -358,7 +375,7 @@ export class NotificationsSetupComponent implements OnInit {
               title: this.translate.instant("Delete"),
               handler: async (objs) => {
                 await this.notificationsSetupService.deleteSendToList(objs.rows);
-                this.dataSource = this.getListDataSource();
+                this.dataSource = await this.getListDataSource();
               }
           });
           }
