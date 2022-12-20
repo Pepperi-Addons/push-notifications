@@ -58,8 +58,7 @@ export class NotificationsComponent implements OnInit {
             item.read = true;
             this.calcShowMarkAllAsRead();
         }
-
-        this.itemClick.emit(item);
+        this.itemReadClick.emit(item);
     }
 
     onNotificationItemReadClick(btnEvent: IPepButtonClickEvent, item: INotificationItem) {
