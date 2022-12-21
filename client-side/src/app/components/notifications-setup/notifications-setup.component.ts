@@ -245,8 +245,8 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly: true,
               Layout: {
                 Origin: {
-                  X: 1,
-                  Y: 2
+                  X: 0,
+                  Y: 0
                 },
                 Size: {
                   Width: 1,
@@ -268,8 +268,8 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly: false,
               Layout: {
                 Origin: {
-                  X: 1,
-                  Y: 2
+                  X: 0,
+                  Y: 1
                 },
                 Size: {
                   Width: 1,
@@ -291,7 +291,7 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly:  false,
               Layout: {
                 Origin: {
-                  X: 1,
+                  X: 0,
                   Y: 2
                 },
                 Size: {
@@ -314,8 +314,8 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly: true,
               Layout: {
                 Origin: {
-                  X: 1,
-                  Y: 2
+                  X: 0,
+                  Y: 3
                 },
                 Size: {
                   Width: 1,
@@ -337,8 +337,8 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly: true,
               Layout: {
                 Origin: {
-                  X: 1,
-                  Y: 2
+                  X: 0,
+                  Y: 4
                 },
                 Size: {
                   Width: 1,
@@ -360,8 +360,8 @@ export class NotificationsSetupComponent implements OnInit {
               ReadOnly: true,
               Layout: {
                 Origin: {
-                  X: 1,
-                  Y: 2
+                  X: 0,
+                  Y: 5
                 },
                 Size: {
                   Width: 1,
@@ -400,8 +400,8 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       addList(){
-        this.dialogRef = this.dialogService.openDialog(this.listForm,'',{disableClose:false, height: '50%',
-        width: '80%'})
+        this.dialogRef = this.dialogService.openDialog(this.listForm,'',{disableClose:false, height: '80%',
+        width: '50%'})
         this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
       

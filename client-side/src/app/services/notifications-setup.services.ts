@@ -15,13 +15,13 @@ export class NotificationsSetupService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
-    deleteSendToList(sendTolists){
+    async deleteSendToList(sendTolists){
         let listToDelete:any[] = []
         sendTolists.map(list=>{
             listToDelete.push({Key:list})
         })
         let url = `/addons/api/${this.addonService.addonUUID}/api/delete_notifications_users_lists`
-        return this.addonService.pepPost(encodeURI(url),listToDelete).toPromise();
+        return await this.addonService.pepPost(encodeURI(url),listToDelete).toPromise();
     }
 
     getResourceList(){
