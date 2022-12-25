@@ -26,7 +26,7 @@
 <ng-template #listForm>
     <pep-dialog [showHeader]="false" [title]="'Add Group List'">
         <ng-container pep-dialog-content>
-            <pep-generic-form [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
+            <pep-generic-form class="userListForm" [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
             </pep-generic-form>
         </ng-container>
         <ng-container pep-dialog-actions>

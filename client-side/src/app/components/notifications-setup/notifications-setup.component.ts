@@ -18,6 +18,7 @@ import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-
 export class NotificationsSetupComponent implements OnInit {
     dataView:FormDataView
     formDataSource:AddonData ={}
+    userListData:AddonData={}
     dialogData: any
     is_disabled: boolean = true
     dataSource: IPepGenericListDataSource
@@ -47,7 +48,12 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       async saveList(){
-        await this.notificationsSetupService.saveList(this.formDataSource)
+        this.userListData.ListName = this.formDataSource.ListName
+        this.userListData.ResourceListKey = this.formDataSource.ResourceListKey
+        this.userListData.DisplayTitleField = this.formDataSource.DisplayTitleField
+        this.userListData.MappingResourceUUID = this.formDataSource.MappingResourceUUID
+        this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
+        await this.notificationsSetupService.saveList(this.userListData)
         this.formDataSource=this.getFormDataSource()
         this.dialogRef.close()
         this.dataSource = await this.getListDataSource()
@@ -91,10 +97,18 @@ export class NotificationsSetupComponent implements OnInit {
 
       getFormDataSource(){
         let defaultData: any =
-          {ListName:"",
+          {
+          ListNameDesc:"<p>Please insert list name</p>",
+          ListName:"",
+          ResourceListKeyDesc:"<p>Select A Resource for group selection</p>",
           ResourceListKey:"",
+          DisplayTitleFieldDesc:"<p>Please select the field that will use as the display title in the 'To'"
+          +" element of the message composer</p>",
           DisplayTitleField:"",
+          MappingResourceDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
+          +" to <br> the selection list chosen above are available in this dropdown</p>",
           MappingResourceUUID:"",
+          UserReferenceFieldDesc:"<p>Please select the field that references user resource in the mapping resource</p>",
           UserReferenceField:'',
           }
         return defaultData
@@ -189,23 +203,29 @@ export class NotificationsSetupComponent implements OnInit {
 
       async valueChange($event){
         let selectionList:any = {}
+        if($event.ApiName == "ListName"){
+          selectionList.ListName =  $event.Value
+          this.formDataSource.ListName = selectionList.ListName
+          this.dataView.Fields[4].ReadOnly = false
+          this.dataView.Fields[4]["OptionalValues"] = await this.getSelectionResources()
+        }
         if($event.ApiName == "ResourceListKey"){
           selectionList.ResourceListKey =  $event.Value
           this.formDataSource.ResourceListKey = selectionList.ResourceListKey
-          this.dataView.Fields[3].ReadOnly = false
-          this.dataView.Fields[3]["OptionalValues"]=await this.getResourceFields(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[6].ReadOnly = false
+          this.dataView.Fields[6]["OptionalValues"]=await this.getResourceFields(this.formDataSource.ResourceListKey)
         }
         if($event.ApiName == "DisplayTitleField"){
           selectionList.DisplayTitleField = $event.Value
           this.formDataSource.DisplayTitleField = selectionList.DisplayTitleField
-          this.dataView.Fields[4].ReadOnly = false
-          this.dataView.Fields[4]["OptionalValues"]=await this.getMappingCollections(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[8].ReadOnly = false
+          this.dataView.Fields[8]["OptionalValues"]=await this.getMappingCollections(this.formDataSource.ResourceListKey)
         }
         if($event.ApiName == "MappingResourceUUID"){
           selectionList.MappingResourceUUID = $event.Value
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
-          this.dataView.Fields[5].ReadOnly = false
-          this.dataView.Fields[5]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
+          this.dataView.Fields[10].ReadOnly = false
+          this.dataView.Fields[10]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
         }
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
@@ -261,6 +281,29 @@ export class NotificationsSetupComponent implements OnInit {
               }
             },
             {
+              FieldID: "ListNameDesc",
+              Type: "RichTextHTML",
+              Title: "",
+              Mandatory: false,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 0,
+                  Y: 1
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
               FieldID: "ListName",
               Type: "TextBox",
               Title: "List Name",
@@ -269,7 +312,30 @@ export class NotificationsSetupComponent implements OnInit {
               Layout: {
                 Origin: {
                   X: 0,
-                  Y: 1
+                  Y: 2
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "ResourceListKeyDesc",
+              Type: "RichTextHTML",
+              Title: "",
+              Mandatory: false,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 0,
+                  Y: 3
                 },
                 Size: {
                   Width: 1,
@@ -292,7 +358,30 @@ export class NotificationsSetupComponent implements OnInit {
               Layout: {
                 Origin: {
                   X: 0,
-                  Y: 2
+                  Y: 4
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "DisplayTitleFieldDesc",
+              Type: "RichTextHTML",
+              Title: "",
+              Mandatory: false,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 0,
+                  Y: 5
                 },
                 Size: {
                   Width: 1,
@@ -315,7 +404,30 @@ export class NotificationsSetupComponent implements OnInit {
               Layout: {
                 Origin: {
                   X: 0,
-                  Y: 3
+                  Y: 6
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "MappingResourceDesc",
+              Type: "RichTextHTML",
+              Title: "",
+              Mandatory: false,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 0,
+                  Y: 7
                 },
                 Size: {
                   Width: 1,
@@ -338,7 +450,30 @@ export class NotificationsSetupComponent implements OnInit {
               Layout: {
                 Origin: {
                   X: 0,
-                  Y: 4
+                  Y: 8
+                },
+                Size: {
+                  Width: 1,
+                  Height: 0
+                }
+              },
+              Style: {
+                Alignment: {
+                  Horizontal: "Stretch",
+                  Vertical: "Stretch"
+                }
+              }
+            },
+            {
+              FieldID: "UserReferenceFieldDesc",
+              Type: "RichTextHTML",
+              Title: "",
+              Mandatory: false,
+              ReadOnly: true,
+              Layout: {
+                Origin: {
+                  X: 0,
+                  Y: 9
                 },
                 Size: {
                   Width: 1,
@@ -361,7 +496,7 @@ export class NotificationsSetupComponent implements OnInit {
               Layout: {
                 Origin: {
                   X: 0,
-                  Y: 5
+                  Y: 10
                 },
                 Size: {
                   Width: 1,
@@ -378,7 +513,6 @@ export class NotificationsSetupComponent implements OnInit {
           ],
           Rows: []
         }
-        dataView.Fields[2]["OptionalValues"] = await this.getSelectionResources()
         return dataView
       }
 
