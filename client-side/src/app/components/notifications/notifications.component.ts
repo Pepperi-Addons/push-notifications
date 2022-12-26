@@ -11,10 +11,10 @@ import { INotificationItem } from './notifications.model';
 })
 export class NotificationsComponent implements OnInit {
 
-    private _items: INotificationItem[] = [];
+    private _items: INotificationItem[] = null
     @Input()
     set items(value: INotificationItem[]) {
-        this._items = value;
+        this._items = value?.length > 0 ? value : null;
         this.calcShowMarkAllAsRead();
     }
     get items(): INotificationItem[] {
@@ -40,7 +40,9 @@ export class NotificationsComponent implements OnInit {
     }
 
     private calcShowMarkAllAsRead() {
-        this.showMarkAllAsRead = this._items.some(item => !item.read);
+        if(this._items){
+            this.showMarkAllAsRead = this._items.some(item => !item.read);
+        }
     }
 
     onMarkAllAsReadClick(btnEvent: IPepButtonClickEvent) {
