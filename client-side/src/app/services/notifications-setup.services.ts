@@ -15,16 +15,17 @@ export class NotificationsSetupService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
-    async getUserUUIDFromView(mappingField,resource,key):Promise<string>{
+    async getUserUUIDFromView(mappingField,resource,key){
+        let userUUID:string[] =[]
         let url = `/resources/${resource}`
-        this.addonService.pepGet(encodeURI(url)).toPromise().then(res =>{
+        await this.addonService.pepGet(encodeURI(url)).toPromise().then(res =>{
             res.map(user =>{
                   if(key == user.Key){
-                    return user[mappingField]
+                    return userUUID.push(user[mappingField])
                   } 
             })
         });
-        throw Error('User UUID Not Found')
+        return userUUID.pop()
        }
 
     async deleteSendToList(sendTolists){

@@ -1,4 +1,4 @@
-import { Component, DebugElement, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren,QueryList} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -12,6 +12,7 @@ import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
+import { UniqueSelectionDispatcher } from '@angular/cdk/collections';
   
 
 
@@ -23,6 +24,8 @@ import { NotificationsSetupService } from 'src/app/services/notifications-setup.
 export class MessageCreatorComponent implements OnInit {
   private currentSnackBar: MatSnackBarRef<PepDefaultSnackBarComponent> | null = null;
   @ViewChild('chipsComp') chipsComp: PepChipsComponent;
+  @ViewChildren('userListChips') userListChips: QueryList<PepChipsComponent>;
+  
 
   message: MessageObject = {
     UsersUUID: [],
@@ -55,6 +58,16 @@ export class MessageCreatorComponent implements OnInit {
       this.message.Body = queryParams.Body;
     }
     this.usersLists = await this.notificationsSetupService.getUsersLists()
+  }
+
+  async getUsersToSendNotifications(){
+    let uuid: string[] = []
+    let emails: string[] =[]
+    this.userListChips.toArray().map(list=>{
+      list.chips.map(chip=>{
+        uuid.push(chip.key)
+      })
+    })
   }
 
   async sendNotifications() {
@@ -106,8 +119,38 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
-  userListClicked(list){
+  getDisplayField(resource,displayTitleField){
 
+  }
+
+  async userListClicked(list,index){
+    this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
+      container: this.viewContainerRef,
+      name: 'ResourcePicker',
+      hostObject: {
+        resource: list.MappingResourceUUID,
+        selectionMode: 'multi'
+      },hostEventsCallback: async ($event) => {
+        if($event.action == 'on-save'){
+          let newChips: any[]  = [];
+          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
+            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.UserReferenceField,list.MappingResourceUUID,chip)
+            let chipObj = { 
+              value: uuid,
+              // value: await this.addonService.getUserEmailByUUID(uuid),
+              key: uuid
+            }
+            if(!this.userListChips.toArray()[index].chips.includes(chipObj))
+            newChips.push(chipObj)
+          }))
+          this.userListChips.toArray()[index].addChipsToList(newChips);  
+          this.dialogRef.close();
+        }
+        if($event.action == 'on-cancel'){
+          this.dialogRef.close();
+        }
+      }
+    })
   }
 
   externalSourceClicked() {
