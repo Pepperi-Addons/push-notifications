@@ -62,12 +62,11 @@
                 // label{
                 //     font-family: variables.$font-family-title;
                 // }
-                span{
+                label,span,p{
                     white-space: normal;
                 }
                 .body-md{
                     width: 100%;
-                    
                     margin-bottom: variables.$spacing-sm;
                     font-family: variables.$font-family-body !important;
                     font-weight: variables.$font-weight-bold;
