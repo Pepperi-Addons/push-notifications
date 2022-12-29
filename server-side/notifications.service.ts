@@ -338,7 +338,9 @@ class NotificationsService {
             }
             notifications.push(notification);
         }
-        return await this.uploadFileAndImport(notifications);
+        // To update read statuse and upload to PFS use function
+        // return await this.uploadFileAndImport(notifications);
+        return await this.uploadeNotificationsToDIMX(notifications);
     }
 
     //MARK: UserDevice handling
@@ -724,9 +726,18 @@ class NotificationsService {
                     }
                     notifications.push(notification);
                 }
-                return await this.uploadFileAndImport(notifications);
+                // To create notificationd and upload to PFS use function
+                // return await this.uploadFileAndImport(notifications);
+                return await this.uploadeNotificationsToDIMX(notifications)
             }
         }
+    }
+
+    // Create Notifications only using DIMX, without PFS
+    async uploadeNotificationsToDIMX(body){
+        const url = `/addons/data/import/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
+        const ansFromImport = await this.papiClient.post(url, {Objects:body});
+        return ansFromImport
     }
 
     async uploadFileAndImport(body) {
