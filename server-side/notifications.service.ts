@@ -127,6 +127,7 @@ class NotificationsService {
     accessToken: string;
     currentUserUUID: string;
     currentUserName: string = "";
+    users: Promise<any>;
 
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
@@ -140,6 +141,7 @@ class NotificationsService {
         this.addonUUID = client.AddonUUID;
         this.addonSecretKey = client.AddonSecretKey ?? "";
         this.accessToken = client.OAuthAccessToken;
+        this.users= this.papiClient.users.find();
 
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
@@ -194,8 +196,7 @@ class NotificationsService {
     }
 
     async getUserUUIDByEmail(userEmail) {
-        const users = await this.papiClient.users.find();
-        let userUUID = users.find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
+        let userUUID = (await this.users).find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
         if (userUUID != undefined) {
             return userUUID;
         }
@@ -679,7 +680,7 @@ class NotificationsService {
                     if (dimxObj.Object.UserEmail !== undefined) {
                         let userUUID;
                         try {
-                             userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail);
+                            userUUID = await this.getUserUUIDByEmail(dimxObj.Object.UserEmail);
                         }
                         catch {
                             userUUID = undefined
@@ -734,7 +735,7 @@ class NotificationsService {
     }
 
     // Create Notifications only using DIMX, without PFS
-    async uploadeNotificationsToDIMX(body){
+    async uploadeNotificationsToDIMX(body) : Promise<any>{
         const url = `/addons/data/import/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
         const ansFromImport = await this.papiClient.post(url, {Objects:body});
         return ansFromImport
