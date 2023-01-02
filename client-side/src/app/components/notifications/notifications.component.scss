@@ -62,7 +62,7 @@
                 // label{
                 //     font-family: variables.$font-family-title;
                 // }
-                span{
+                label,span,p{
                     white-space: normal;
                 }
                 .body-md{
@@ -73,8 +73,8 @@
                     font-weight: variables.$font-weight-bold;
                 }
                 .notification-body {
+                    margin-block-start: 0 !important;
                     font-family: variables.$font-family-body !important;
-                    
                     margin-bottom: variables.$spacing-sm;
                 }
     
