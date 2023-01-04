@@ -33,7 +33,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
     
-    await service.createPNSSubscriptionForUserDeviceRemoval();
+    // await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
     await service.createPNSSubscriptionForPlatformApplicationRemoval();
     await createRelations(papiClient);
