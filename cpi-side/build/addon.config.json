@@ -34,7 +34,8 @@
             "pfs": "1.0.2",
             "dimx": "0.0.177",
             "cpi_node": "1.0.8",
-            "slugs": "1.0.22"
+            "slugs": "1.0.22",
+            "webapp": "17.15.106"
         },
         "CPISide": [
             "addon-cpi.ts"

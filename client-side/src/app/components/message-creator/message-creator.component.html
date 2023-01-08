@@ -11,7 +11,7 @@
     <ng-container pep-main-area>
         <div class="message-creator">
             <div class="to">
-                <pep-chips #chipsComp [type]="'select'" [chips]="chips" [styleType]="'weak'" [orientation] ="'vertical'" [placeholder]="'Add Recipient'" (fieldClick)="externalSourceClicked()"></pep-chips>
+                <pep-chips #chipsComp [type]="'select'" [chips]="chips" [styleType]="'weak'" [orientation] ="'vertical'" [placeholder]="'AddRecipient' | translate" (fieldClick)="externalSourceClicked()"></pep-chips>
                 <pep-chips class="pep-spacing-element-negative" *ngFor="let userList of usersLists;let indexOfelement=index;" #userListChips [type]="'select'" [placeholder]="'Add Users From '+userList.ListName" (fieldClick)="userListClicked(userList,indexOfelement)"></pep-chips>
             </div>
             <div class="subject">
