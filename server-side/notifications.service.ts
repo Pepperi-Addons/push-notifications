@@ -152,19 +152,19 @@ class NotificationsService {
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
-    createPNSSubscriptionForUserDeviceRemoval() {
-        return this.papiClient.notification.subscriptions.upsert({
-            AddonUUID: this.addonUUID,
-            AddonRelativeURL: "/api/user_device_removed",
-            Type: "data",
-            Name: "deviceRemovalSubscription",
-            FilterPolicy: {
-                Action: ['remove'],
-                Resource: [USER_DEVICE_TABLE_NAME],
-                AddonUUID: [this.addonUUID]
-            }
-        });
-    }
+    // createPNSSubscriptionForUserDeviceRemoval() {
+    //     return this.papiClient.notification.subscriptions.upsert({
+    //         AddonUUID: this.addonUUID,
+    //         AddonRelativeURL: "/api/user_device_removed",
+    //         Type: "data",
+    //         Name: "deviceRemovalSubscription",
+    //         FilterPolicy: {
+    //             Action: ['remove'],
+    //             Resource: [USER_DEVICE_TABLE_NAME],
+    //             AddonUUID: [this.addonUUID]
+    //         }
+    //     });
+    // }
 
     createPNSSubscriptionForNotificationInsert() {
         return this.papiClient.notification.subscriptions.upsert({
@@ -402,7 +402,7 @@ class NotificationsService {
                 }
         }
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
-        body.ExpirationDateTime = this.getExpirationDateTime(30);
+        // body.ExpirationDateTime = this.getExpirationDateTime(5);
         body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);

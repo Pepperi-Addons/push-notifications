@@ -69,7 +69,7 @@ export class AddonService {
     }
 
     async getUserEmailByUUID(UUID: string){
-        const user:User = (await this.users).find(u => u.UUID ==UUID)?.Email;
+        const user:User = (await this.users).find(u => u.UUID ==UUID);
         if (user != undefined) {
             return user.Email
         }
