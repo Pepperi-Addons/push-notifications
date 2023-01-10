@@ -1,6 +1,6 @@
 {
   "AddonUUID": "95025423-9096-4a4f-a8cd-d0a17548e42e",
-  "AddonVersion": "1.1.26",
+  "AddonVersion": "1.1.27",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -30,7 +30,8 @@
       "dimx": "0.0.177",
       "cpi_node": "1.0.8",
       "slugs": "1.0.22",
-      "webapp": "17.15.106"
+      "webapp": "17.15.106",
+      "resource_list": "0.7.87"
     },
     "CPISide": [
       "addon-cpi.ts"
