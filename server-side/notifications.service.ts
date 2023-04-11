@@ -1,4 +1,4 @@
-import { PapiClient, AddonData } from '@pepperi-addons/papi-sdk'
+import { PapiClient, Contact } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
@@ -206,9 +206,19 @@ class NotificationsService {
     }
 
     async getUserName(userUUID: string) {
-        const user: User = await this.papiClient.users.uuid(userUUID).get();
-        if (user != undefined) {
-            return (user.FirstName ?? "") + (user.LastName ?? "") 
+        try{
+            const user: User = await this.papiClient.users.uuid(userUUID).get();
+            console.log(`got user - ${JSON.stringify(user)}`)
+            if (user != undefined) {
+                return (user.FirstName ?? "") + (user.LastName ?? "") 
+            }
+        }
+        catch{
+            const user: Contact = await this.papiClient.contacts.uuid(userUUID).get()
+            console.log(`got contact - ${JSON.stringify(user)}`)
+            if (user != undefined) {
+                return (user.FirstName ?? "") + (user.LastName ?? "") 
+            }
         }
     }
 
