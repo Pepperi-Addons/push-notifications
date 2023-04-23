@@ -8,8 +8,11 @@
             <!-- <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button> -->
             </div>
         </div>
-        <div *ngIf="!items" id="loadingSpinner">
-            <div class="pep-loading-spinner" *ngFor="let number of [0, 1, 2, 3, 4]"></div>
+        <div *ngIf="!items" class="notifications-footer">
+            <img [src]="flagSImageSRC">
+            <span class="footer-text body-sm">
+                {{ 'NO_NOTIFICATIONS' | translate }}
+            </span>
         </div>
         <ul *ngIf="items" class="notifications-items">
             <li *ngFor="let item of items" mat-menu-item  (click)="onNotificationItemClick(item)">
