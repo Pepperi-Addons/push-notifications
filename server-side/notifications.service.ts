@@ -392,6 +392,7 @@ class NotificationsService {
             else {
                 throw new Error("Register user device faild");
             }
+            console.log('Upserting user device '+body)
             return await this.upsertUserDeviceResource(body);
         }
         else {
@@ -413,6 +414,7 @@ class NotificationsService {
         }
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
         body.ExpirationDateTime = this.getExpirationDateTime(30);
+        console.log('Setting Expiration Time To '+body.ExpirationDateTime)
         body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
@@ -426,6 +428,7 @@ class NotificationsService {
     async removeDevices(body) {
         for (const device of body.DevicesKeys) {
             try {
+                console.log('Removing device from Adal, with Key '+device)
                 const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
                 deviceToRemove.Hidden = true;
                 await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
@@ -648,6 +651,7 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
+            console.log('Removing device Endpoint From SNS'+object.Key)
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.EndpointARN);
             }
