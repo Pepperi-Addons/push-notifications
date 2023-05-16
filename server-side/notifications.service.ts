@@ -127,7 +127,6 @@ class NotificationsService {
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
-    currentUserName: string = "";
     users: Promise<any>;
 
     constructor(private client: Client) {
