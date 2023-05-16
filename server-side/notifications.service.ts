@@ -126,7 +126,6 @@ class NotificationsService {
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
-    currentUserName: string = "";
     users: Promise<any>;
 
     constructor(private client: Client) {
@@ -146,7 +145,6 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        this.getUserName(this.currentUserUUID).then((res) => this.currentUserName = res ?? "");
 
         this.sns = new AWS.SNS();
     }
@@ -206,19 +204,10 @@ class NotificationsService {
     }
 
     async getUserName(userUUID: string) {
-        try{
-            const user: User = await this.papiClient.users.uuid(userUUID).get();
-            console.log(`got user - ${JSON.stringify(user)}`)
-            if (user != undefined) {
-                return (user.FirstName ?? "") + (user.LastName ?? "") 
-            }
-        }
-        catch{
-            const user: Contact = await this.papiClient.contacts.uuid(userUUID).get()
-            console.log(`got contact - ${JSON.stringify(user)}`)
-            if (user != undefined) {
-                return (user.FirstName ?? "") + (user.LastName ?? "") 
-            }
+        const user: User = await this.papiClient.users.uuid(userUUID).get();
+        console.log(`got user - ${JSON.stringify(user)}`)
+        if (user != undefined) {
+            return (user.FirstName ?? "") + (user.LastName ?? "") 
         }
     }
 
@@ -287,7 +276,7 @@ class NotificationsService {
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
             body.CreatorUUID = this.currentUserUUID;
-            body.CreatorName = this.currentUserName;
+            body.CreatorName =  await this.getUserName(this.currentUserUUID)
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
@@ -720,6 +709,7 @@ class NotificationsService {
     async bulkNotifications(body): Promise<any> {
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
+        const creatorName = await this.getUserName(this.currentUserUUID)
 
         if (body.UsersUUID != undefined) {
             if (body.UsersUUID.length > 100) {
@@ -732,7 +722,7 @@ class NotificationsService {
                         "UserUUID": uuid,
                         "Title": body.Title,
                         "Body": body.Body,
-                        "CreatorName": this.currentUserName,
+                        "CreatorName": creatorName,
                         "Read": body.Read ?? false
                     }
                     notifications.push(notification);
