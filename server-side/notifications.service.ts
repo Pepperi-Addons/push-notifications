@@ -26,7 +26,7 @@ class PlatformIOS extends PlatformBase {
     async createPlatformApplication(body) {
         const params = {
             Name: body.AppKey,
-            Platform: "APNS_SANDBOX",
+            Platform: "APNS",
             Attributes: {
                 'PlatformCredential': body.Credential,// .p8
                 'PlatformPrincipal': body.AppleSigningKeyID,
@@ -41,7 +41,7 @@ class PlatformIOS extends PlatformBase {
         let jsonData = JSON.stringify({ Notification: data.Notification})
         return {
             "default": `${data.Notification.Title}`,
-            "APNS_SANDBOX": JSON.stringify({
+            "APNS": JSON.stringify({
                 "aps": {
                     "eventData": jsonData,
                     "badge": numberOfUnreadNotifications,
@@ -373,70 +373,32 @@ class NotificationsService {
             body.Key = `${body.DeviceKey}_${body.AppKey}`;
             body.LastRegistrationDate = new Date().toISOString();
 
-            const alreadyExist = this.setDevicesToEnabledIfExists(body.Key)
-
             // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            if(!alreadyExist){
-                const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS_SANDBOX";
-                const awsID = process.env.AccountID;
-                const region = process.env.AWS_REGION
-                console.log("@@@awsID:", awsID);
-                console.log("@@@region:", region);
-                const appARN = `arn:aws:sns:${region}:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
-                let endpointARN = await this.createApplicationEndpoint({
-                    AddonRelativeURL: body.AddonRelativeURL,
-                    PlatformType: body.PlatformType,
-                    PlatformApplicationArn: appARN,
-                    DeviceToken: body.Token,
-                    EndpointArn: body.EndpointARN
-                });
+            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
+            const awsID = process.env.AccountID;
+            const region = process.env.AWS_REGION
+            console.log("@@@awsID:", awsID);
+            console.log("@@@region:", region);
+            const appARN = `arn:aws:sns:${region}:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
+            let endpointARN = await this.createApplicationEndpoint({
+                AddonRelativeURL: body.AddonRelativeURL,
+                PlatformType: body.PlatformType,
+                PlatformApplicationArn: appARN,
+                DeviceToken: body.Token,
+                EndpointArn: body.EndpointARN
+            });
 
-                if (endpointARN != undefined) {
-                    body.Endpoint = endpointARN;
-                }
-                else {
-                    throw new Error("Register user device faild");
-                }
+            if (endpointARN != undefined) {
+                body.Endpoint = endpointARN;
+            }
+            else {
+                throw new Error("Register user device faild");
             }
             console.log('Upserting user device '+body)
             return await this.upsertUserDeviceResource(body);
         }
         else {
             this.throwErrorFromSchema(validation);
-        }
-    }
-
-    async enableEndpoint(endpoint: string){
-        const attr:SetEndpointAttributesInput = {
-            EndpointArn:endpoint,
-            Attributes: { Enabled: 'true' }
-        }
-        await this.sns.setEndpointAttributes(attr).promise()
-    }
-
-    async setDevicesToEnabledIfExists(deviceKey: string): Promise<Boolean>{
-        const devicesEndpoints = await this.getEndpointIfDeviceExists(deviceKey)
-        
-        if(devicesEndpoints.length >0){
-            devicesEndpoints.map(async endpoint =>{
-                await this.enableEndpoint(endpoint)
-            })
-            return true
-        }
-        else{
-            return false
-        }
-    }
-
-    async getEndpointIfDeviceExists(deviceKey: string): Promise<string[]>{
-        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${deviceKey}'` }) as UserDevice[];
-        if (userDevices.length != 0) {
-            return userDevices.map(device => {
-                return device.Endpoint
-            })
-        }
-        else{
-            return []
         }
     }
 
@@ -632,8 +594,17 @@ class NotificationsService {
                 };
                 const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
                 console.log("@@@Endpoint:", Endpoint);
+                await this.enableEndpoint(Endpoint.EndpointArn!)
                 return Endpoint.EndpointArn;
         }
+    }
+
+    async enableEndpoint(endpoint: string){
+        const attr:SetEndpointAttributesInput = {
+            EndpointArn:endpoint,
+            Attributes: { Enabled: 'true' }
+        }
+        await this.sns.setEndpointAttributes(attr).promise()
     }
 
     async deleteApplicationEndpoint(endpointARN) {
