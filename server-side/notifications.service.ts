@@ -657,7 +657,7 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
-            console.log('Removing device Endpoint From SNS'+object.Key)
+            console.log(`Removing device Endpoint From SNS ${object.Key}`)
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.EndpointARN);
             }
