@@ -373,8 +373,7 @@ class NotificationsService {
                 AddonRelativeURL: body.AddonRelativeURL,
                 PlatformType: body.PlatformType,
                 PlatformApplicationArn: appARN,
-                DeviceToken: body.Token,
-                EndpointArn: body.EndpointARN
+                DeviceToken: body.Token
             });
 
             if (endpointARN != undefined) {
