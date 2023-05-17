@@ -1,4 +1,4 @@
-import { PapiClient, Contact } from '@pepperi-addons/papi-sdk'
+import { PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
@@ -12,6 +12,7 @@ import jwt from 'jwt-decode';
 import { Agent } from 'https';
 import fetch from 'node-fetch';
 import AWS, { SNS } from 'aws-sdk';
+import { SetEndpointAttributesInput } from 'aws-sdk/clients/sns';
 
 abstract class PlatformBase {
     constructor(protected papiClient,
@@ -150,19 +151,19 @@ class NotificationsService {
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
-    // createPNSSubscriptionForUserDeviceRemoval() {
-    //     return this.papiClient.notification.subscriptions.upsert({
-    //         AddonUUID: this.addonUUID,
-    //         AddonRelativeURL: "/api/user_device_removed",
-    //         Type: "data",
-    //         Name: "deviceRemovalSubscription",
-    //         FilterPolicy: {
-    //             Action: ['remove'],
-    //             Resource: [USER_DEVICE_TABLE_NAME],
-    //             AddonUUID: [this.addonUUID]
-    //         }
-    //     });
-    // }
+    createPNSSubscriptionForUserDeviceRemoval() {
+        return this.papiClient.notification.subscriptions.upsert({
+            AddonUUID: this.addonUUID,
+            AddonRelativeURL: "/api/user_device_removed",
+            Type: "data",
+            Name: "deviceRemovalSubscription",
+            FilterPolicy: {
+                Action: ['remove'],
+                Resource: [USER_DEVICE_TABLE_NAME],
+                AddonUUID: [this.addonUUID]
+            }
+        });
+    }
 
     createPNSSubscriptionForNotificationInsert() {
         return this.papiClient.notification.subscriptions.upsert({
@@ -276,7 +277,7 @@ class NotificationsService {
             const lifetimeSoftLimit = await this.getNotificationsSoftLimit();
             body.Key = uuid();
             body.CreatorUUID = this.currentUserUUID;
-            body.CreatorName =  await this.getUserName(this.currentUserUUID)
+            body.CreatorName = await this.getUserName(this.currentUserUUID);
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
@@ -377,10 +378,19 @@ class NotificationsService {
 
             if (endpointARN != undefined) {
                 body.Endpoint = endpointARN;
+                console.log('enabling endpoint ')
+                try{
+                    await this.enableEndpoint(endpointARN)
+                    console.log(`Enabled endpoint ${endpointARN} successfully`)
+                }
+                catch(error){
+                    console.log(`failed to enable endpoint , error - ${error.message}`)
+                }
             }
             else {
                 throw new Error("Register user device faild");
             }
+            console.log('Upserting user device ',body)
             return await this.upsertUserDeviceResource(body);
         }
         else {
@@ -401,7 +411,8 @@ class NotificationsService {
                 }
         }
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
-        // body.ExpirationDateTime = this.getExpirationDateTime(5);
+        body.ExpirationDateTime = this.getExpirationDateTime(30);
+        console.log('Setting Expiration Time To ', body.ExpirationDateTime)
         body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
 
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
@@ -415,6 +426,7 @@ class NotificationsService {
     async removeDevices(body) {
         for (const device of body.DevicesKeys) {
             try {
+                console.log('Removing device from Adal, with Key ',device)
                 const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
                 deviceToRemove.Hidden = true;
                 await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
@@ -582,6 +594,14 @@ class NotificationsService {
         }
     }
 
+    async enableEndpoint(endpoint: string){
+        const attr:SetEndpointAttributesInput = {
+            EndpointArn:endpoint,
+            Attributes: { Enabled: 'true' }
+        }
+        await this.sns.setEndpointAttributes(attr).promise()
+    }
+
     async deleteApplicationEndpoint(endpointARN) {
         const params = {
             EndpointArn: endpointARN
@@ -637,6 +657,7 @@ class NotificationsService {
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
         for (const object of body.Message.ModifiedObjects) {
+            console.log(`Removing device Endpoint From SNS ${object.Key}`)
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.EndpointARN);
             }

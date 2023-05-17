@@ -28,11 +28,6 @@
             },
             "runtimeExecutable": "${workspaceFolder}/server-side/node_modules/.bin/nodemon",
             "restart": true,
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "!**/node_modules/**"
-            ],
-            "env":{"AccountID":"022490869427","AWS_REGION":"us-west-2"}
         },
         {
             "type": "node",
