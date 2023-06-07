@@ -424,22 +424,24 @@ class NotificationsService {
     }
     // remove devices from ADAL by deviceKey , it will remove from AWS in ExpirationDateTime
     async removeDevices(body) {
-        for (const device of body.DevicesKeys) {
-            try {
-                console.log('Removing device from Adal, with Key ',device)
-                const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
-                deviceToRemove.Hidden = true;
-                await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
-            }
-            catch {
-                console.log('device does not exist');
-            }
-        }
+        await Promise.all(
+            body.DevicesKeys.map(async device =>{
+                try {
+                    console.log('Removing device from Adal, with Key ',device)
+                    const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
+                    deviceToRemove.Hidden = true;
+                    await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
+                }
+                catch(error) {
+                    console.log('error while removing device', error.message);
+                }
+            })
+        )
     }
     // called by PNS when a notification is created
     async sendPushNotification(body) {
         console.log("@@@pushNotification body: ", body);
-        for (const object of body.Message.ModifiedObjects) {
+        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             try {
                 console.log("@@@pushNotification object: ", object);
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
@@ -469,8 +471,7 @@ class NotificationsService {
             catch (error) {
                 console.log("@@@error", error);
             }
-
-        }
+        }))
     }
 
     async getUserDevicesByUserUUID(userUUID) {
@@ -612,17 +613,17 @@ class NotificationsService {
     async deleteAllApplicationEndpoints() {
         let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter().toArray();
 
-        for (let device of devices) {
+        await Promise.all(devices.map(async device =>{
             await this.deleteApplicationEndpoint(device.Endpoint);
-        }
+        }))
     }
 
     async deleteAllPlatformsApplication() {
         let platforms = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).iter().toArray();
 
-        for (let platform of platforms) {
+        await Promise.all(platforms.map(async platform =>{
             await this.deleteApplication(platform.ApplicationARN);
-        }
+        }))
     }
 
     async deleteApplication(platformArn) {
@@ -656,7 +657,7 @@ class NotificationsService {
 
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
-        for (const object of body.Message.ModifiedObjects) {
+        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             console.log(`Removing device Endpoint From SNS ${object.Key}`)
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.EndpointARN);
@@ -664,23 +665,23 @@ class NotificationsService {
             else {
                 console.log("Device endpoint does not exist");
             }
-        }
+        }))
     }
 
     async removePlatformApplication(body) {
-        for (const object of body.Message.ModifiedObjects) {
+        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             if (object.EndpointARN != undefined) {
                 await this.deleteApplicationEndpoint(object.ApplicationARN);
             }
             else {
                 console.log("Device endpoint does not exist");
             }
-        }
+        }))
     }
 
     //DIMX 
     async importNotificationsSource(body) {
-        for (const dimxObj of body.DIMXObjects) {
+        await Promise.all(body.DIMXObjects.map(async dimxObj =>{
             //upsert notifications
             if (dimxObj.Object.Key != undefined) {
                 // do nothing, forward the body to DIMX as is.
@@ -721,7 +722,7 @@ class NotificationsService {
                     dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
                 }
             }
-        }
+        }))
         console.log("@@@@import end body: ", body);
         return body;
     }
