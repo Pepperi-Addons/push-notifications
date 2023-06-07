@@ -1,5 +1,6 @@
 {
     "NOTIFICATIONS": "Notifications",
+    "NO_NOTIFICATIONS": "You don't have any notifiactions from the last 30 days",
     "NOTIFICATIONS_FOOTER_LINE": "Those are all of your notifications from the last 30 days",
     "ACTIONS": {
         "MARK_ALL_AS_READ": "Mark all as read",

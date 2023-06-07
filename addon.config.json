@@ -35,7 +35,9 @@
       "dimx": "0.0.177",
       "cpi_node": "1.0.8",
       "slugs": "1.0.22",
-      "webapp": "17.15.106"
+      "webapp": "17.15.106",
+      "papi": "9.5.538",
+      "resource_list": "0.7.87"
     },
     "CPISide": [
       "addon-cpi.ts"
