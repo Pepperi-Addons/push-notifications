@@ -102,18 +102,76 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
+  getUsersList(): any{
+    return {
+      List: {
+        Key: "Notifications_Users_List",
+        Name: "Users list",
+        Resource: "users",
+        Views: [{
+          Key: "notifications_users_view",
+          Type: "Grid",
+          Title: "Users",
+          Blocks: [{
+            Title: "Email",
+            Configuration: {
+                Type: "TextBox",
+                FieldID: "Email",
+                Width: 10
+            }, 
+          },
+          {
+            Title: "First Name",
+            Configuration: {
+                Type: "TextBox",
+                FieldID: "FirstName",
+                Width: 10
+            },
+          },
+          {
+            Title: "Last Name",
+            Configuration: {
+                Type: "TextBox",
+                FieldID: "LastName",
+                Width: 10
+            },
+          },
+          {
+            Title: "User UUID",
+            Configuration: {
+                Type: "TextBox",
+                FieldID: "Key",
+                Width: 10
+            },
+          }],
+        }],
+        SelectionType: "Multi",
+      },
+      State: {
+        ListKey: "Notifications_Users_List",
+      }
+    }
+  }
+
+
+  getUsersHostObject(){
+    const hostObject = {
+      listContainer: this.getUsersList(),
+      inDialog: true
+    }
+    return hostObject
+  }
+
   externalSourceClicked() {
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
-      name: 'ResourcePicker',
-      hostObject: {
-        resource: "users",
-        selectionMode: 'multi'
-      },
+      name: 'List',
+      hostObject: this.getUsersHostObject(),
       hostEventsCallback: async ($event) => {
-        if($event.action == 'on-save'){
+        if($event.action == 'on-done'){
+          console.log($event)
           let newChips: any[]  = [];
-          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
+          await Promise.all($event.data.selectedObjects.map( async chip => {
             let chipObj = { 
               value: await this.addonService.getUserEmailByUUID(chip),
               key: chip
