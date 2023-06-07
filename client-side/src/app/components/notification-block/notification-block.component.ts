@@ -12,7 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./notification-block.component.css']
 })
 export class NotificationBlockComponent implements OnInit {
-  items: INotificationItem[] = [];
+  items: INotificationItem[] = null;
   notificationsList = [];
   screenSize: PepScreenSizeType;
 
@@ -34,8 +34,9 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   async configureItems() {
-    let notificationsItems = [];
+    let notificationsItems: Array<any> = null;
     this.notificationsList = await this.notificationsService.getNotifications(`UserUUID='${this.addonService.userUUID}'`);
+    notificationsItems = this.notificationsList.length > 0 ? [] : null;
     for (const notification of this.notificationsList) {
       let item: INotificationItem = {
         key: notification.Key,
