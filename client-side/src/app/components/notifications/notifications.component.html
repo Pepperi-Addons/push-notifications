@@ -2,35 +2,42 @@
         <div class="notifications-header">
             <div class="pep-border-bottom">
                 <div class="left-cont">
-                    <div class="title-lg pep-spacing-element">{{ 'NOTIFICATIONS' | translate }}</div>
+                    <div class="body-lg">{{ 'NOTIFICATIONS' | translate }}</div>
             </div>
             <div *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</div>
             <!-- <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button> -->
             </div>
         </div>
-        <ul class="notifications-items">
+        <div *ngIf="!items" class="notifications-footer">
+            <img [src]="flagSImageSRC">
+            <span class="footer-text body-sm">
+                {{ 'NO_NOTIFICATIONS' | translate }}
+            </span>
+        </div>
+        <ul *ngIf="items" class="notifications-items">
             <li *ngFor="let item of items" mat-menu-item  (click)="onNotificationItemClick(item)">
                 <ng-container *ngTemplateOutlet="notificationItemTemplate; context: {item: item}"></ng-container>
             </li>
         </ul>
-        <div class="notifications-footer">
+        <div *ngIf="items" class="notifications-footer">
             <img [src]="flagSImageSRC">
             <span class="footer-text body-sm">
                 {{ 'NOTIFICATIONS_FOOTER_LINE' | translate }}
             </span>
         </div>
-    </div>
+</div>
+
 <ng-template #notificationItemTemplate let-item="item">
     <div class="notification-item pep-border-bottom">
         <div class="msg-wrapper">
             <label class="body-md">{{ item.title }}</label>
             <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
             <div class="notification-item-footer body-xs color-dimmed">
-                <span *ngIf="item.from" class="">{{ item.from }}</span>
-                <span *ngIf="item.from">&#8226;</span><!--•-->
+                <span *ngIf="item.from" class="user-details">{{ item.from }}</span>
+                <span *ngIf="item.from">&nbsp;&#8226;&nbsp;</span><!--•-->
                 <span class="date-ago">{{ item.date | dateAgo }}</span>
-                <span *ngIf="item.goToActivityName" class="notification-goto body-2xs" (click)="onGoToBtnClick(item)">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</span>
             </div>
+            <div *ngIf="item.goToActivityName" class="notification-goto body-2xs" (click)="onGoToBtnClick(item)">{{'ACTIONS.GO_TO_TEXT' | translate}}&nbsp;{{ item.goToActivityName }}</div>
         </div>
 
         <pep-button [title]="(item.read ? 'ACTIONS.MARK_AS_UNREAD' : 'ACTIONS.MARK_AS_READ') | translate" 
