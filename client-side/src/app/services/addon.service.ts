@@ -17,6 +17,7 @@ export class AddonService {
     addonUUID;
     userUUID;
     dialogRef;
+    users: Promise<any>;
 
     get papiClient(): PapiClient {
         return new PapiClient({
@@ -36,6 +37,7 @@ export class AddonService {
         this.parsedToken = jwt(accessToken);
         this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
         this.userUUID = this.parsedToken.sub;
+        this.users = this.papiClient.users.find()
     }
 
     // Dialog service 
@@ -63,12 +65,11 @@ export class AddonService {
       }
 
     async getCurrentUserEmail() {
-        const users = await this.papiClient.users.find();
-        return users.find(u => u.UUID == this.userUUID)?.Email
+        return (await this.users).find(u => u.UUID == this.userUUID)?.Email
     }
 
     async getUserEmailByUUID(UUID: string){
-        const user:User = await this.papiClient.users.uuid(UUID).get();
+        const user:User = (await this.users).find(u => u.UUID ==UUID);
         if (user != undefined) {
             return user.Email
         }

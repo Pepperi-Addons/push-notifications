@@ -60,6 +60,10 @@ export class MessageCreatorComponent implements OnInit {
   async sendNotifications() {
     this.message.Email = this.chipsComp.chips.map(chips => chips.value)
     this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
+    this.router.navigate(['../'], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+    })
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
   }
@@ -78,10 +82,6 @@ export class MessageCreatorComponent implements OnInit {
       }
       this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
       this.currentSnackBar.instance.closeClick.subscribe(() => {
-        this.router.navigate(['../'], {
-          relativeTo: this.route,
-          queryParamsHandling: 'merge',
-        })
     });
     }
     else {
