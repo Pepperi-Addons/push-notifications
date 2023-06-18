@@ -11,12 +11,13 @@ import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
 import { Agent } from 'https';
 import fetch from 'node-fetch';
-import AWS, { SNS } from 'aws-sdk';
-import { SetEndpointAttributesInput } from 'aws-sdk/clients/sns';
+import {NotifiactionsSnsService} from './notifications-sns.service'
+import { CreateEndpointStrategy, UpdateEndpointStrategy, DeleteEndpointStrategy, RecreateEndpointStrategy} from './register-device.service'
 
 abstract class PlatformBase {
-    constructor(protected papiClient,
-        protected sns) {
+    protected notificationsSnsService: NotifiactionsSnsService
+    constructor(protected papiClient) {
+            this.notificationsSnsService = new NotifiactionsSnsService(this.papiClient)
     }
 
     abstract createPlatformApplication(body: any): any;
@@ -34,7 +35,7 @@ class PlatformIOS extends PlatformBase {
                 'ApplePlatformBundleID': body.AppKey
             }
         };
-        return await this.sns.createPlatformApplication(params).promise();
+        return await this.notificationsSnsService.createPlatformApplication(params);
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -64,7 +65,7 @@ class PlatformIOS extends PlatformBase {
             TargetArn: pushNotification.Endpoint
         };
         console.log("@@@params: ", params);
-        return this.sns.publish(params).promise();
+        return this.notificationsSnsService.publishPushNotifiaction(params);
     }
 }
 class PlatformAndroid extends PlatformBase {
@@ -76,7 +77,7 @@ class PlatformAndroid extends PlatformBase {
                 'PlatformCredential': body.Credential,// API Key
             }
         };
-        return await this.sns.createPlatformApplication(params).promise();
+        return await this.notificationsSnsService.createPlatformApplication(params);
     }
 
     createPayload(data, numberOfUnreadNotifications) {
@@ -106,7 +107,7 @@ class PlatformAndroid extends PlatformBase {
             TargetArn: pushNotification.Endpoint
         };
         console.log("@@@params: ", params);
-        return this.sns.publish(params).promise();
+        return this.notificationsSnsService.publishPushNotifiaction(params);
     }
 }
 class PlatformAddon extends PlatformBase {
@@ -120,14 +121,88 @@ class PlatformAddon extends PlatformBase {
     }
 }
 
+class UserDeviceHandlingFactory{
+    userDevices: UserDevice[] = []
+    papiClient: PapiClient
+    addonSecretKey: string
+    addonUUID: string
+    constructor(private client: Client, private newUserDeviceData:any){
+        this.papiClient = new PapiClient({
+            baseURL: client.BaseURL,
+            token: client.OAuthAccessToken,
+            addonUUID: client.AddonUUID,
+            addonSecretKey: client.AddonSecretKey,
+            actionUUID: client.ActionUUID
+        });
+        this.addonUUID = client.AddonUUID;
+        this.addonSecretKey = client.AddonSecretKey ?? "";
+        this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${this.newUserDeviceData.Key}'` }).then(userDevice =>{ this.userDevices = userDevice as UserDevice[]});
+    }
+
+    async getStrategy(): Promise<CreateEndpointStrategy | RecreateEndpointStrategy | UpdateEndpointStrategy>{
+        let strategy
+        if(await this.isDeviceExist()){
+            if(await this.isTokenChanged){
+                // if there is a new token, then update the endpoint with the old token
+                strategy = new UpdateEndpointStrategy(this.client);
+            }
+            else if (await this.isDeviceKeyChanged()){
+                // if key exists old endpoint need to be removed and recreated
+                strategy = new RecreateEndpointStrategy(this.client, this.userDevices[0].Key)
+            }
+            else{
+                // default if no key and token changed but device exists
+                strategy = new CreateEndpointStrategy(this.client)
+            }
+        }
+        else{
+            // if device not exists then create a new device
+            strategy = new CreateEndpointStrategy(this.client)
+        }
+        return strategy
+    }
+    
+    private async isTokenChanged(): Promise<boolean>{
+        // isTokenChanged() - UpdateEndpointStrategy
+        const userDeviceToken = await encryption.decryptSecretKey(this.userDevices[0].Token, this.addonSecretKey)
+        if (this.newUserDeviceData.Token != userDeviceToken){
+            return true
+        }
+        else{
+            return false
+        }
+    } 
+
+    private async isDeviceKeyChanged(): Promise<boolean>{
+        // isDeviceKeyChanged() - RecreateEndpointStrategy
+        if(this.newUserDeviceData.Key != this.userDevices[0].Key){
+            return true
+        }
+        else{
+            return false
+        }
+        
+    }
+
+    private async isDeviceExist(): Promise<boolean>{
+        // isDeviceExist() - CreateEndpointStrategy
+        if(this.userDevices.length != 0){
+            return true
+        }
+        else{
+            return false
+        }
+    }    
+}
+
 class NotificationsService {
-    sns: SNS;
     papiClient: PapiClient
     addonSecretKey: string
     addonUUID: string;
     accessToken: string;
     currentUserUUID: string;
     users: Promise<any>;
+    notificationsSnsService: NotifiactionsSnsService
 
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
@@ -146,8 +221,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-
-        this.sns = new AWS.SNS();
+        this.notificationsSnsService = new NotifiactionsSnsService(this.papiClient)
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
@@ -210,11 +284,6 @@ class NotificationsService {
         if (user != undefined) {
             return (user.FirstName ?? "") + (user.LastName ?? "") 
         }
-    }
-
-    getExpirationDateTime(days: number) {
-        const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
-        return new Date(Date.now() + daysToAdd)
     }
 
     async getNumberOfUnreadNotifications() {
@@ -354,43 +423,37 @@ class NotificationsService {
         });
     }
 
-    async upsertUserDevice(body) {
+    async populateUserDevice(body){
+        const addonSecretKey = this.client.AddonSecretKey ?? "";
+
+        body.UserUUID = this.currentUserUUID;
+        body.Key = `${body.DeviceKey}_${body.AppKey}`;
+        body.LastRegistrationDate = new Date().toISOString();
+
+        //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
+        body.ExpirationDateTime = this.getExpirationDateTime(30);
+        console.log('Setting Expiration Time To ', body.ExpirationDateTime)
+        body.Token = await encryption.encryptSecretKey(body.Token, addonSecretKey)
+        
+        return body 
+    }
+
+    private getExpirationDateTime(days: number) {
+        const daysToAdd = days * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        return new Date(Date.now() + daysToAdd)
+    }
+
+    async upsertUserDevice(body) { // body -> userDevice
         // Schema validation
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            body.UserUUID = this.currentUserUUID;
-            body.Key = `${body.DeviceKey}_${body.AppKey}`;
-            body.LastRegistrationDate = new Date().toISOString();
+            const userDeviceHandlingFactory = new UserDeviceHandlingFactory(this.client, body)
+            body = await this.populateUserDevice(body)
 
-            // if device doesn't exist creates one, else aws createPlatformEndpoint does nothing
-            const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
-            const awsID = process.env.AccountID;
-            const region = process.env.AWS_REGION
-            console.log("@@@awsID:", awsID);
-            console.log("@@@region:", region);
-            const appARN = `arn:aws:sns:${region}:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
-            let endpointARN = await this.createApplicationEndpoint({
-                AddonRelativeURL: body.AddonRelativeURL,
-                PlatformType: body.PlatformType,
-                PlatformApplicationArn: appARN,
-                DeviceToken: body.Token
-            });
-
-            if (endpointARN != undefined) {
-                body.Endpoint = endpointARN;
-                console.log('enabling endpoint ')
-                try{
-                    await this.enableEndpoint(endpointARN)
-                    console.log(`Enabled endpoint ${endpointARN} successfully`)
-                }
-                catch(error){
-                    console.log(`failed to enable endpoint , error - ${error.message}`)
-                }
-            }
-            else {
-                throw new Error("Register user device faild");
-            }
-            console.log('Upserting user device ',body)
+            const strategy = await userDeviceHandlingFactory.getStrategy()
+            
+            body = await strategy.execute(body)
+            console.log('Upserting user device to ADAL ',body)
             return await this.upsertUserDeviceResource(body);
         }
         else {
@@ -399,22 +462,6 @@ class NotificationsService {
     }
 
     async upsertUserDeviceResource(body) {
-        body.Key = `${body.DeviceKey}_${body.AppKey}`;
-        const userDevices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${body.Key}'` }) as UserDevice[];
-
-        // if there is a new token, then remove the endpoint with the old token
-        if (userDevices.length != 0) {
-            const userDeviceToken = await encryption.decryptSecretKey(userDevices[0].Token, this.addonSecretKey)
-            if (body.Token != userDeviceToken)
-                if (userDevices[0].Endpoint != undefined) {
-                    await this.deleteApplicationEndpoint(userDevices[0].Endpoint);
-                }
-        }
-        //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
-        body.ExpirationDateTime = this.getExpirationDateTime(30);
-        console.log('Setting Expiration Time To ', body.ExpirationDateTime)
-        body.Token = await encryption.encryptSecretKey(body.Token, this.addonSecretKey)
-
         const device = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(body);
         if (device) {
             delete device.Endpoint;
@@ -540,17 +587,17 @@ class NotificationsService {
                 case "iOS":
                     let validation = this.validateSchema(body, platformApplicationsIOSSchema);
                     if (validation.valid) {
-                        basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                        basePlatform = new PlatformIOS(this.papiClient);
                         break;
                     }
                     else {
                         this.throwErrorFromSchema(validation);
                     }
                 case "Android":
-                    basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                    basePlatform = new PlatformAndroid(this.papiClient);
                     break;
                 case "Addon":
-                    basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                    basePlatform = new PlatformAddon(this.papiClient);
                     break;
                 default:
                     throw new Error(`Type not supported ${body.PlatformType}}`);
@@ -579,42 +626,12 @@ class NotificationsService {
     if we send notification to platform application it 
     will send notifications to all mobile endpoints registered
     */
-    async createApplicationEndpoint(body) {
-        switch (body.PlatformType) {
-            case "Addon":
-                return body.AddonRelativeURL;
-            default:
-                console.log("@@@createApplicationEndpoint: body :", body);
-                const params = {
-                    PlatformApplicationArn: body.PlatformApplicationArn,
-                    Token: body.DeviceToken
-                };
-                const Endpoint = await this.sns.createPlatformEndpoint(params).promise();
-                console.log("@@@Endpoint:", Endpoint);
-                return Endpoint.EndpointArn;
-        }
-    }
-
-    async enableEndpoint(endpoint: string){
-        const attr:SetEndpointAttributesInput = {
-            EndpointArn:endpoint,
-            Attributes: { Enabled: 'true' }
-        }
-        await this.sns.setEndpointAttributes(attr).promise()
-    }
-
-    async deleteApplicationEndpoint(endpointARN) {
-        const params = {
-            EndpointArn: endpointARN
-        };
-        return await this.sns.deleteEndpoint(params).promise();
-    }
 
     async deleteAllApplicationEndpoints() {
         let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter().toArray();
 
         await Promise.all(devices.map(async device =>{
-            await this.deleteApplicationEndpoint(device.Endpoint);
+            await this.notificationsSnsService.deleteApplicationEndpoint(device.Endpoint);
         }))
     }
 
@@ -622,15 +639,8 @@ class NotificationsService {
         let platforms = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).iter().toArray();
 
         await Promise.all(platforms.map(async platform =>{
-            await this.deleteApplication(platform.ApplicationARN);
+            await this.notificationsSnsService.deleteApplication(platform.ApplicationARN);
         }))
-    }
-
-    async deleteApplication(platformArn) {
-        const params = {
-            PlatformApplicationArn: platformArn
-        };
-        return await this.sns.deletePlatformApplication(params).promise();
     }
 
     // publish to particular topic ARN or to endpoint ARN
@@ -639,14 +649,14 @@ class NotificationsService {
 
         switch (pushNotification.PlatformType) {
             case "iOS":
-                basePlatform = new PlatformIOS(this.papiClient, this.sns);
+                basePlatform = new PlatformIOS(this.papiClient);
                 break;
             case "Android":
-                basePlatform = new PlatformAndroid(this.papiClient, this.sns);
+                basePlatform = new PlatformAndroid(this.papiClient);
                 break;
             case "Addon":
                 console.log("@@@switchCase addon: ", pushNotification);
-                basePlatform = new PlatformAddon(this.papiClient, this.sns);
+                basePlatform = new PlatformAddon(this.papiClient);
                 break;
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
@@ -660,7 +670,7 @@ class NotificationsService {
         await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             console.log(`Removing device Endpoint From SNS ${object.Key}`)
             if (object.EndpointARN != undefined) {
-                await this.deleteApplicationEndpoint(object.EndpointARN);
+                await this.notificationsSnsService.deleteApplicationEndpoint(object.EndpointARN);
             }
             else {
                 console.log("Device endpoint does not exist");
@@ -671,7 +681,7 @@ class NotificationsService {
     async removePlatformApplication(body) {
         await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             if (object.EndpointARN != undefined) {
-                await this.deleteApplicationEndpoint(object.ApplicationARN);
+                await this.notificationsSnsService.deleteApplicationEndpoint(object.ApplicationARN);
             }
             else {
                 console.log("Device endpoint does not exist");
