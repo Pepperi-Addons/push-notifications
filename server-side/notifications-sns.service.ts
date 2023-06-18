@@ -1,11 +1,20 @@
+import { Client } from '@pepperi-addons/debug-server/dist';
 import { PapiClient } from '@pepperi-addons/papi-sdk';
 import AWS, { SNS } from 'aws-sdk';
 import { SetEndpointAttributesInput } from 'aws-sdk/clients/sns';
 
 export class NotifiactionsSnsService{
     sns: SNS;
+    papiClient: PapiClient
 
-    constructor(private papiClient: PapiClient){
+    constructor(private client: Client){
+        this.papiClient =  new PapiClient({
+            baseURL: client.BaseURL,
+            token: client.OAuthAccessToken,
+            addonUUID: client.AddonUUID,
+            addonSecretKey: client.AddonSecretKey,
+            actionUUID: client.ActionUUID
+        });
         this.sns = new AWS.SNS();
     }
 

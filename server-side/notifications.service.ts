@@ -221,7 +221,7 @@ class NotificationsService {
         // get user uuid from the token
         const parsedToken: any = jwt(this.accessToken)
         this.currentUserUUID = parsedToken.sub;
-        this.notificationsSnsService = new NotifiactionsSnsService(this.papiClient)
+        this.notificationsSnsService = new NotifiactionsSnsService(this.client)
     }
 
     // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 

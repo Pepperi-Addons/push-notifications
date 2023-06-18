@@ -17,7 +17,7 @@ abstract class EndpointStrategy {
             actionUUID: client.ActionUUID
         });
         this.accessToken = client.OAuthAccessToken;
-        this.notificationsSnsService = new NotifiactionsSnsService(this.papiClient)
+        this.notificationsSnsService = new NotifiactionsSnsService(this.client)
     }
 
     abstract execute(body: any): any;
