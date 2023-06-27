@@ -30,6 +30,7 @@
     "dependencies": {
         "@pepperi-addons/debug-server": "*",
         "@pepperi-addons/papi-sdk": "^1.39.4",
-        "shared": "file:../shared"
+        "shared": "file:../shared",
+        "uuid": "^9.0.0"
     }
 }
