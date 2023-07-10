@@ -183,7 +183,7 @@ export async function bulk_notifications(client: Client, request: Request) {
 export async function total_daily_notifications(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'GET') {
-        return service.getTotalNotificationsSentperDay();
+        return service.getTotalNotificationsSentPerDay();
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
