@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus
 } from 'shared'
 import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
@@ -330,7 +330,7 @@ class NotificationsService {
         return await this.updateNotification(notification)
     }
 
-    async updateNotificationsReadStatus(body) {
+    async updateNotificationsReadStatus(body: notificationReadStatus) {
         let notifications: Notification[] = [];
         for (let key of body.Keys) {
             let notification: Notification = {
@@ -756,9 +756,9 @@ class NotificationsService {
         }
     }
 
-    async batchUpsertReadStatusToAdal(body: any){
+    async batchUpsertReadStatusToAdal(notificationsToUpdate: Notification[]){
         const url = `/addons/data/batch/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
-        return await this.papiClient.post(url, { Objects: body});
+        return await this.papiClient.post(url, { Objects: notificationsToUpdate});
     }
 
     // Create Notifications only using DIMX, without PFS
