@@ -1,3 +1,4 @@
+import { NotifiactionsSnsService } from './notifications-sns.service';
 import NotificationsService from './notifications.service'
 import { Client, Request } from '@pepperi-addons/debug-server'
 
@@ -136,7 +137,7 @@ export async function delete_all_application_endpoints(client: Client, request: 
 }
 
 export async function create_application_endpoint(client: Client, request: Request) {
-    const service = new NotificationsService(client)
+    const service = new NotifiactionsSnsService(client)
     if (request.method == 'POST') {
         return service.createApplicationEndpoint(request.body);
     }
