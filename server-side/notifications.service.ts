@@ -1,18 +1,18 @@
-import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk'
+import { PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus
 } from 'shared'
-import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
 import { Agent } from 'https';
 import fetch from 'node-fetch';
 import {NotifiactionsSnsService} from './notifications-sns.service'
-import { CreateEndpointStrategy, UpdateEndpointStrategy, DeleteEndpointStrategy, RecreateEndpointStrategy} from './register-device.service'
+import { UserDeviceHandlingFactory } from './register-device.service'
+import * as encryption from 'shared'
 
 abstract class PlatformBase {
     protected notificationsSnsService: NotifiactionsSnsService
@@ -120,86 +120,6 @@ class PlatformAddon extends PlatformBase {
         return this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
 }
-
-class UserDeviceHandlingFactory{
-    userDevices: UserDevice[] = []
-    papiClient: PapiClient
-    addonSecretKey: string
-    addonUUID: string
-    constructor(private client: Client, private newUserDeviceData:any){
-        this.papiClient = new PapiClient({
-            baseURL: client.BaseURL,
-            token: client.OAuthAccessToken,
-            addonUUID: client.AddonUUID,
-            addonSecretKey: client.AddonSecretKey,
-            actionUUID: client.ActionUUID
-        });
-        this.addonUUID = client.AddonUUID;
-        this.addonSecretKey = client.AddonSecretKey ?? "";
-    }
-
-    async getUserDevices(){
-        const userDevice = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${this.newUserDeviceData.Key}'` }) as AddonData
-        this.userDevices = userDevice as UserDevice[]
-    }
-
-    async getStrategy(): Promise<CreateEndpointStrategy | RecreateEndpointStrategy | UpdateEndpointStrategy>{
-        await this.getUserDevices()
-        let strategy
-        if(await this.isDeviceExist()){
-            if(await this.isTokenChanged){
-                // if there is a new token, then update the endpoint with the old token
-                strategy = new UpdateEndpointStrategy(this.client, this.userDevices[0].Endpoint);
-            }
-            else if (await this.isDeviceKeyChanged()){
-                // if key exists old endpoint need to be removed and recreated
-                strategy = new RecreateEndpointStrategy(this.client, this.userDevices[0].Key)
-            }
-            else{
-                // default if no key and token changed but device exists
-                strategy = new CreateEndpointStrategy(this.client)
-            }
-        }
-        else{
-            // if device not exists then create a new device
-            strategy = new CreateEndpointStrategy(this.client)
-        }
-        return strategy
-    }
-    
-    private async isTokenChanged(): Promise<boolean>{
-        // isTokenChanged() - UpdateEndpointStrategy
-        const userDeviceToken = await encryption.decryptSecretKey(this.userDevices[0].Token, this.addonSecretKey)
-        if (this.newUserDeviceData.Token != userDeviceToken){
-            return true
-        }
-        else{
-            return false
-        }
-    } 
-
-    private async isDeviceKeyChanged(): Promise<boolean>{
-        // isDeviceKeyChanged() - RecreateEndpointStrategy
-        if(this.newUserDeviceData.Key != this.userDevices[0].Key){
-            return true
-        }
-        else{
-            return false
-        }
-        
-    }
-
-    private async isDeviceExist(): Promise<boolean>{
-        // isDeviceExist() - CreateEndpointStrategy
-        if(this.userDevices.length != 0){
-            return true
-        }
-        else{
-            return false
-        }
-    }    
-}
-
 class NotificationsService {
     papiClient: PapiClient
     addonSecretKey: string
