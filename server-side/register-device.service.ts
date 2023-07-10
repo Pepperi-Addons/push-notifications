@@ -2,7 +2,6 @@ import { PapiClient } from "@pepperi-addons/papi-sdk";
 import { NotifiactionsSnsService } from "./notifications-sns.service";
 import { Client } from "@pepperi-addons/debug-server/dist";
 import jwt from 'jwt-decode';
-import * as encryption from 'shared'
 
 abstract class EndpointStrategy {
     protected notificationsSnsService: NotifiactionsSnsService
@@ -63,14 +62,19 @@ export class CreateEndpointStrategy extends EndpointStrategy{
 }
 
 export class UpdateEndpointStrategy extends EndpointStrategy{
+    constructor(client: Client, private endpoint:string){
+        super(client)
+    }
     async execute(body: any) {
-        await this.notificationsSnsService.updateEndpointAttributes(body.Endpoint, body.Token)
+        console.log(`@@@Updating Endpoint attributes to endpoint ${this.endpoint} with token ${body.Token}`)
+        await this.notificationsSnsService.updateEndpointAttributes(this.endpoint, body.Token)
         return body
     }
 }
 
 export class DeleteEndpointStrategy extends EndpointStrategy{
     async execute(body: any) {
+        console.log(`@@@Deleting Endpoint ${body.Endpoint}`)
         await this.notificationsSnsService.deleteApplicationEndpoint(body.Endpoint)
         return body
     }

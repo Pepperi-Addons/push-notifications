@@ -1,4 +1,4 @@
-import { PapiClient } from '@pepperi-addons/papi-sdk'
+import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
@@ -136,15 +136,20 @@ class UserDeviceHandlingFactory{
         });
         this.addonUUID = client.AddonUUID;
         this.addonSecretKey = client.AddonSecretKey ?? "";
-        this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${this.newUserDeviceData.Key}'` }).then(userDevice =>{ this.userDevices = userDevice as UserDevice[]});
+    }
+
+    async getUserDevices(){
+        const userDevice = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).find({ where: `Key='${this.newUserDeviceData.Key}'` }) as AddonData
+        this.userDevices = userDevice as UserDevice[]
     }
 
     async getStrategy(): Promise<CreateEndpointStrategy | RecreateEndpointStrategy | UpdateEndpointStrategy>{
+        await this.getUserDevices()
         let strategy
         if(await this.isDeviceExist()){
             if(await this.isTokenChanged){
                 // if there is a new token, then update the endpoint with the old token
-                strategy = new UpdateEndpointStrategy(this.client);
+                strategy = new UpdateEndpointStrategy(this.client, this.userDevices[0].Endpoint);
             }
             else if (await this.isDeviceKeyChanged()){
                 // if key exists old endpoint need to be removed and recreated
