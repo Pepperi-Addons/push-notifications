@@ -45,6 +45,11 @@ export interface UserDevice {
     LastRegistrationDate: Date
 }
 
+export interface notificationReadStatus{
+    Read: boolean,
+    Keys: string[]
+}
+
 export const notificationOnCreateSchema: Schema = {
     $id: "/Notification",
     type: "object",

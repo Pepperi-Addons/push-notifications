@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus
 } from 'shared'
 import * as encryption from 'shared'
 import { Validator } from 'jsonschema';
@@ -330,7 +330,7 @@ class NotificationsService {
         return await this.updateNotification(notification)
     }
 
-    async updateNotificationsReadStatus(body) {
+    async updateNotificationsReadStatus(body: notificationReadStatus) {
         let notifications: Notification[] = [];
         for (let key of body.Keys) {
             let notification: Notification = {
@@ -339,9 +339,9 @@ class NotificationsService {
             }
             notifications.push(notification);
         }
-        // To update read statuse and upload to PFS use function
+        // To update read status and upload to PFS use function
         // return await this.uploadFileAndImport(notifications);
-        return await this.uploadeNotificationsToDIMX(notifications);
+        return await this.batchUpsertReadStatusToAdal(notifications);
     }
 
     //MARK: UserDevice handling
@@ -388,7 +388,7 @@ class NotificationsService {
                 }
             }
             else {
-                throw new Error("Register user device faild");
+                throw new Error("Register user device failed");
             }
             console.log('Upserting user device ',body)
             return await this.upsertUserDeviceResource(body);
@@ -463,7 +463,7 @@ class NotificationsService {
                             console.log("@@@ans from publish: ", ans);
                         }
                         catch(error) {
-                            console.log("@@@error single publish faild", error);
+                            console.log("@@@error single publish failed", error);
                         }
                     }));
                 }
@@ -713,13 +713,13 @@ class NotificationsService {
                         }
                         else {
                             dimxObj.Status = Error;
-                            dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} faild with the following error: The given Email is not compatible with any UserUUID`
+                            dimxObj.Details = `${JSON.stringify(dimxObj.Object.UserEmail)} failed with the following error: The given Email is not compatible with any UserUUID`
                         }
                     }
                 }
                 else {
                     dimxObj.Status = Error;
-                    dimxObj.Details = `${JSON.stringify(dimxObj.Object)} faild with the following error: USERUUID and UserEmail are mutually exclusive`
+                    dimxObj.Details = `${JSON.stringify(dimxObj.Object)} failed with the following error: USERUUID and UserEmail are mutually exclusive`
                 }
             }
         }))
@@ -749,15 +749,20 @@ class NotificationsService {
                     }
                     notifications.push(notification);
                 }
-                // To create notificationd and upload to PFS use function
+                // To create notifications and upload to PFS use function
                 // return await this.uploadFileAndImport(notifications);
-                return await this.uploadeNotificationsToDIMX(notifications)
+                return await this.uploadNotificationsToDIMX(notifications)
             }
         }
     }
 
+    async batchUpsertReadStatusToAdal(notificationsToUpdate: Notification[]){
+        const url = `/addons/data/batch/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
+        return await this.papiClient.post(url, { Objects: notificationsToUpdate});
+    }
+
     // Create Notifications only using DIMX, without PFS
-    async uploadeNotificationsToDIMX(body) : Promise<any>{
+    async uploadNotificationsToDIMX(body) : Promise<any>{
         const url = `/addons/data/import/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
         const ansFromImport = await this.papiClient.post(url, {Objects:body});
         return ansFromImport
@@ -894,7 +899,7 @@ class NotificationsService {
 
     // Usage monitor
 
-    async getTotalNotificationsSentperDay() {
+    async getTotalNotificationsSentPerDay() {
         const today = new Date();
         let totalNotifications: Notification[] = [];
         await this.getNotifications({}).then(notifications => {
@@ -919,8 +924,8 @@ class NotificationsService {
     }
 
     async getTotalNotificationsSentInTheLastWeekUsageData() {
-        const daysToSubstract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
-        let firstDate = new Date(Date.now() - daysToSubstract)
+        const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        let firstDate = new Date(Date.now() - daysToSubtract)
 
         const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
         return {

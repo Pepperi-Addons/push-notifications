@@ -193,7 +193,7 @@ async function createNotificationsResource(papiClient: PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -223,7 +223,7 @@ async function createPlatformApplicationResource(papiClient:PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -260,7 +260,7 @@ async function createNotificationsLogViewResource(papiClient: PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -309,7 +309,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -341,7 +341,7 @@ async function createNotificationsVariablesResource(papiClient: PapiClient, clie
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -364,7 +364,7 @@ async function createPFSResource(papiClient: PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
@@ -422,7 +422,7 @@ async function createRelations(papiClient: PapiClient) {
     catch (err) {
         return {
             success: false,
-            errorMessage: err ? err : 'Unknown Error Occured',
+            errorMessage: err ? err : 'Unknown Error Occurred',
         }
     }
 }
