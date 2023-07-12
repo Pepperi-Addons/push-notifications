@@ -435,7 +435,7 @@ class NotificationsService {
                             console.log("@@@ans from publish: ", ans);
                         }
                         catch(error) {
-                            console.log("@@@error single publish failed", error);
+                            console.error(`@@@error single publish failed with error:${error} for device: ${device} and notification: ${notification}`);
                         }
                     }));
                 }
