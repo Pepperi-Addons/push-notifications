@@ -7,7 +7,7 @@ export class NotifiactionsSnsService{
     sns: SNS;
     papiClient: PapiClient
 
-    constructor(private client: Client){
+    constructor(client: Client){
         this.papiClient =  new PapiClient({
             baseURL: client.BaseURL,
             token: client.OAuthAccessToken,
