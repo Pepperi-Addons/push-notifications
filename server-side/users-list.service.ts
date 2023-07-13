@@ -1,4 +1,4 @@
-import { PapiClient, AddonData,AddonDataScheme } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { USERS_LISTS_TABLE_NAME } from 'shared'
 import { v4 as uuid } from 'uuid';
@@ -8,7 +8,7 @@ class UsersListsService {
     addonSecretKey: string
     addonUUID: string;
     accessToken: string;
-    constructor(private client: Client) {
+    constructor(client: Client) {
         this.papiClient = new PapiClient({
             baseURL: client.BaseURL,
             token: client.OAuthAccessToken,
@@ -58,8 +58,8 @@ class UsersListsService {
 
     async getResourceFields(body){
         let fields : string[] = []
-        let resources = await this.papiClient.resources.resource('resources').search(body)
-        resources.map(resource=>{
+        let resources = await this.papiClient.resources.resource('resources').search(body) as any
+        resources.Objects.map(resource=>{
             fields=[...fields,...Object.keys(resource.Fields)]
         })
         return fields
@@ -88,8 +88,8 @@ class UsersListsService {
 
     async getReferenceFields(body){
         let fields:string[] = []
-        let resources = await this.papiClient.resources.resource('resources').search(body)
-        resources.map(resource=>{
+        let resources = await this.papiClient.resources.resource('resources').search(body) as any
+        resources.Objects.map(resource=>{
             Object.keys(resource.Fields).map(key=>{
                 if(resource.Fields[key]["Type"] == 'Resource' && resource.Fields[key]["Resource"]=='users'){
                     fields.push(key)
