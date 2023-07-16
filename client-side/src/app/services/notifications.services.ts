@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AddonService } from './addon.service';
+import { notificationReadStatus } from 'shared';
 
 @Injectable({
     providedIn: 'root'
@@ -19,7 +20,7 @@ export class NotificationsService {
         }
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
-    updateNotificationsReadStatus(notifications) {
+    updateNotificationsReadStatus(notifications: notificationReadStatus) {
         return this.addonService.pepPost(`/addons/api/${this.addonService.addonUUID}/api/update_notifications_read_status`, notifications).toPromise()
     }
 
