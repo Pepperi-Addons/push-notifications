@@ -1,10 +1,11 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NotificationsService } from '../../services/notifications.services';
 import { AddonService } from '../../services/addon.service';
 import { INotificationItem } from '../notifications/notifications.model';
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { config } from '../../addon.config';
 import { TranslateService } from '@ngx-translate/core';
+import {notificationReadStatus} from 'shared'
 
 @Component({
   selector: 'app-notification-block',
@@ -12,7 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./notification-block.component.css']
 })
 export class NotificationBlockComponent implements OnInit {
-  items: INotificationItem[] = [];
+  items: INotificationItem[] = null;
   notificationsList = [];
   screenSize: PepScreenSizeType;
 
@@ -34,8 +35,9 @@ export class NotificationBlockComponent implements OnInit {
   }
 
   async configureItems() {
-    let notificationsItems = [];
+    let notificationsItems: Array<any> = null;
     this.notificationsList = await this.notificationsService.getNotifications(`UserUUID='${this.addonService.userUUID}'`);
+    notificationsItems = this.notificationsList.length > 0 ? [] : null;
     for (const notification of this.notificationsList) {
       let item: INotificationItem = {
         key: notification.Key,
@@ -59,7 +61,7 @@ export class NotificationBlockComponent implements OnInit {
         "Keys": this.notificationsList.map(notification => {
           return notification.Key
         })
-      });
+      } as notificationReadStatus );
   }
 
   async itemReadClick(event) {
