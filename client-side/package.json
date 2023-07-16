@@ -47,7 +47,8 @@
         "rxjs": "~7.5.0",
         "shared": "file:../shared",
         "tslib": "^2.0.0",
-        "zone.js": "~0.11.5"
+        "zone.js": "~0.11.5",
+        "shared": "file:../shared"
     },
     "devDependencies": {
         "@angular-architects/module-federation": "^14.3.8",

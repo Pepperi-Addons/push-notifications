@@ -1,3 +1,4 @@
+import { NotifiactionsSnsService } from './notifications-sns.service';
 import NotificationsService from './notifications.service'
 import UsersListsService from './users-list.service'
 import { Client, Request } from '@pepperi-addons/debug-server'
@@ -185,7 +186,7 @@ export async function delete_all_application_endpoints(client: Client, request: 
 }
 
 export async function create_application_endpoint(client: Client, request: Request) {
-    const service = new NotificationsService(client)
+    const service = new NotifiactionsSnsService(client)
     if (request.method == 'POST') {
         return service.createApplicationEndpoint(request.body);
     }
@@ -231,7 +232,7 @@ export async function bulk_notifications(client: Client, request: Request) {
 export async function total_daily_notifications(client: Client, request: Request) {
     const service = new NotificationsService(client)
     if (request.method == 'GET') {
-        return service.getTotalNotificationsSentperDay();
+        return service.getTotalNotificationsSentPerDay();
     }
     else {
         throw new Error(`Method ${request.method} not supported`);
