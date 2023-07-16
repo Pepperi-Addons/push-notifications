@@ -348,19 +348,19 @@ class NotificationsService {
         });
     }
 
-    async populateUserDevice(body){
+    async populateUserDevice(deviceDataToPopulate){
         const addonSecretKey = this.client.AddonSecretKey ?? "";
 
-        body.UserUUID = this.currentUserUUID;
-        body.Key = `${body.DeviceKey}_${body.AppKey}`;
-        body.LastRegistrationDate = new Date().toISOString();
+        deviceDataToPopulate.UserUUID = this.currentUserUUID;
+        deviceDataToPopulate.Key = `${deviceDataToPopulate.DeviceKey}_${deviceDataToPopulate.AppKey}`;
+        deviceDataToPopulate.LastRegistrationDate = new Date().toISOString();
 
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
-        body.ExpirationDateTime = this.getExpirationDateTime(30);
-        console.log('Setting Expiration Time To ', body.ExpirationDateTime)
-        body.Token = await encryption.encryptSecretKey(body.Token, addonSecretKey)
+        deviceDataToPopulate.ExpirationDateTime = this.getExpirationDateTime(30);
+        console.log('Setting Expiration Time To ', deviceDataToPopulate.ExpirationDateTime)
         
-        return body 
+        
+        return deviceDataToPopulate 
     }
 
     private getExpirationDateTime(days: number) {
@@ -368,18 +368,22 @@ class NotificationsService {
         return new Date(Date.now() + daysToAdd)
     }
 
-    async upsertUserDevice(body) { // body -> userDevice
+    async upsertUserDevice(body: UserDevice) { // body -> userDevice
         // Schema validation
+        
         let validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
-            const userDeviceHandlingFactory = new UserDeviceHandlingFactory(this.client, body)
-            body = await this.populateUserDevice(body)
+            let deviceData = await this.populateUserDevice(body)
+
+            const userDeviceHandlingFactory = new UserDeviceHandlingFactory(this.client, deviceData)
 
             const strategy = await userDeviceHandlingFactory.getStrategy()
             
-            body = await strategy.execute(body)
-            console.log('Upserting user device to ADAL ',body)
-            return await this.upsertUserDeviceResource(body);
+            deviceData = await strategy.execute(deviceData)
+            deviceData.Token = await encryption.encryptSecretKey(deviceData.Token, this.client.AddonSecretKey ?? "")
+
+            console.log('Upserting user device to ADAL ',deviceData)
+            return await this.upsertUserDeviceResource(deviceData);
         }
         else {
             this.throwErrorFromSchema(validation);
@@ -435,7 +439,7 @@ class NotificationsService {
                             console.log("@@@ans from publish: ", ans);
                         }
                         catch(error) {
-                            console.log("@@@error single publish failed", error);
+                            console.warn(`@@@error single publish failed with error:${error} for device: ${JSON.stringify(device)} and notification: ${JSON.stringify(notification)}`);
                         }
                     }));
                 }

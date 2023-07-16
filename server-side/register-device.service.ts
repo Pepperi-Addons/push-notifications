@@ -122,7 +122,7 @@ export class UserDeviceHandlingFactory{
         await this.getUserDevices()
         let strategy
         if(await this.isDeviceExist()){
-            if(await this.isTokenChanged){
+            if(await this.isTokenChanged()){
                 // if there is a new token, then update the endpoint with the old token
                 strategy = new UpdateEndpointStrategy(this.client, this.userDevices[0].Endpoint);
             }
