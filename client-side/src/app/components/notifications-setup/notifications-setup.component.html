@@ -7,12 +7,14 @@
 
     <ng-container pep-main-area>
         <pep-generic-list #glist1
+        [uuidMapping]="'Key'"
         [dataSource]="dataSource"
         [actions]="actions"
         [title]="'Send To'"
         [disabled]="false"
         [addPadding]="true"
         [showSearch]="false"
+        [zebraStripes]="false"
         [showTopBar]="true">
         <ng-container right-buttons>
             <pep-button class="pep-spacing-element" value="Add a list" styleType="strong" sizeType="sm" (buttonClick)="addList()"></pep-button>
@@ -22,12 +24,16 @@
     </pep-page-layout>
 
 <ng-template #listForm>
-    <ng-container class="formContainer">
-        <pep-generic-form [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
-        </pep-generic-form>
-        <div class="pep-spacing-element-negative" style="display: flex; align-content:flex-start;">
-            <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
-            <pep-button class="pep-spacing-element" value="Save" styleType="strong" sizeType="sm" [disabled]="true" (buttonClick)="saveList()"></pep-button>
-        </div>
-    </ng-container>
+    <pep-dialog [showHeader]="false" [title]="'Add Group List'">
+        <ng-container pep-dialog-content>
+            <pep-generic-form [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
+            </pep-generic-form>
+        </ng-container>
+        <ng-container pep-dialog-actions>
+            <div class="pep-spacing-element-negative" style="display: flex;">
+                <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
+                <pep-button class="pep-spacing-element" value="Done" styleType="strong" sizeType="sm" [(disabled)]="is_disabled" (buttonClick)="saveList()"></pep-button>
+            </div>
+        </ng-container>
+    </pep-dialog>
 </ng-template>

@@ -50,10 +50,40 @@ class UsersListsService {
     async getResourceLists(query){
         let resourceList: string[] = []
         let resources = await this.papiClient.resources.resource('resources').get()
-        for(let resource in resources){
-            resourceList.push(resources[resource]['Name'])
-        }
+        resources.map(resource=>{
+            resourceList.push(resource['Name'])
+        })
         return resourceList
+    }
+
+    async getResourceFields(body){
+        let fields : string[] = []
+        let resources = await this.papiClient.resources.resource('resources').search(body)
+        resources.map(resource=>{
+            fields=[...fields,...Object.keys(resource.Fields)]
+        })
+        return fields
+    }
+
+    async getMappingCollections(body){
+        let mappingCollections:string[] = []
+        let resources = await this.papiClient.resources.resource('resources').get()
+        resources.map(resource=>{
+            let hasResource = false
+            let hasReference = false
+            Object.keys(resource.Fields).map(key=>{
+                if(resource.Fields[key]["Type"] == 'Resource' && resource.Fields[key]["Resource"]=='users'){
+                    hasReference=true
+                }
+                if(resource.Fields[key]["Type"] == 'Resource' && resource.Fields[key]["Resource"]==body.resource){
+                    hasResource=true
+                }
+            })
+            if(hasReference && hasResource){
+                mappingCollections.push(resource['Name'])
+            }
+        })
+        return mappingCollections
     }
 
     async createUsersListsResource(papiClient:PapiClient) {
@@ -61,7 +91,9 @@ class UsersListsService {
             Name: USERS_LISTS_TABLE_NAME,
             Type: 'meta_data',
             Fields: {
-       
+                ListName: {
+                    Type: 'String'
+                },
                 ResourceListUUID: {
                     Type: 'String'
                 },
