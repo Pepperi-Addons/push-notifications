@@ -56,6 +56,10 @@ export interface UsersLists{
     MappingResourceUUID: string
     UserReferenceField: string;
 }
+export interface notificationReadStatus{
+    Read: boolean,
+    Keys: string[]
+}
 
 export const notificationOnCreateSchema: Schema = {
     $id: "/Notification",
