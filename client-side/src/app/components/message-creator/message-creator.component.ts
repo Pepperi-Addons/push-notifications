@@ -1,4 +1,4 @@
-import { Component, DebugElement, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -10,8 +10,9 @@ import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/d
 import { config } from '../../addon.config';
 import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-
+import { MatDialogRef } from '@angular/material/dialog';
+import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
+  
 
 
 @Component({
@@ -30,10 +31,12 @@ export class MessageCreatorComponent implements OnInit {
     Body: ""
   };
   chips: any[] = [];
+  usersLists: any[] = []
   dialogRef: MatDialogRef<any> 
 
   constructor(
     private notificationsService: NotificationsService,
+    private notificationsSetupService: NotificationsSetupService,
     private addonService: AddonService,
     public route: ActivatedRoute,
     private translate: TranslateService,
@@ -45,12 +48,13 @@ export class MessageCreatorComponent implements OnInit {
     this.addonService.addonUUID = config.AddonUUID;
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     const queryParams = this.route.snapshot.queryParams;
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
     }
+    this.usersLists = await this.notificationsSetupService.getUsersLists()
   }
 
   async sendNotifications() {
@@ -100,6 +104,9 @@ export class MessageCreatorComponent implements OnInit {
           relativeTo: this.route,
           queryParamsHandling: 'merge',
     });
+  }
+
+  userListClicked(list){
   }
 
   getUsersList(): any{

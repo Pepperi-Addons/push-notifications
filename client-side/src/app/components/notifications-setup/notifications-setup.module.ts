@@ -9,7 +9,7 @@ import { PepFileService,PepAddonService} from '@pepperi-addons/ngx-lib';
 import { PepButton, PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
-
+import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { NotificationsSetupComponent } from './notifications-setup.component';
 import { config } from '../../addon.config';
 import { MessageCreatorModule } from '../message-creator/message-creator.module';
@@ -32,6 +32,7 @@ export const routes: Routes = [
       PepPageLayoutModule,
       PepButtonModule,
       PepTopBarModule,
+      PepDialogModule,
       MessageCreatorModule,
       TranslateModule.forChild({
         loader: {

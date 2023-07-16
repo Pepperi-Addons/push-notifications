@@ -15,13 +15,54 @@ export class NotificationsSetupService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
-    deleteSendToList(sendTolists){
+    async getUserUUIDFromView(mappingField,resource,key):Promise<string>{
+        let url = `/resources/${resource}`
+        this.addonService.pepGet(encodeURI(url)).toPromise().then(res =>{
+            res.map(user =>{
+                  if(key == user.Key){
+                    return user[mappingField]
+                  } 
+            })
+        });
+        throw Error('User UUID Not Found')
+       }
+
+    async deleteSendToList(sendTolists){
+        let listToDelete:any[] = []
+        sendTolists.map(list=>{
+            listToDelete.push({Key:list})
+        })
         let url = `/addons/api/${this.addonService.addonUUID}/api/delete_notifications_users_lists`
-        return this.addonService.pepPost(encodeURI(url),sendTolists).toPromise();
+        return await this.addonService.pepPost(encodeURI(url),listToDelete).toPromise();
     }
 
     getResourceList(){
         let url = `/addons/api/${this.addonService.addonUUID}/api/get_resource_lists`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
+    }
+
+    getResourceFields(resource){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_resource_fields`
+        return this.addonService.pepPost(encodeURI(url),resource).toPromise();
+    }
+
+    getMappingCollections(resource){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_mapping_collections`
+        return this.addonService.pepPost(encodeURI(url),resource).toPromise();
+    }
+
+    getUserReferenceFields(resource){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/get_user_reference_fields`
+        return this.addonService.pepPost(encodeURI(url),resource).toPromise();
+    }
+
+    getUsersLists(){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
+        return this.addonService.pepGet(encodeURI(url)).toPromise();
+    }
+
+    saveList(list){
+        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_lists`
+        return this.addonService.pepPost(encodeURI(url),list).toPromise();
     }
 }
