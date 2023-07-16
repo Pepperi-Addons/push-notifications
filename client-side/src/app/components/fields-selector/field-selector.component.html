@@ -1,0 +1,29 @@
+<div style="display:flex; gap:2rem;">
+    <div cdkDropList [cdkDropListData]="items">
+         <pep-draggable-items 
+         [items]="items" 
+         title="Fields To Display" 
+         titleType="with-bottom-border" 
+         titleSizeType="md" 
+         [showSearch]="false" 
+         [dropAreaIds]="['dropArea1']" >
+        </pep-draggable-items> 
+    </div> 
+    <div 
+    cdkDropList 
+    id="dropArea1" 
+    (cdkDropListDropped)="drop($event)" 
+    style="border: 1px solid #ccc; width: 200px; min-height: 200px; display:flex; gap: 0.5rem; flex-direction: column; padding: 1rem; border-radius: 0.25rem;" > 
+        <p 
+        style="margin: auto auto !important; display: flex;" 
+        *ngIf="!dropArea.length" 
+        > 
+        Drop here Selected Fields To Display
+        </p> 
+        <pep-draggable-item 
+        *ngFor="let item of dropArea" 
+        [title]="item.title" 
+        [data]="item.data" >
+        </pep-draggable-item>
+    </div> 
+</div>
