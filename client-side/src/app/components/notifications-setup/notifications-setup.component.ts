@@ -2,13 +2,15 @@ import { Component, OnInit, ViewChild, TemplateRef,Inject, Injector} from '@angu
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
-import { ActivatedRoute, Router } from '@angular/router';
 import { AddonData,FormDataView } from '@pepperi-addons/papi-sdk';
 import { NotificationsSetupService } from '../../services/notifications-setup.services';
 import { config } from '../../addon.config';
-import { MatDialogRef,MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
 import { GenericFormComponent } from '@pepperi-addons/ngx-composite-lib/generic-form';
+import { DraggableItemsComponent, IPepDraggableItem } from '@pepperi-addons/ngx-lib/draggable-items';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
 @Component({
   selector: 'app-notifications-setup',
   templateUrl: './notifications-setup.component.html',
@@ -20,22 +22,29 @@ export class NotificationsSetupComponent implements OnInit {
     formDataSource:AddonData ={}
     userListData:AddonData={}
     dialogData: any
+    selectedFields: IPepDraggableItem[] = []
     is_disabled: boolean = true
+    cancelDropArea = []
+    selectDropArea = []
+    fieldsToSelect: IPepDraggableItem[] = []
     dataSource: IPepGenericListDataSource
+    // fieldSelectorComponent: FieldSelectorComponent
     constructor(    
-        private injector: Injector,
-        private translate: TranslateService,
-        private notificationsSetupService: NotificationsSetupService,
-        private addonService: AddonService,
-        private route: ActivatedRoute,
-        private router: Router,
-        private dialogService: PepDialogService,
+        protected injector: Injector,
+        protected translate: TranslateService,
+        protected notificationsSetupService: NotificationsSetupService,
+        protected addonService: AddonService,
+        protected dialogService: PepDialogService,
         ) {
           this.addonService.addonUUID = config.AddonUUID;
+          // this.fieldSelectorComponent = new FieldSelectorComponent(injector, translate, notificationsSetupService, addonService, dialogService)
          }
     dialogRef: MatDialogRef<any>
     @ViewChild('listForm', { read: TemplateRef }) listForm:TemplateRef<any>;
     @ViewChild(GenericFormComponent) genericForm  
+
+    @ViewChild('fieldsSelector', { read: TemplateRef }) fieldsSelector:TemplateRef<any>;
+    @ViewChild(DraggableItemsComponent) selectFields  
  
       async ngOnInit() {
         this.dataView = await this.getDataView()
@@ -44,20 +53,38 @@ export class NotificationsSetupComponent implements OnInit {
       }
     
       cancel(){
+        this.formDataSource=this.getFormDataSource()
         this.dialogRef.close()
       }
 
-      async saveList(){
+      openFieldSelection(){
         this.userListData.ListName = this.formDataSource.ListName
         this.userListData.ResourceListKey = this.formDataSource.ResourceListKey
         this.userListData.DisplayTitleField = this.formDataSource.DisplayTitleField
         this.userListData.MappingResourceUUID = this.formDataSource.MappingResourceUUID
         this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
-        await this.notificationsSetupService.saveList(this.userListData)
-        this.formDataSource=this.getFormDataSource()
         this.dialogRef.close()
+        this.openFieldSelector()
+        // this.formDataSource=this.getFormDataSource()
+
+      }
+
+      async saveList(){
+        this.userListData.SelectionDisplayField = this.selectedFields.map(field => {return field.title})
+        this.dialogRef.close()
+        await this.notificationsSetupService.saveList(this.userListData)
+        this.formDataSource = this.getFormDataSource()
         this.dataSource = await this.getListDataSource()
       }
+
+
+
+      openFieldSelector(){
+        this.dialogRef = this.dialogService.openDialog(this.fieldsSelector,'',{disableClose:false, height: '80%',
+        width: '50%'})
+        this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
+      }
+
       
       async getSelectionResources(){
         let resources = []
@@ -150,7 +177,7 @@ export class NotificationsSetupComponent implements OnInit {
                   {
                     FieldID: 'DisplayTitleField',
                     Type: 'TextBox',
-                    Title: this.translate.instant("Display Field"),
+                    Title: this.translate.instant("Title Field"),
                     Mandatory: false,
                     ReadOnly: true
                   },
@@ -160,7 +187,14 @@ export class NotificationsSetupComponent implements OnInit {
                     Title: this.translate.instant("Mapping Resource"),
                     Mandatory: false,
                     ReadOnly: true
-                  }
+                  },
+                  {
+                    FieldID: 'SelectionDisplayField',
+                    Type: 'TextBox',
+                    Title: this.translate.instant("Display Fields"),
+                    Mandatory: false,
+                    ReadOnly: true
+                  },
                 ],
                 Columns: [
                   {
@@ -226,6 +260,7 @@ export class NotificationsSetupComponent implements OnInit {
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
           this.dataView.Fields[10].ReadOnly = false
           this.dataView.Fields[10]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
+          await this.updateFieldsToSelect(this.formDataSource.MappingResourceUUID)
         }
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
@@ -239,6 +274,14 @@ export class NotificationsSetupComponent implements OnInit {
 
       fieldClick(){
 
+      }
+
+      async updateFieldsToSelect(resource){
+        const fieldNames = await this.notificationsSetupService.getResourceFields({Where:"Name = "+resource})
+        this.fieldsToSelect = fieldNames.map(field=>{
+          return { title: field, data: field }
+        })
+        console.log(`Fields to select ${this.fieldsToSelect}`)
       }
 
       async getDataView():Promise<FormDataView>{
@@ -539,4 +582,29 @@ export class NotificationsSetupComponent implements OnInit {
         this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
       
+      addSelected(event: CdkDragDrop<IPepDraggableItem[]>) {
+        console.log(event)
+        if (event.previousContainer === event.container) {
+          moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      } else {
+          const item = this.fieldsToSelect.find(item => item.title === event.item.data);
+          console.log(item)
+          this.selectedFields.push(item)
+          this.fieldsToSelect = this.fieldsToSelect.filter(removedItem => removedItem.title != item.title)
+          console.log(this.selectedFields)
+      }
+    }
+    
+    removeSelected(event: CdkDragDrop<IPepDraggableItem[]>){
+      console.log(event)
+        if (event.previousContainer === event.container) {
+          moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      } else {
+          const item = this.selectedFields.find(item => item.title === event.item.data);
+          console.log(item)
+          this.fieldsToSelect.push(item)
+          console.log(this.fieldsToSelect)
+          this.selectedFields = this.selectedFields.filter(removedItem => removedItem.title != item.title)
+      }
+    }
 }

@@ -13,6 +13,8 @@ import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { NotificationsSetupComponent } from './notifications-setup.component';
 import { config } from '../../addon.config';
 import { MessageCreatorModule } from '../message-creator/message-creator.module';
+import { PepDraggableItemsModule } from '@pepperi-addons/ngx-lib/draggable-items';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 export const routes: Routes = [
     {
@@ -33,6 +35,8 @@ export const routes: Routes = [
       PepButtonModule,
       PepTopBarModule,
       PepDialogModule,
+      PepDraggableItemsModule,
+      DragDropModule,
       MessageCreatorModule,
       TranslateModule.forChild({
         loader: {
