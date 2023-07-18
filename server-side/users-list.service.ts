@@ -121,6 +121,9 @@ class UsersListsService {
                 },
                 UserReferenceField: {
                     Type: 'String'
+                },
+                SelectionDisplayFields: {
+                    Type: "MultipleStringValues"
                 }
             }
             

@@ -9,6 +9,7 @@ import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { DeviceManagmentComponent, DeviceManagmentModule } from './components/device-managment';
 import { NotificationsLogComponent, NotificationsLogModule } from './components/notifications-log';
 import { NotificationsSetupComponent, NotificationsSetupModule } from './components/notifications-setup';
+
 import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
@@ -76,8 +77,8 @@ export class AppModule implements DoBootstrap {
         this.pepAddonService.defineCustomElement(`notifications-element-${config.AddonUUID}`, NotificationBlockComponent, this.injector);
         this.pepAddonService.defineCustomElement(`notifications-editor-element-${config.AddonUUID}`, NotificationBlockEditorComponent, this.injector);
 
-        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, SettingsComponent, this.injector);
-        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, SettingsComponent, this.injector);
-        this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, SettingsComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, DeviceManagmentComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, NotificationsLogComponent, this.injector);
+        this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, NotificationsSetupComponent, this.injector);
     }
 }

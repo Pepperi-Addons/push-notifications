@@ -215,6 +215,10 @@ export const usersListsSchema: Schema = {
         UserReferenceField: {
             type: "string",
             required: true
+        },
+        SelectionDisplayFields: {
+            type: "string[]",
+            required: true
         }
     }
 }
