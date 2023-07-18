@@ -20,7 +20,7 @@ export class EmptyRouteComponent {}
 const routes: Routes = [
     {
         path: ':settingsSectionName/:addonUUID', // /:slugName'
-        component: SettingsComponent,
+        // component: SettingsComponent,
         children: [
             {
                 path: 'device_managment',
@@ -38,7 +38,7 @@ const routes: Routes = [
                 path: 'notifications_setup',
                 component: NotificationsSetupComponent,
             },
-            { path: '**', component: EmptyRouteComponent }
+            { path: '**', component: NotificationsLogComponent }
         ]
     }
 ];

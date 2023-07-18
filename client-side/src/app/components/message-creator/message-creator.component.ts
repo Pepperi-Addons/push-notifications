@@ -10,9 +10,8 @@ import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/d
 import { config } from '../../addon.config';
 import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UniqueSelectionDispatcher } from '@angular/cdk/collections';
   
 
 
@@ -126,14 +125,12 @@ export class MessageCreatorComponent implements OnInit {
   async userListClicked(list,index){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
-      name: 'ResourcePicker',
-      hostObject: {
-        resource: list.MappingResourceUUID,
-        selectionMode: 'multi'
-      },hostEventsCallback: async ($event) => {
-        if($event.action == 'on-save'){
+      name: 'List',
+      hostObject: this.getGenericHostObject(list),
+      hostEventsCallback: async ($event) => {
+        if($event.action == 'on-done'){
           let newChips: any[]  = [];
-          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
+          await Promise.all($event.data.selectedObjects.map( async chip => {
             let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.UserReferenceField,list.MappingResourceUUID,chip)
             let chipObj = { 
               value: uuid,
@@ -202,6 +199,41 @@ export class MessageCreatorComponent implements OnInit {
       }
     }
   }
+
+  getGenericPickerList(list){
+    return {
+      List: {
+        Key: `Notifications_List_${list.ListName}`,
+        Name: `list ${list.ListName}`,
+        Resource: list.MappingResourceUUID,
+        Views: [{
+          Key: `notifications_${list.ListName}_view`,
+          Type: "Grid",
+          Title: list.ListName,
+          Blocks: list.SelectionDisplayFields.map(field => this.getSingleGenericField(field))
+        }]
+      }
+    }
+  }
+
+  getSingleGenericField(field: string){
+    return {
+      Title: field,
+      Configuration: {
+          Type: "TextBox",
+          FieldID: field,
+          Width: 10
+      }
+  }
+}
+
+getGenericHostObject(list){
+  const hostObject = {
+    listContainer: this.getGenericPickerList(list),
+    inDialog: true
+  }
+  return hostObject
+}
 
 
   getUsersHostObject(){
