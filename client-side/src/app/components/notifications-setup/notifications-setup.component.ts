@@ -260,7 +260,7 @@ export class NotificationsSetupComponent implements OnInit {
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
           this.dataView.Fields[10].ReadOnly = false
           this.dataView.Fields[10]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
-          await this.updateFieldsToSelect(this.formDataSource.MappingResourceUUID)
+          await this.updateFieldsToSelect(this.formDataSource.ResourceListKey)
         }
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
