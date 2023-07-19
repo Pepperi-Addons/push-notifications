@@ -27,6 +27,7 @@ export class NotificationsLogComponent implements OnInit {
 
   ngOnInit() {
     this.addonService.getCurrentUserEmail().then((email) => this.currentUserEmail = email);
+    this.clearQueryParams();
   }
 
   noDataMessage: string;
@@ -171,12 +172,21 @@ export class NotificationsLogComponent implements OnInit {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "UsersUUID": notification.Fields[2]?.FormattedValue,
+          "UsersList": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,
           "Body": notification.Fields[1]?.FormattedValue,
         }
       })
     }
+  }
+
+  clearQueryParams() {
+    // remove the query params of the current page except for the 'dev' param
+    // the query params that are added to the url are used for the duplicate message feature
+    // dev may not exist in the url, so we need to check it
+    const idDevMode = this.route?.snapshot?.queryParams?.dev;
+    const queryParams = idDevMode ? { dev: idDevMode } : {};
+    this.router.navigate([], { queryParams });
   }
 
 }
