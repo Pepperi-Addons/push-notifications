@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { config } from '../addon.config';
 import { AddonService } from './addon.service';
-import { IPepListSortingData } from '@pepperi-addons/ngx-lib/list';
+// import { IPepListSortingData } from '@pepperi-addons/ngx-lib/list';
 
 @Injectable({
     providedIn: 'root'
@@ -49,7 +49,7 @@ export class NotificationsLogService {
     }
     
         
-    private sortList(list: any[], sorting: IPepListSortingData) {
+    private sortList(list: any[], sorting: any) {
         const { sortBy, isAsc } = sorting;
         
         const compareStrings = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' });
