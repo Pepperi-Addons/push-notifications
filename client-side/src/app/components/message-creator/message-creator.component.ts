@@ -146,13 +146,26 @@ export class MessageCreatorComponent implements OnInit {
           }],
         }],
         SelectionType: "Multi",
+        Search: {
+          Fields: [
+              {
+                  FieldID: "FirstName"
+              },
+              {
+                  FieldID: "LastName"
+              },
+              {
+                  FieldID: "Email"
+              }
+          ]
+        },
+        Sorting: {Ascending: true, FieldID: "FirstName"},     
       },
       State: {
         ListKey: "Notifications_Users_List",
-      }
+      },          
     }
   }
-
 
   getUsersHostObject(){
     const hostObject = {
