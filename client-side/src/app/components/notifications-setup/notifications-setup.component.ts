@@ -240,27 +240,27 @@ export class NotificationsSetupComponent implements OnInit {
         if($event.ApiName == "ListName"){
           selectionList.ListName =  $event.Value
           this.formDataSource.ListName = selectionList.ListName
-          this.dataView.Fields[4].ReadOnly = false
           this.dataView.Fields[4]["OptionalValues"] = await this.getSelectionResources()
+          this.dataView.Fields[4].ReadOnly = false
         }
         if($event.ApiName == "ResourceListKey"){
           selectionList.ResourceListKey =  $event.Value
           this.formDataSource.ResourceListKey = selectionList.ResourceListKey
-          this.dataView.Fields[6].ReadOnly = false
           this.dataView.Fields[6]["OptionalValues"]=await this.getResourceFields(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[6].ReadOnly = false
         }
         if($event.ApiName == "DisplayTitleField"){
           selectionList.DisplayTitleField = $event.Value
           this.formDataSource.DisplayTitleField = selectionList.DisplayTitleField
-          this.dataView.Fields[8].ReadOnly = false
           this.dataView.Fields[8]["OptionalValues"]=await this.getMappingCollections(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[8].ReadOnly = false
         }
         if($event.ApiName == "MappingResourceUUID"){
           selectionList.MappingResourceUUID = $event.Value
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
-          this.dataView.Fields[10].ReadOnly = false
           this.dataView.Fields[10]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
           await this.updateFieldsToSelect(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[10].ReadOnly = false
         }
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
