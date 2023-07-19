@@ -38,16 +38,18 @@ export class NotificationsLogComponent implements OnInit {
     return {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
+        this.notificationsLogService.handleSorting(params, notificationsList);
         if (params.searchString) {
           notificationsList = notificationsList.filter(notification => {
             return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body?.toLowerCase().includes(params.searchString.toLowerCase()))  
           })
           this.noDataMessage = this.translate.instant("No_Results_Error")
         }
-       for (let notification of notificationsList) {
-         let creationDate = new Date(notification.CreationDateTime);
-         notification.Date = creationDate.getDate()+'/'+(creationDate.getMonth()+1)+'/'+creationDate.getFullYear();
-       }
+        for (let notification of notificationsList) {
+            // Generate human-readable date and time
+            const date = new Date(notification.CreationDateTime);
+            notification.Date = this.notificationsLogService.formatDateTime(date);        
+        }
 
         return Promise.resolve({
           dataView: {
@@ -113,19 +115,16 @@ export class NotificationsLogComponent implements OnInit {
           items: notificationsList
         });
       },
-      inputs: () => {
-        return Promise.resolve(
-          {
-            pager: {
-              type: 'scroll'
-            },
-            selectionType: 'multi',
-            noDataFoundMsg:this.noDataMessage
-          }
-        );
+      inputs: {
+        pager: {
+          type: 'scroll'
+        },
+        selectionType: 'single',
+        noDataFoundMsg:this.noDataMessage,
+        supportSorting: true,
       },
     } as IPepGenericListDataSource
-  }
+  } 
 
   actions: IPepGenericListActions = {
     get: async (data) => {
