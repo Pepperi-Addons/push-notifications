@@ -23,7 +23,7 @@ export class NotificationsSetupComponent implements OnInit {
     userListData:AddonData={}
     dialogData: any
     selectedFields: IPepDraggableItem[] = []
-    is_disabled: boolean = true
+    isSaveListDisabled: boolean = true
     cancelDropArea = []
     selectDropArea = []
     fieldsToSelect: IPepDraggableItem[] = []
@@ -80,7 +80,7 @@ export class NotificationsSetupComponent implements OnInit {
 
 
       openFieldSelector(){
-        this.dialogRef = this.dialogService.openDialog(this.fieldsSelector,'',{disableClose:false, height: '80%',
+        this.dialogRef = this.dialogService.openDialog(this.fieldsSelector,'',{disableClose:false, height: '50%',
         width: '50%'})
         this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
@@ -265,7 +265,7 @@ export class NotificationsSetupComponent implements OnInit {
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
           this.formDataSource.UserReferenceField = selectionList.UserReferenceField
-          this.is_disabled = false
+          this.isSaveListDisabled = false
         }
 
       // update the data view with the desired data
