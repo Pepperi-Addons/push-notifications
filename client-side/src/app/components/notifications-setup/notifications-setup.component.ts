@@ -23,7 +23,7 @@ export class NotificationsSetupComponent implements OnInit {
     userListData:AddonData={}
     dialogData: any
     selectedFields: IPepDraggableItem[] = []
-    is_disabled: boolean = true
+    isSaveListDisabled: boolean = true
     cancelDropArea = []
     selectDropArea = []
     fieldsToSelect: IPepDraggableItem[] = []
@@ -80,7 +80,7 @@ export class NotificationsSetupComponent implements OnInit {
 
 
       openFieldSelector(){
-        this.dialogRef = this.dialogService.openDialog(this.fieldsSelector,'',{disableClose:false, height: '80%',
+        this.dialogRef = this.dialogService.openDialog(this.fieldsSelector,'',{disableClose:false, height: '50%',
         width: '50%'})
         this.dialogData = this.injector.get(MAT_DIALOG_DATA, null)
       }
@@ -240,32 +240,32 @@ export class NotificationsSetupComponent implements OnInit {
         if($event.ApiName == "ListName"){
           selectionList.ListName =  $event.Value
           this.formDataSource.ListName = selectionList.ListName
-          this.dataView.Fields[4].ReadOnly = false
           this.dataView.Fields[4]["OptionalValues"] = await this.getSelectionResources()
+          this.dataView.Fields[4].ReadOnly = false
         }
         if($event.ApiName == "ResourceListKey"){
           selectionList.ResourceListKey =  $event.Value
           this.formDataSource.ResourceListKey = selectionList.ResourceListKey
-          this.dataView.Fields[6].ReadOnly = false
           this.dataView.Fields[6]["OptionalValues"]=await this.getResourceFields(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[6].ReadOnly = false
         }
         if($event.ApiName == "DisplayTitleField"){
           selectionList.DisplayTitleField = $event.Value
           this.formDataSource.DisplayTitleField = selectionList.DisplayTitleField
-          this.dataView.Fields[8].ReadOnly = false
           this.dataView.Fields[8]["OptionalValues"]=await this.getMappingCollections(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[8].ReadOnly = false
         }
         if($event.ApiName == "MappingResourceUUID"){
           selectionList.MappingResourceUUID = $event.Value
           this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
-          this.dataView.Fields[10].ReadOnly = false
           this.dataView.Fields[10]["OptionalValues"]=await this.getUserReferenceFields(this.formDataSource.MappingResourceUUID)
-          await this.updateFieldsToSelect(this.formDataSource.MappingResourceUUID)
+          await this.updateFieldsToSelect(this.formDataSource.ResourceListKey)
+          this.dataView.Fields[10].ReadOnly = false
         }
         if($event.ApiName == "UserReferenceField"){
           selectionList.UserReferenceField = $event.Value
           this.formDataSource.UserReferenceField = selectionList.UserReferenceField
-          this.is_disabled = false
+          this.isSaveListDisabled = false
         }
 
       // update the data view with the desired data
