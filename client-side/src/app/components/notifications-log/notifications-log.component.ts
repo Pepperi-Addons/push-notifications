@@ -27,6 +27,7 @@ export class NotificationsLogComponent implements OnInit {
 
   ngOnInit() {
     this.addonService.getCurrentUserEmail().then((email) => this.currentUserEmail = email);
+    this.clearQueryParams();
   }
 
   noDataMessage: string;
@@ -38,16 +39,18 @@ export class NotificationsLogComponent implements OnInit {
     return {
       init: async (params: any) => {
         let notificationsList = await this.notificationsLogService.getNotificationsLog();
+        this.notificationsLogService.handleSorting(params, notificationsList);
         if (params.searchString) {
           notificationsList = notificationsList.filter(notification => {
             return (notification.Title.toLowerCase().includes(params.searchString.toLowerCase()) || notification.Body?.toLowerCase().includes(params.searchString.toLowerCase()))  
           })
           this.noDataMessage = this.translate.instant("No_Results_Error")
         }
-       for (let notification of notificationsList) {
-         let creationDate = new Date(notification.CreationDateTime);
-         notification.Date = creationDate.getDate()+'/'+(creationDate.getMonth()+1)+'/'+creationDate.getFullYear();
-       }
+        for (let notification of notificationsList) {
+            // Generate human-readable date and time
+            const date = new Date(notification.CreationDateTime);
+            notification.Date = this.notificationsLogService.formatDateTime(date);        
+        }
 
         return Promise.resolve({
           dataView: {
@@ -113,19 +116,16 @@ export class NotificationsLogComponent implements OnInit {
           items: notificationsList
         });
       },
-      inputs: () => {
-        return Promise.resolve(
-          {
-            pager: {
-              type: 'scroll'
-            },
-            selectionType: 'multi',
-            noDataFoundMsg:this.noDataMessage
-          }
-        );
+      inputs: {
+        pager: {
+          type: 'scroll'
+        },
+        selectionType: 'single',
+        noDataFoundMsg:this.noDataMessage,
+        supportSorting: true,
       },
     } as IPepGenericListDataSource
-  }
+  } 
 
   actions: IPepGenericListActions = {
     get: async (data) => {
@@ -172,12 +172,21 @@ export class NotificationsLogComponent implements OnInit {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "UsersUUID": notification.Fields[2]?.FormattedValue,
+          "UsersList": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,
           "Body": notification.Fields[1]?.FormattedValue,
         }
       })
     }
+  }
+
+  clearQueryParams() {
+    // remove the query params of the current page except for the 'dev' param
+    // the query params that are added to the url are used for the duplicate message feature
+    // dev may not exist in the url, so we need to check it
+    const idDevMode = this.route?.snapshot?.queryParams?.dev;
+    const queryParams = idDevMode ? { dev: idDevMode } : {};
+    this.router.navigate([], { queryParams });
   }
 
 }
