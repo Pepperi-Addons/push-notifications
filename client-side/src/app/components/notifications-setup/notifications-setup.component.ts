@@ -70,7 +70,7 @@ export class NotificationsSetupComponent implements OnInit {
       }
 
       async saveList(){
-        this.userListData.SelectionDisplayField = this.selectedFields.map(field => {return field.title})
+        this.userListData.SelectionDisplayFields = this.selectedFields.map(field => {return field.title})
         this.dialogRef.close()
         await this.notificationsSetupService.saveList(this.userListData)
         this.formDataSource = this.getFormDataSource()
@@ -189,7 +189,7 @@ export class NotificationsSetupComponent implements OnInit {
                     ReadOnly: true
                   },
                   {
-                    FieldID: 'SelectionDisplayField',
+                    FieldID: 'SelectionDisplayFields',
                     Type: 'TextBox',
                     Title: this.translate.instant("Display Fields"),
                     Mandatory: false,

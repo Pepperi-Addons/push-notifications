@@ -201,11 +201,12 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   getGenericPickerList(list){
+    console.log(list)
     return {
       List: {
         Key: `Notifications_List_${list.ListName}`,
         Name: `list ${list.ListName}`,
-        Resource: list.MappingResourceUUID,
+        Resource: list.ResourceListKey,
         Views: [{
           Key: `notifications_${list.ListName}_view`,
           Type: "Grid",
