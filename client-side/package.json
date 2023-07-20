@@ -31,7 +31,7 @@
         "@ngx-translate/http-loader": "^7.0.0",
         "@pepperi-addons/data-views": "^0.0.2",
         "@pepperi-addons/ngx-composite-lib": "^0.4.0-angular14.4",
-        "@pepperi-addons/ngx-lib": "0.4.1-beta.78",
+        "@pepperi-addons/ngx-lib": "^0.4.2-beta.110",
         "@pepperi-addons/papi-sdk": "*",
         "@tweenjs/tween.js": "^17.1.1",
         "hammerjs": "^2.0.8",
@@ -45,9 +45,9 @@
         "ngx-virtual-scroller": "^4.0.3",
         "quill": "^1.3.7",
         "rxjs": "~7.5.0",
+        "shared": "file:../shared",
         "tslib": "^2.0.0",
-        "zone.js": "~0.11.5",
-        "shared": "file:../shared"
+        "zone.js": "~0.11.5"
     },
     "devDependencies": {
         "@angular-architects/module-federation": "^14.3.8",
