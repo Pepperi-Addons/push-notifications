@@ -28,9 +28,9 @@ export class NotificationsSetupService {
         return userUUID.pop()
        }
 
-    async deleteSendToList(sendTolists){
+    async deleteSendToList(sendToLists){
         let listToDelete:any[] = []
-        sendTolists.map(list=>{
+        sendToLists.map(list=>{
             listToDelete.push({Key:list})
         })
         let url = `/addons/api/${this.addonService.addonUUID}/api/delete_notifications_users_lists`

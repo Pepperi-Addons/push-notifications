@@ -131,7 +131,7 @@ export class MessageCreatorComponent implements OnInit {
         if($event.action == 'on-done'){
           let newChips: any[]  = [];
           await Promise.all($event.data.selectedObjects.map( async chip => {
-            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.UserReferenceField,list.MappingResourceUUID,chip)
+            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.DisplayTitleField, list.ResourceListKey, chip)
             let chipObj = { 
               value: uuid,
               // value: await this.addonService.getUserEmailByUUID(uuid),
@@ -213,6 +213,9 @@ export class MessageCreatorComponent implements OnInit {
           Title: list.ListName,
           Blocks: list.SelectionDisplayFields.map(field => this.getSingleGenericField(field))
         }]
+      },
+      State: {
+        ListKey: `Notifications_List_${list.ListName}`,
       }
     }
   }
