@@ -212,6 +212,11 @@ class NotificationsService {
         }
     }
 
+    // get all notifications for the current user
+    async unreadNotificationsCount() {
+        return await this.getNumberOfUnreadNotifications(this.currentUserUUID);
+    }
+    
     async getNumberOfUnreadNotifications(userUUID: string) {
         let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${userUUID}'`});
         console.log(`number of unread notifications - ${notifications.length} for user - ${userUUID}`)

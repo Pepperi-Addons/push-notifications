@@ -9,6 +9,7 @@
         "GO_TO_TEXT": "Go to"
     },
     "Title_Addon": "Notifications",
+    "Device_Managment": "Device Managment",
     "No_Notifications_Error": "No Notifications Assigned",
     "User_UUID": "User ID",
     "Creator_UUID": "Creator ID",
@@ -24,6 +25,7 @@
     "View": "View",
     "AddRecipient":"Add Recipient",
     "Device_Name": "Device Name",
+    "Device_Type": "Device Type",
     "App_Name": "App Name",
     "Last_Use_Date": "Last Use Date",
     "No_Devices_Error": "No Devices Assigned",
