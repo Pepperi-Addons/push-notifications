@@ -13,6 +13,7 @@ import fetch from 'node-fetch';
 import {NotifiactionsSnsService} from './notifications-sns.service'
 import { UserDeviceHandlingFactory } from './register-device.service'
 import * as encryption from 'shared'
+import { PayloadData } from 'shared'
 
 abstract class PlatformBase {
     protected notificationsSnsService: NotifiactionsSnsService
@@ -211,8 +212,9 @@ class NotificationsService {
         }
     }
 
-    async getNumberOfUnreadNotifications() {
-        let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${this.currentUserUUID}'` });
+    async getNumberOfUnreadNotifications(userUUID: string) {
+        let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${userUUID}'`});
+        console.log(`number of unread notifications - ${notifications.length} for user - ${userUUID}`)
         return notifications.length;
     }
 
@@ -420,7 +422,7 @@ class NotificationsService {
         await Promise.all(body.Message.ModifiedObjects.map(async object =>{
             try {
                 console.log("@@@pushNotification object: ", object);
-                const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get();
+                const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get() as Notification;
                 //get user devices by user uuid
                 const userDevicesList: UserDevice[] = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
                 console.log("@@@pushNotification userDevicesList: ", userDevicesList);
@@ -428,7 +430,7 @@ class NotificationsService {
                     // for each user device send push notification
                     await Promise.all(userDevicesList.map(async(device) => {
                         try {
-                            let pushNotification = {
+                            let pushNotification: PayloadData = {
                                 Notification: notification,
                                 Endpoint: device.Endpoint,
                                 DeviceType: device.DeviceType,
@@ -573,7 +575,7 @@ class NotificationsService {
     }
 
     // publish to particular topic ARN or to endpoint ARN
-    async publish(pushNotification) {
+    async publish(pushNotification: PyaloadData) {
         let basePlatform: PlatformBase;
 
         switch (pushNotification.PlatformType) {
@@ -590,7 +592,7 @@ class NotificationsService {
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
         }
-        let numberOfUnreadNotifications = await this.getNumberOfUnreadNotifications();
+        let numberOfUnreadNotifications = await this.getNumberOfUnreadNotifications(pushNotification.Notification.UserUUID!!);
         return basePlatform.publish(pushNotification, numberOfUnreadNotifications)
     }
 
