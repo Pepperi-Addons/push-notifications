@@ -575,7 +575,7 @@ class NotificationsService {
     }
 
     // publish to particular topic ARN or to endpoint ARN
-    async publish(pushNotification: PyaloadData) {
+    async publish(pushNotification: PayloadData) {
         let basePlatform: PlatformBase;
 
         switch (pushNotification.PlatformType) {
