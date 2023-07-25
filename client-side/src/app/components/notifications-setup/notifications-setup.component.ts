@@ -82,7 +82,7 @@ export class NotificationsSetupComponent implements OnInit {
                   ReadOnly: true
                 },
                 {
-                  FieldID: 'SelectionDisplayField',
+                  FieldID: 'SelectionDisplayFields',
                   Type: 'TextBox',
                   Title: this.translate.instant("Display Fields"),
                   Mandatory: false,
