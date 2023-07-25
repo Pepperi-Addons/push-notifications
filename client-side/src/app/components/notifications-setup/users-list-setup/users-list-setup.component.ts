@@ -101,7 +101,7 @@ done() {
     if($event.ApiName == 'ChipFieldsSelector'){
       this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
         if(res){
-            this.userListData.SelectionDisplayField = res
+            this.userListData.SelectionDisplayFields = res
             this.isSaveListDisabled = false
         }
       },
