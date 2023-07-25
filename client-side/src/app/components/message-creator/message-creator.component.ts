@@ -70,6 +70,35 @@ export class MessageCreatorComponent implements OnInit {
     })
   }
 
+  ngAfterViewInit() {
+    this.handleDuplicateMessageParams();
+  }
+
+  private handleDuplicateMessageParams() {
+    // get query params from url, from the previous page that added by duplicate message
+    const queryParams = this.route.snapshot.queryParams;
+    if (queryParams != undefined) {
+      this.message.Title = queryParams.Title || '';
+      this.message.Body = queryParams.Body || '';
+      this.handleUserList(queryParams.UsersList);
+    }
+  }
+  
+  private handleUserList(usersList: string) {
+    // users list is a string of users emails separated by comma
+    if (usersList != undefined) {
+      const users = usersList.split(',');
+      Promise.all(users.map(async user => {
+        const userUUID = await this.addonService.getUUIDByEmail(user);
+        this.chips.push({ key: userUUID, value: user });       
+
+      })).then(() => {
+        // this.chipsComp.chips = this.chips;
+        this.chipsComp.addChipsToList(this.chips)
+      }); 
+    }
+   
+  }
   async sendNotifications() {
     this.message.Email = this.chipsComp.chips.map(chips => chips.value)
     this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
@@ -197,13 +226,26 @@ export class MessageCreatorComponent implements OnInit {
           }],
         }],
         SelectionType: "Multi",
+        Search: {
+          Fields: [
+              {
+                  FieldID: "FirstName"
+              },
+              {
+                  FieldID: "LastName"
+              },
+              {
+                  FieldID: "Email"
+              }
+          ]
+        },
+        Sorting: {Ascending: true, FieldID: "FirstName"},     
       },
       State: {
         ListKey: "Notifications_Users_List",
-      }
+      },          
     }
   }
-
 
   getUsersHostObject(){
     const hostObject = {

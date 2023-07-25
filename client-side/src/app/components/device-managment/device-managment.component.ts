@@ -54,6 +54,13 @@ export class DeviceManagmentComponent implements OnInit {
                 ReadOnly: true
               },
               {
+                FieldID: 'DeviceType',
+                Type: 'TextBox',
+                Title: this.translate.instant("Device_Type"),
+                Mandatory: true,
+                ReadOnly: true
+              },
+              {
                 FieldID: 'AppName',
                 Type: 'TextBox',
                 Title: this.translate.instant("App_Name"),
@@ -69,6 +76,9 @@ export class DeviceManagmentComponent implements OnInit {
               }
             ],
             Columns: [
+              {
+                Width: 30
+              },
               {
                 Width: 30
               },
