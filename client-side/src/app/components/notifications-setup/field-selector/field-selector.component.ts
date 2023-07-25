@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { IPepDraggableItem, } from '@pepperi-addons/ngx-lib/draggable-items';
@@ -23,13 +23,21 @@ export class FieldSelectorComponent implements OnInit {
     private dialogRef: MatDialogRef<any>,
     private translate: TranslateService,
     private dialogService: PepDialogService,
-    protected addonService: AddonService
-    ) { }
+    protected addonService: AddonService,
+    @Inject(MAT_DIALOG_DATA) private data: string[]
+    ) {
+      this.parseDataToSelect()
+     }
 
   ngOnInit(): void {
    
   }
 
+  parseDataToSelect(){
+    this.data.forEach(entity =>{
+      this.fieldsToSelect.push({title: entity, data: {key: entity, title: entity}})
+    })
+  }
 
   cancel(){
      this.dialogRef.close();
@@ -38,31 +46,25 @@ export class FieldSelectorComponent implements OnInit {
   }
 
   done() {
-
+    this.dialogRef.close(this.selectedFields.map(field => {return field.title}))
   }
   addSelected(event: CdkDragDrop<IPepDraggableItem[]>) {
-    console.log(event)
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      const item = this.fieldsToSelect.find(item => item.title === event.item.data);
-      console.log(item)
+      const item = this.fieldsToSelect.find(item => item.title === event.item.data.key);
       this.selectedFields.push(item)
-      this.fieldsToSelect = this.fieldsToSelect.filter(removedItem => removedItem.title != item.title)
-      console.log(this.selectedFields)
+      this.fieldsToSelect = this.fieldsToSelect.filter(removedItem => removedItem.data.key != item.data.key)
     }
   }
     
   removeSelected(event: CdkDragDrop<IPepDraggableItem[]>){
-    console.log(event)
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      const item = this.selectedFields.find(item => item.title === event.item.data);
-      console.log(item)
+      const item = this.selectedFields.find(item => item.title === event.item.data.key);
       this.fieldsToSelect.push(item)
-      console.log(this.fieldsToSelect)
-      this.selectedFields = this.selectedFields.filter(removedItem => removedItem.title != item.title)
+      this.selectedFields = this.selectedFields.filter(removedItem => removedItem.title != item.data.key)
     }
   }
 }

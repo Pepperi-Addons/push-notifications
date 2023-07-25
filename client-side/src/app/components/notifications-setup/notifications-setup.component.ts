@@ -1,16 +1,12 @@
-import { Component, OnInit, ViewChild, TemplateRef,Inject, Injector} from '@angular/core';
+import { Component, OnInit, Injector} from '@angular/core';
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { TranslateService } from '@ngx-translate/core';
 import { AddonService } from '../../services/addon.service';
-// import { AddonData,FormDataView } from '@pepperi-addons/papi-sdk';
 import { NotificationsSetupService } from '../../services/notifications-setup.services';
 import { config } from '../../addon.config';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { PepDialogActionButton, PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
-import { IPepDraggableItem } from '@pepperi-addons/ngx-lib/draggable-items';
+import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog'; 
 import { UsersListSetupComponent } from './users-list-setup/users-list-setup.component';
-import { FieldSelectorComponent } from './field-selector/field-selector.component';
-// import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
 
 @Component({
   selector: 'app-notifications-setup',
@@ -20,12 +16,9 @@ import { FieldSelectorComponent } from './field-selector/field-selector.componen
 
 export class NotificationsSetupComponent implements OnInit {
     dialogData: any
-
-    cancelDropArea = []
-    selectDropArea = []
+    notificationsDialogService: NotificationsDialogService
 
     dataSource: IPepGenericListDataSource
-    // fieldSelectorComponent: FieldSelectorComponent
     constructor(    
         protected injector: Injector,
         protected translate: TranslateService,
@@ -34,14 +27,8 @@ export class NotificationsSetupComponent implements OnInit {
         protected dialogService: PepDialogService,
         ) {
           this.addonService.addonUUID = config.AddonUUID;
-          // this.fieldSelectorComponent = new FieldSelectorComponent(injector, translate, notificationsSetupService, addonService, dialogService)
+          this.notificationsDialogService = new NotificationsDialogService(this.dialogService)
          }
-    dialogRef: MatDialogRef<any>
-    // @ViewChild('listForm', { read: TemplateRef }) listForm:TemplateRef<any>;
-    // @ViewChild(GenericFormComponent) genericForm  
-
-    // @ViewChild('fieldsSelector', { read: TemplateRef }) fieldsSelector:TemplateRef<any>;
-    // @ViewChild(DraggableItemsComponent) selectFields  
  
       async ngOnInit() {
         this.dataSource = await this.getListDataSource()
@@ -171,34 +158,11 @@ export class NotificationsSetupComponent implements OnInit {
     }
 
     createNewListSetup(){
-      this.openDialog(UsersListSetupComponent,(res) => {
+      this.notificationsDialogService.openDialog(UsersListSetupComponent,(res) => {
         if(res){
-            debugger
+          this.notificationsSetupService.saveList(res)
         }
       });
-    }
-    selectFields(){
-      this.openDialog(FieldSelectorComponent,(res) => {
-        if(res){
-          debugger
-          console.log(res)
-            
-        }
-    });
-  }
-      
-    openDialog(comp: any, callBack, data = {}){
-      let config = this.dialogService.getDialogConfig({}, 'inline');
-          config.disableClose = false;
-          config.height = '80%'; // THE EDIT MODAL WIDTH
-          config.width = '50%'; // THE EDIT MODAL WIDTH
-  
-      let dialogRef: MatDialogRef<any> = this.dialogService.openDialog(comp, data, config);
-     
-      dialogRef.afterClosed().subscribe((value) => {
-          if (value !== undefined && value !== null) {
-             callBack(value);
-          }
-      });
-  }
+    } 
+    
 }

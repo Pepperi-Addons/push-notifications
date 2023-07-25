@@ -4,6 +4,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { AddonService } from 'src/app/services/addon.service';
+import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
+import { FieldSelectorComponent } from '../field-selector/field-selector.component';
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -18,6 +20,9 @@ export class UsersListSetupComponent implements OnInit {
   selectedResource: AddonData
   selectedMappingResource: AddonData
   availableResources: AddonData[]
+  notificationsDialogService: NotificationsDialogService
+  resourceFields: string[]
+  selectedDisplayFields: string[]
 
 
   constructor(
@@ -25,7 +30,9 @@ export class UsersListSetupComponent implements OnInit {
     private translate: TranslateService,
     private dialogService: PepDialogService,
     protected addonService: AddonService
-    ) { }
+    ) { 
+      this.notificationsDialogService = new NotificationsDialogService(this.dialogService)
+    }
 
   ngOnInit(): void {
     this.dataView = this.getDataView()
@@ -35,25 +42,16 @@ export class UsersListSetupComponent implements OnInit {
 
   cancel(){
      this.dialogRef.close();
-    // this.formDataSource = this.getFormDataSource()
-    // this.dialogRef.close()
   }
 
 done() {
-  return this.userListData
-
+  this.userListData.ListName = this.formDataSource.ListName
+  this.userListData.ResourceListKey = this.formDataSource.ResourceListKey
+  this.userListData.DisplayTitleField = this.formDataSource.DisplayTitleField
+  this.userListData.MappingResourceUUID = this.formDataSource.MappingResourceUUID
+  this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
+  this.dialogRef.close(this.userListData)
 }
-  // openFieldSelection(){
-  //   this.userListData.ListName = this.formDataSource.ListName
-  //   this.userListData.ResourceListKey = this.formDataSource.ResourceListKey
-  //   this.userListData.DisplayTitleField = this.formDataSource.DisplayTitleField
-  //   this.userListData.MappingResourceUUID = this.formDataSource.MappingResourceUUID
-  //   this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
-  //   // this.dialogRef.close()
-  //   // this.openFieldSelector()
-  //   // this.formDataSource=this.getFormDataSource()
-
-  // }
 
   async valueChange($event){
     let selectionList:any = {}
@@ -86,6 +84,9 @@ done() {
     if($event.ApiName == "UserReferenceField"){
       selectionList.UserReferenceField = $event.Value
       this.formDataSource.UserReferenceField = selectionList.UserReferenceField
+      this.dataView.Fields[12].ReadOnly = false
+    }
+    if($event.ApiName == 'ChipFieldsSelector'){
       this.isSaveListDisabled = false
     }
 
@@ -93,13 +94,23 @@ done() {
   this.dataView = JSON.parse(JSON.stringify(this.dataView))
   }
 
-  fieldClick(){
-
+  fieldClick($event){
+    console.log($event)
+    console.log(JSON.stringify($event))
+    if($event.ApiName == 'ChipFieldsSelector'){
+      this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
+        if(res){
+            this.userListData.SelectionDisplayField = res
+            this.isSaveListDisabled = false
+        }
+      },
+      this.resourceFields)
+    }
   }
 
   getFormDataSource(){
     let defaultData: any = {
-        ListNameDesc:"Please insert list name",
+        ListNameDesc:"<p>Please insert list name</p>",
         ListName:"",
         ResourceListKeyDesc:"<p>Select A Resource for group selection</p>",
         ResourceListKey:"",
@@ -110,7 +121,9 @@ done() {
         +" to <br> the selection list chosen above are available in this dropdown</p>",
         MappingResourceUUID:"",
         UserReferenceFieldDesc:"<p>Please select the field that references user resource in the mapping resource</p>",
-        UserReferenceField:''
+        UserReferenceField:'',
+        ChipFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
+        ChipFieldsSelector: 'Press To Select Fields To Display'
     }
     return defaultData
   }
@@ -156,7 +169,7 @@ done() {
         },
         {
           FieldID: "ListNameDesc",
-          Type: "Button",
+          Type: "RichTextHTML",
           Title: "",
           Mandatory: false,
           ReadOnly: true,
@@ -383,6 +396,52 @@ done() {
               Vertical: "Stretch"
             }
           }
+        },
+        {
+          FieldID: "ChipFieldsSelectorDesc",
+          Type: "RichTextHTML",
+          Title: "",
+          Mandatory: true,
+          ReadOnly: true,
+          Layout: {
+            Origin: {
+              X: 0,
+              Y: 11
+            },
+            Size: {
+              Width: 1,
+              Height: 0
+            }
+          },
+          Style: {
+            Alignment: {
+              Horizontal: "Stretch",
+              Vertical: "Stretch"
+            }
+          }
+        },
+        {
+          FieldID: "ChipFieldsSelector",
+          Type: "Button",
+          Title: "Select Fields To Display When Selecting Groups For Sending Notifications",
+          Mandatory: true,
+          ReadOnly: true,
+          Layout: {
+            Origin: {
+              X: 0,
+              Y: 12
+            },
+            Size: {
+              Width: 1,
+              Height: 0
+            }
+          },
+          Style: {
+            Alignment: {
+              Horizontal: "Stretch",
+              Vertical: "Stretch"
+            }
+          }
         }
       ],
       Rows: []
@@ -402,6 +461,7 @@ done() {
   getResourceFields(){
     const resourceToSelect = this.availableResources.filter(resource => resource.Name === this.selectedResource)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
+    this.resourceFields = fields
     return fields.map(field=>{
       return {Key:field, Value:field}
     })
