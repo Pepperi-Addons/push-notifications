@@ -55,7 +55,7 @@ done() {
 }
 
   async valueChange($event){
-    let selectionList:any = {}
+    let selectionList: any = {}
     if($event.ApiName == "ListName"){
       selectionList.ListName =  $event.Value
       this.formDataSource.ListName = selectionList.ListName
