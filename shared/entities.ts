@@ -25,6 +25,13 @@ export interface Notification {
     NavigationPath?: string
 }
 
+export interface PayloadData {
+    Notification: Notification,
+    Endpoint: string,
+    DeviceType: string
+    PlatformType: string
+}
+
 export interface NotificationLog extends AddonData {
     CreatorUUID: string,
     UsersList: string[],
