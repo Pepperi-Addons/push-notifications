@@ -1,0 +1,7 @@
+.userListForm {
+    ::ng-deep pep-rich-html-textarea {
+        .mat-form-field-suffix{
+            visibility: hidden;
+        }
+    }
+}

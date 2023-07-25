@@ -15,7 +15,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import {NOTIFICATION_SETUP_ELEMENT} from 'shared'
-
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 
 // import { AddonModule } from './components/addon/addon.module';
@@ -25,6 +24,7 @@ import { AppComponent } from './app.component';
 
 import { config } from './addon.config';
 import { SettingsComponent, SettingsModule } from './components/settings';
+import { PepDraggableItemsModule } from '@pepperi-addons/ngx-lib/draggable-items';
 
 @NgModule({
     declarations: [	

@@ -17,64 +17,8 @@
         [zebraStripes]="false"
         [showTopBar]="true">
         <ng-container right-buttons>
-            <pep-button class="pep-spacing-element" value="Add a list" styleType="strong" sizeType="sm" (buttonClick)="addList()"></pep-button>
+            <pep-button class="pep-spacing-element" value="Add a list" styleType="strong" sizeType="sm" (buttonClick)="createNewListSetup()"></pep-button>
         </ng-container>
         </pep-generic-list>
     </ng-container>
     </pep-page-layout>
-
-<ng-template #listForm>
-    <pep-dialog [showHeader]="false" [title]="'Add Group List'">
-        <ng-container pep-dialog-content>
-            <pep-generic-form class="userListForm" [dataView]="dataView" [dataSource]="formDataSource" [inline]="true" [showTopBar]="false" [addPadding]="false" (valueChange)="valueChange($event)" (fieldClick)="fieldClick()">
-            </pep-generic-form>
-        </ng-container>
-        <ng-container pep-dialog-actions>
-            <div class="pep-spacing-element-negative" style="display: flex;">
-                <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
-                <pep-button class="pep-spacing-element" value="Done" styleType="strong" sizeType="sm" [(disabled)]="isSaveListDisabled" (buttonClick)="openFieldSelection()"></pep-button>
-            </div>
-        </ng-container>
-    </pep-dialog>
-</ng-template>
-
-<ng-template #fieldsSelector>
-    <pep-dialog [showHeader]="false" [title]="'Select Fields To Display'">
-        <ng-container pep-dialog-content>
-            <div style="display:flex; gap:2rem;">
-                <div id="cancelDropArea" cdkDropList [cdkDropListData]="fieldsToSelect"
-                (cdkDropListDropped)="removeSelected($event)">
-                    <pep-draggable-items 
-                    [items]="fieldsToSelect" 
-                    title="Fields To Display" 
-                    titleType="with-bottom-border" 
-                    titleSizeType="md" 
-                    [showSearch]="false" 
-                    [dropAreaIds]="['selectDropArea']" >
-                    </pep-draggable-items> 
-                </div>
-                <div 
-                cdkDropList 
-                [cdkDropListData]="selectedFields"
-                id="selectDropArea"
-                (cdkDropListDropped)="addSelected($event)"
-                style="border: 1px solid #ccc; width: 200px; min-height: 200px; display:flex; gap: 0.5rem; flex-direction: column; padding: 1rem; border-radius: 0.25rem;" > 
-                    <p 
-                    style="margin: auto auto !important; display: flex;" 
-                    *ngIf="!selectedFields.length" 
-                    > 
-                    Drop here Selected Fields To Display
-                    </p> 
-                    <pep-draggable-items [items]="selectedFields" [dropAreaIds]="['cancelDropArea']">
-                    </pep-draggable-items>
-                </div> 
-            </div>
-        </ng-container>
-        <ng-container pep-dialog-actions>
-            <div class="pep-spacing-element-negative" style="display: flex;">
-                <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
-                <pep-button class="pep-spacing-element" value="Done" styleType="strong" sizeType="sm" [(disabled)]="isSaveListDisabled" (buttonClick)="saveList()"></pep-button>
-            </div>
-        </ng-container>
-    </pep-dialog>
-</ng-template>
