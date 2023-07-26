@@ -6,7 +6,7 @@ export const defaultFormViewForListSetup: FormDataView = {
     Columns: [],
     Context: {
       Object: {
-        Resource: "transactions",
+        Resource: "None",
         InternalID: 0,
         Name: "Object Name"
       },
@@ -85,7 +85,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "ResourceListKeyDesc",
+        FieldID: "ResourceNameDesc",
         Type: "RichTextHTML",
         Title: "",
         Mandatory: false,
@@ -108,7 +108,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "ResourceListKey",
+        FieldID: "ResourceName",
         Type: "ComboBox",
         Title: "Selection Resource List",
         Mandatory: true,
@@ -131,7 +131,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "DisplayTitleFieldDesc",
+        FieldID: "TitleFieldDesc",
         Type: "RichTextHTML",
         Title: "",
         Mandatory: false,
@@ -154,7 +154,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "DisplayTitleField",
+        FieldID: "TitleField",
         Type: "MapDataDropDown",
         Title: "Selection Display Title Field",
         Mandatory: true,
@@ -177,7 +177,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "MappingResourceDesc",
+        FieldID: "MappingResourceNameDesc",
         Type: "RichTextHTML",
         Title: "",
         Mandatory: false,
@@ -200,7 +200,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "MappingResourceUUID",
+        FieldID: "MappingResourceName",
         Type: "MapDataDropDown",
         Title: "Choose Mapping Resource",
         Mandatory: true,
@@ -269,7 +269,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "ChipFieldsSelectorDesc",
+        FieldID: "DisplayFieldsSelectorDesc",
         Type: "RichTextHTML",
         Title: "",
         Mandatory: true,
@@ -292,7 +292,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
-        FieldID: "ChipFieldsSelector",
+        FieldID: "DisplayFieldsSelector",
         Type: "Button",
         Title: "Select Fields To Display When Selecting Groups For Sending Notifications",
         Mandatory: true,
@@ -321,16 +321,16 @@ export const defaultFormViewForListSetup: FormDataView = {
 export const defaultDataSourceForListSetup = {
     ListNameDesc:"<p>Please insert list name</p>",
     ListName:"",
-    ResourceListKeyDesc:"<p>Select A Resource for group selection</p>",
-    ResourceListKey:"",
-    DisplayTitleFieldDesc:"<p>Please select the field that will use as the display title in the 'To'"
+    ResourceNameDesc:"<p>Select A Resource for group selection</p>",
+    ResourceName:"",
+    TitleFieldDesc:"<p>Please select the field that will use as the display title in the 'To'"
     +" element of the message composer</p>",
-    DisplayTitleField:"",
-    MappingResourceDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
+    TitleField:"",
+    MappingResourceNameDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
     +" to <br> the selection list chosen above are available in this dropdown</p>",
-    MappingResourceUUID:"",
+    MappingResourceName:"",
     UserReferenceFieldDesc:"<p>Please select the field that references user resource in the mapping resource</p>",
     UserReferenceField:'',
-    ChipFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
-    ChipFieldsSelector: 'Press To Select Fields To Display'
+    DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
+    DisplayFieldsSelector: 'Press To Select Fields To Display'
 }

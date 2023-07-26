@@ -6,7 +6,7 @@
     <ng-container pep-dialog-actions>
         <div class="pep-spacing-element-negative" style="display: flex;">
             <pep-button class="pep-spacing-element" value="Cancel" styleType="regular" sizeType="sm" (buttonClick)="cancel()"></pep-button>
-            <pep-button class="pep-spacing-element" value="Done" styleType="strong" sizeType="sm" [(disabled)]="isSaveListDisabled" (buttonClick)="done()"></pep-button>
+            <pep-button class="pep-spacing-element" value="Done" styleType="strong" sizeType="sm" [disabled]="!isSaveButtonEnabled" (buttonClick)="done()"></pep-button>
         </div>
     </ng-container>
 </pep-dialog>

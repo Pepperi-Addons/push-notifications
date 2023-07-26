@@ -23,6 +23,6 @@
 		"json-scheme": "^0.4.8",
 		"jsonschema": "^1.4.1",
 		"pfs": "^3.0.0",
-		"semver": "^7.3.5"
+		"semver": "^7.5.4"
 	}
 }
