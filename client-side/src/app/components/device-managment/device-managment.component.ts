@@ -47,6 +47,13 @@ export class DeviceManagmentComponent implements OnInit {
             Title: 'Notifications',
             Fields: [
               {
+                FieldID: 'Username',
+                Type: 'TextBox',
+                Title: this.translate.instant("Username"),
+                Mandatory: true,
+                ReadOnly: true
+              },
+              {
                 FieldID: 'DeviceName',
                 Type: 'TextBox',
                 Title: this.translate.instant("Device_Name"),
@@ -76,6 +83,9 @@ export class DeviceManagmentComponent implements OnInit {
               }
             ],
             Columns: [
+              {
+                Width: 30
+              },
               {
                 Width: 30
               },

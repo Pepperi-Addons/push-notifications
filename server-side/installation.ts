@@ -314,6 +314,10 @@ async function createUserDeviceResource(papiClient: PapiClient) {
                 Type: 'String',
                 Indexed: true
             },
+            Username: {
+                Type: 'String'
+            },
+
             DeviceKey: {
                 Type: 'String'
             },

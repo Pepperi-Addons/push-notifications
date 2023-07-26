@@ -194,6 +194,16 @@ class NotificationsService {
         });
     }
 
+    async getEmailByUserUUID(userUUID: string): Promise<string>{
+        const userData = await this.papiClient.users.uuid(userUUID).get()
+        if(userData.Email != undefined){
+            return userData.Email
+        }
+        else{
+            throw new Error(`User with UUID ${userUUID} do not have email!`)
+        }
+    }
+
     async getUserUUIDByEmail(userEmail) {
         let userUUID = (await this.users).find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
         if (userUUID != undefined) {
@@ -359,6 +369,7 @@ class NotificationsService {
         const addonSecretKey = this.client.AddonSecretKey ?? "";
 
         deviceDataToPopulate.UserUUID = this.currentUserUUID;
+        deviceDataToPopulate.Username = await this.getEmailByUserUUID(this.currentUserUUID)
         deviceDataToPopulate.Key = `${deviceDataToPopulate.DeviceKey}_${deviceDataToPopulate.AppKey}`;
         deviceDataToPopulate.LastRegistrationDate = new Date().toISOString();
 
