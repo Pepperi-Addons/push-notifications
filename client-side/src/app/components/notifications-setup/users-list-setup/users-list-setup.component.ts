@@ -6,7 +6,7 @@ import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
 import { FieldSelectorComponent } from '../field-selector/field-selector.component';
-import { defaultFormViewForListSetup, defaultDataSourceForListSetup } from '../metadata'
+import { defaultFormViewForListSetup, defaultDataSourceForListSetup } from 'shared'
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -38,6 +38,8 @@ export class UsersListSetupComponent implements OnInit {
   ngOnInit(): void {
     this.dataView = defaultFormViewForListSetup
     this.formDataSource = defaultDataSourceForListSetup
+    this.loadAvailableResources().then(
+      resources => this.availableResources = resources)
   }
 
 
@@ -45,93 +47,159 @@ export class UsersListSetupComponent implements OnInit {
      this.dialogRef.close();
   }
 
-done() {
-  this.userListData.ListName = this.formDataSource.ListName
-  this.userListData.ResourceListKey = this.formDataSource.ResourceListKey
-  this.userListData.DisplayTitleField = this.formDataSource.DisplayTitleField
-  this.userListData.MappingResourceUUID = this.formDataSource.MappingResourceUUID
-  this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
-  this.dialogRef.close(this.userListData)
-}
+  done() {
+    this.userListData.ListName = this.formDataSource.ListName
+    this.userListData.ResourceName = this.formDataSource.ResourceName
+    this.userListData.TitleField = this.formDataSource.TitleField
+    this.userListData.MappingResourceName = this.formDataSource.MappingResourceName
+    this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
+    this.dialogRef.close(this.userListData)
+  }
+
+  get isSaveButtonEnabled(): boolean{
+    console.log(this.userListData.SelectionDisplayFields)
+    return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
+    && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
+    && this.formDataSource.UserReferenceField != "" && this.userListData.SelectionDisplayFields != undefined
+  }
 
   async valueChange($event){
-    let selectionList: any = {}
-    if($event.ApiName == "ListName"){
-      selectionList.ListName =  $event.Value
-      this.formDataSource.ListName = selectionList.ListName
-      this.dataView.Fields[4]["OptionalValues"] = await this.getSelectionResources()
-      this.dataView.Fields[4].ReadOnly = false
+    console.log($event)
+    if($event.ApiName == "ListName"){ 
+      this.validateListName($event.Value)
     }
-    if($event.ApiName == "ResourceListKey"){
-      selectionList.ResourceListKey =  $event.Value
-      this.formDataSource.ResourceListKey = selectionList.ResourceListKey
-      this.selectedResource = selectionList.ResourceListKey
-      this.dataView.Fields[6]["OptionalValues"] = this.getResourceFields()
-      this.dataView.Fields[6].ReadOnly = false
+    if($event.ApiName == "ResourceName"){
+      this.validateResources($event.Value)
     }
-    if($event.ApiName == "DisplayTitleField"){
-      selectionList.DisplayTitleField = $event.Value
-      this.formDataSource.DisplayTitleField = selectionList.DisplayTitleField
-      this.dataView.Fields[8]["OptionalValues"] = this.getMappingCollections()
-      this.dataView.Fields[8].ReadOnly = false
+    if($event.ApiName == "TitleField"){
+      this.validateDisplayTitleField($event.Value)
     }
-    if($event.ApiName == "MappingResourceUUID"){
-      selectionList.MappingResourceUUID = $event.Value
-      this.formDataSource.MappingResourceUUID = selectionList.MappingResourceUUID
-      this.dataView.Fields[10]["OptionalValues"] = this.getUserReferenceFields(this.getSelectedMappingResource(this.formDataSource.MappingResourceUUID))
-      console.log(JSON.stringify(this.dataView.Fields[10]["OptionalValues"]))
-      this.dataView.Fields[10].ReadOnly = false
+    if($event.ApiName == "MappingResourceName"){
+      this.validateMappingResource($event.Value)
     }
     if($event.ApiName == "UserReferenceField"){
-      selectionList.UserReferenceField = $event.Value
-      this.formDataSource.UserReferenceField = selectionList.UserReferenceField
-      this.dataView.Fields[12].ReadOnly = false
-    }
-    if($event.ApiName == 'ChipFieldsSelector'){
-      this.isSaveListDisabled = false
+      this.validateUserReferenceField($event.Value)
     }
 
   // update the data view with the desired data
-  this.dataView = JSON.parse(JSON.stringify(this.dataView))
+  this.refreshFormData()
+  }
+
+  async loadAvailableResources(){
+    return await this.addonService.papiClient.resources.resource('resources').get()
+  }
+
+  validateListName(listNameSelected: string){
+    // saving the list name 
+    this.formDataSource.ListName = listNameSelected
+    console.log(listNameSelected)
+    // updating data in resource selection
+    this.dataView.Fields[4]["OptionalValues"] = this.getSelectionResources()
+    console.log(JSON.stringify(this.dataView.Fields[4]["OptionalValues"]))
+    // enabling resource selection
+    this.dataView.Fields[4].ReadOnly = false
+  }
+
+  validateResources(resourceSelected: string){
+    // validating that next fields are not selected, if resource is changed it affects
+    // the rest of the fields
+    this.formDataSource.TitleField = ""
+    // not setting display title to read only because it need to be selected next
+    this.formDataSource.MappingResourceName = ""
+    this.dataView.Fields[8].ReadOnly = true
+    this.formDataSource.UserReferenceField = ""
+    this.dataView.Fields[10].ReadOnly = true
+    this.userListData.SelectionDisplayFields = undefined
+    this.dataView.Fields[12].ReadOnly = true
+    // saving data from the form selection
+    this.formDataSource.ResourceName = resourceSelected
+    // enabling selection of the next field and updating options to select
+    this.dataView.Fields[6]["OptionalValues"] = this.getResourceFields(resourceSelected)
+    this.dataView.Fields[6].ReadOnly = false
+  }
+
+  validateDisplayTitleField(displayTitleSelected: string){
+    // saving the list name 
+    this.formDataSource.TitleField = displayTitleSelected
+    // updating data in mapping resource selection
+    this.dataView.Fields[8]["OptionalValues"] = this.getMappingCollections(this.formDataSource.ResourceName)
+    // enabling mapping resource selection
+    this.dataView.Fields[8].ReadOnly = false
+  }
+
+  validateMappingResource(selectedMappingResource: string){
+    // validating that next fields are not selected, if mapping is changed it affects
+    // the reference fields selected
+    this.formDataSource.UserReferenceField = ""
+    // saving the mapping resource name
+    this.formDataSource.MappingResourceName = selectedMappingResource
+    // enabling selection of reference fields and populating data to be selected
+    this.dataView.Fields[10]["OptionalValues"] = this.getUserReferenceFields(this.getSelectedMappingResource(selectedMappingResource))
+    this.dataView.Fields[10].ReadOnly = false
+  }
+  validateUserReferenceField(selectedUserReferenceField: string){
+    // saving the selected user reference field
+    this.formDataSource.UserReferenceField = selectedUserReferenceField
+    // enabling display fields selection in drag and drop 
+    this.dataView.Fields[12].ReadOnly = false
+  }
+
+  validateSelectedDisplayFields(selectedDisplayFields: string[]){
+    console.log(`selected fields ${selectedDisplayFields}`)
+    if(selectedDisplayFields.length == 0){
+      throw new Error('Fields Must Be Selected!')
+    }
+    else{
+      // saving selected fields
+      console.log(selectedDisplayFields)
+      this.userListData.SelectionDisplayFields = selectedDisplayFields
+      // enabling saving the list
+      this.isSaveListDisabled = false
+    }
+
+  }
+
+  refreshFormData(){
+    // refreshing because data view is not updated on its own
+    this.dataView = JSON.parse(JSON.stringify(this.dataView))
   }
 
   fieldClick($event){
-    console.log($event)
-    console.log(JSON.stringify($event))
-    if($event.ApiName == 'ChipFieldsSelector'){
+    if($event.ApiName == 'DisplayFieldsSelector'){
       this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
         if(res){
-            this.userListData.SelectionDisplayFields = res
-            this.isSaveListDisabled = false
+          console.log(`res is ${res}`)
+            this.validateSelectedDisplayFields(res)
         }
       },
       this.resourceFields)
     }
   }
-
       
-  async getSelectionResources(){
-    const resources = await this.addonService.papiClient.resources.resource('resources').get()
-    this.availableResources = resources
+  getSelectionResources(): optionalValuesData[]{
+    const resources = this.availableResources
     return resources.map(resource => {
-      return {Key: resource.Name, Value: resource.Name}
+      return {Key: resource.Name, Value: resource.Name} as optionalValuesData
     });
   }
 
-  getResourceFields(){
-    const resourceToSelect = this.availableResources.filter(resource => resource.Name === this.selectedResource)[0]
+  getResourceFields(selectedResourceName: string): optionalValuesData[]{
+    const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
     return fields.map(field=>{
-      return {Key:field, Value:field}
+      return {Key:field, Value:field} as optionalValuesData
     })
   }
 
-  getMappingCollections(){
+  getMappingCollections(selectedResourceName: string): optionalValuesData[]{
     const mappingCollections: optionalValuesData[] = []
     this.availableResources.forEach(resource =>{
-      const resourceField = this.getMappedResourceFields(resource)
+      const resourceField = this.getMappedResourceFields(resource, selectedResourceName)
       const userField = this.getUserReferenceFields(resource)
+      console.log(`resource is ${resource}`)
+      console.log(`resource reference is ${resourceField}`)
+      console.log(`user reference is ${userField}`)
       if (resourceField.length > 0 && userField.length >0){
         mappingCollections.push({Key: resource.Name, Value: resource.Name})
       }
@@ -139,28 +207,29 @@ done() {
     return mappingCollections
   }
 
-  getMappedResourceFields(mappingResource){
+  getMappedResourceFields(mappingResource, selectedResourceName): optionalValuesData[]{
     const mappedResourceFields: optionalValuesData[] = []
     Object.keys(mappingResource.Fields).forEach(key =>{
-      if(mappingResource.Fields[key].Type == 'Resource' && mappingResource.Fields[key]["Resource"] == this.selectedResource){
+      if(mappingResource.Fields[key].Type == 'Resource' && mappingResource.Fields[key]["Resource"] == selectedResourceName){
         mappedResourceFields.push({Key: key, Value: key})
       }
     })
     return mappedResourceFields
   }
 
-  getSelectedMappingResource(mappingResourceName){
-    return this.availableResources.filter(resource => resource.Name === mappingResourceName)[0]
-  }
-
-  getUserReferenceFields(mappingResource){
+  getUserReferenceFields(mappingResource: AddonData): optionalValuesData[]{
     const mappedUserFields: optionalValuesData[] = []
     Object.keys(mappingResource.Fields).map(key =>{
+      console.log(key)
       if(mappingResource.Fields[key].Type == 'Resource' && mappingResource.Fields[key]["Resource"] == 'users'){
         mappedUserFields.push({Key: key, Value: key})
       }
     })
     return mappedUserFields
+  }
+
+  getSelectedMappingResource(mappingResourceName: string){
+    return this.availableResources.filter(resource => resource.Name === mappingResourceName)[0]
   }
 
 }

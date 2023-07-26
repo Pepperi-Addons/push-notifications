@@ -51,22 +51,14 @@ export class MessageCreatorComponent implements OnInit {
     this.addonService.addonUUID = config.AddonUUID;
   }
 
-  async ngOnInit() {
+  ngOnInit() {
     const queryParams = this.route.snapshot.queryParams;
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title;
       this.message.Body = queryParams.Body;
     }
-    this.usersLists = await this.notificationsSetupService.getUsersLists()
-  }
-
-  async getUsersToSendNotifications(){
-    let uuid: string[] = []
-    let emails: string[] =[]
-    this.userListChips.toArray().map(list=>{
-      list.chips.map(chip=>{
-        uuid.push(chip.key)
-      })
+    this.notificationsSetupService.getUsersLists().then(list => {
+      this.usersLists = list
     })
   }
 
@@ -146,10 +138,6 @@ export class MessageCreatorComponent implements OnInit {
           relativeTo: this.route,
           queryParamsHandling: 'merge',
     });
-  }
-
-  getDisplayField(resource,displayTitleField){
-
   }
 
   async userListClicked(list,index){

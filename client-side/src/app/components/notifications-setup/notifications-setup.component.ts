@@ -74,21 +74,21 @@ export class NotificationsSetupComponent implements OnInit {
                   ReadOnly: true
                 },
                 {
-                  FieldID: 'ResourceListKey',
+                  FieldID: 'ResourceName',
                   Type: 'TextBox',
                   Title: this.translate.instant("Type"),
                   Mandatory: true,
                   ReadOnly: true
                 },
                 {
-                  FieldID: 'DisplayTitleField',
+                  FieldID: 'TitleField',
                   Type: 'TextBox',
                   Title: this.translate.instant("Title Field"),
                   Mandatory: false,
                   ReadOnly: true
                 },
                 {
-                  FieldID: 'MappingResourceUUID',
+                  FieldID: 'MappingResourceName',
                   Type: 'TextBox',
                   Title: this.translate.instant("Mapping Resource"),
                   Mandatory: false,
@@ -128,7 +128,7 @@ export class NotificationsSetupComponent implements OnInit {
           });
         },
         inputs: () => {
-          return Promise.resolve(
+          return (
             {
               pager: {
                 type: 'scroll'

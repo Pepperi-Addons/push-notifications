@@ -57,11 +57,12 @@ export interface UserDevice {
 
 export interface UsersLists{
     Key: string;
-    ResourceListKey: string;
-    SelectionViewUUID?: string;
-    DisplayTitleField: string;
-    MappingResourceUUID: string
+    ListName: string;
+    ResourceName: string;
+    TitleField: string;
+    MappingResourceName: string
     UserReferenceField: string;
+    SelectionDisplayFields: string[]
 }
 export interface notificationReadStatus{
     Read: boolean,
@@ -203,19 +204,19 @@ export const usersListsSchema: Schema = {
     $id: "/NotificationsUsersLists",
     type: "object",
     properties: {
-        ResourceListKey: {
+        ListName: {
             type: "string",
             required: true
         },
-        SelectionViewUUID: {
-            type: "string",
-            required: false
-        },
-        DisplayTitleField: {
+        ResourceName: {
             type: "string",
             required: true
         },
-        MappingResourceUUID: {
+        TitleField: {
+            type: "string",
+            required: true
+        },
+        MappingResourceName: {
             type: "string",
             required: true
         },
