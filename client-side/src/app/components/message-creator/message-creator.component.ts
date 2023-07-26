@@ -148,11 +148,11 @@ export class MessageCreatorComponent implements OnInit {
         if($event.action == 'on-done'){
           let newChips: any[]  = [];
           await Promise.all($event.data.selectedObjects.map( async chip => {
-            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.DisplayTitleField, list.ResourceListKey, chip)
+            let title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, chip)
             let chipObj = { 
-              value: uuid,
+              value: title,
               // value: await this.addonService.getUserEmailByUUID(uuid),
-              key: uuid
+              key: title
             }
             if(!this.userListChips.toArray()[index].chips.includes(chipObj))
             newChips.push(chipObj)
@@ -238,7 +238,7 @@ export class MessageCreatorComponent implements OnInit {
       List: {
         Key: `Notifications_List_${list.ListName}`,
         Name: `list ${list.ListName}`,
-        Resource: list.ResourceListKey,
+        Resource: list.ResourceName,
         Views: [{
           Key: `notifications_${list.ListName}_view`,
           Type: "Grid",

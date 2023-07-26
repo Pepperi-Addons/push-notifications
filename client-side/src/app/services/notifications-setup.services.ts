@@ -15,7 +15,7 @@ export class NotificationsSetupService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
-    async getUserUUIDFromView(mappingField,resource,key){
+    async getDisplayTitleFromResource(mappingField,resource,key){
         let userUUID:string[] =[]
         let url = `/resources/${resource}`
         await this.addonService.pepGet(encodeURI(url)).toPromise().then(res =>{
