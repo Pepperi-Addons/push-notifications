@@ -57,14 +57,12 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   get isSaveButtonEnabled(): boolean{
-    console.log(this.userListData.SelectionDisplayFields)
     return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
     && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
     && this.formDataSource.UserReferenceField != "" && this.userListData.SelectionDisplayFields != undefined
   }
 
   async valueChange($event){
-    console.log($event)
     if($event.ApiName == "ListName"){ 
       this.validateListName($event.Value)
     }
@@ -92,10 +90,8 @@ export class UsersListSetupComponent implements OnInit {
   validateListName(listNameSelected: string){
     // saving the list name 
     this.formDataSource.ListName = listNameSelected
-    console.log(listNameSelected)
     // updating data in resource selection
     this.dataView.Fields[4]["OptionalValues"] = this.getSelectionResources()
-    console.log(JSON.stringify(this.dataView.Fields[4]["OptionalValues"]))
     // enabling resource selection
     this.dataView.Fields[4].ReadOnly = false
   }
@@ -145,13 +141,11 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   validateSelectedDisplayFields(selectedDisplayFields: string[]){
-    console.log(`selected fields ${selectedDisplayFields}`)
     if(selectedDisplayFields.length == 0){
       throw new Error('Fields Must Be Selected!')
     }
     else{
       // saving selected fields
-      console.log(selectedDisplayFields)
       this.userListData.SelectionDisplayFields = selectedDisplayFields
       // enabling saving the list
       this.isSaveListDisabled = false
@@ -168,8 +162,7 @@ export class UsersListSetupComponent implements OnInit {
     if($event.ApiName == 'DisplayFieldsSelector'){
       this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
         if(res){
-          console.log(`res is ${res}`)
-            this.validateSelectedDisplayFields(res)
+          this.validateSelectedDisplayFields(res)
         }
       },
       this.resourceFields)
@@ -197,9 +190,6 @@ export class UsersListSetupComponent implements OnInit {
     this.availableResources.forEach(resource =>{
       const resourceField = this.getMappedResourceFields(resource, selectedResourceName)
       const userField = this.getUserReferenceFields(resource)
-      console.log(`resource is ${resource}`)
-      console.log(`resource reference is ${resourceField}`)
-      console.log(`user reference is ${userField}`)
       if (resourceField.length > 0 && userField.length >0){
         mappingCollections.push({Key: resource.Name, Value: resource.Name})
       }
@@ -220,7 +210,6 @@ export class UsersListSetupComponent implements OnInit {
   getUserReferenceFields(mappingResource: AddonData): optionalValuesData[]{
     const mappedUserFields: optionalValuesData[] = []
     Object.keys(mappingResource.Fields).map(key =>{
-      console.log(key)
       if(mappingResource.Fields[key].Type == 'Resource' && mappingResource.Fields[key]["Resource"] == 'users'){
         mappedUserFields.push({Key: key, Value: key})
       }
