@@ -269,6 +269,52 @@ export const defaultFormViewForListSetup: FormDataView = {
         }
       },
       {
+        FieldID: "ResourceReferenceFieldDesc",
+        Type: "RichTextHTML",
+        Title: "",
+        Mandatory: false,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: 11
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
+      },
+      {
+        FieldID: "ResourceReferenceField",
+        Type: "MapDataDropDown",
+        Title: "Resource Reference Field",
+        Mandatory: true,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: 12
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
+      },
+      {
         FieldID: "DisplayFieldsSelectorDesc",
         Type: "RichTextHTML",
         Title: "",
@@ -277,7 +323,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 11
+            Y: 13
           },
           Size: {
             Width: 1,
@@ -300,7 +346,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 12
+            Y: 14
           },
           Size: {
             Width: 1,
@@ -329,8 +375,12 @@ export const defaultDataSourceForListSetup = {
     MappingResourceNameDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
     +" to <br> the selection list chosen above are available in this dropdown</p>",
     MappingResourceName:"",
-    UserReferenceFieldDesc:"<p>Please select the field that references user resource in the mapping resource</p>",
+    UserReferenceFieldDesc:"<p> Please select the field that references user resource in the mapping"
+    +" resource <br> if there is only one field available it will be selected automatically </p>",
     UserReferenceField:'',
+    ResourceReferenceFieldDesc:"<p> Please select the field that references the selected resource in the mapping"
+    +" resource <br> if there is only one field available it will be selected automatically </p>",
+    ResourceReferenceField:'',
     DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
     DisplayFieldsSelector: 'Press To Select Fields To Display'
 }

@@ -61,9 +61,10 @@ export interface UsersLists{
     ListName: string;
     ResourceName: string;
     TitleField: string;
-    MappingResourceName: string
+    MappingResourceName: string;
     UserReferenceField: string;
-    SelectionDisplayFields: string[]
+    ResourceReferenceField: string;
+    SelectionDisplayFields: string[];
 }
 export interface notificationReadStatus{
     Read: boolean,
@@ -226,6 +227,10 @@ export const usersListsSchema: Schema = {
             required: true
         },
         UserReferenceField: {
+            type: "string",
+            required: true
+        },
+        ResourceReferenceField: {
             type: "string",
             required: true
         },

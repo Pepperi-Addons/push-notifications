@@ -67,6 +67,9 @@ class UsersListsService {
                 UserReferenceField: {
                     Type: 'String'
                 },
+                ResourceReferenceField: {
+                    Type: 'String'
+                },
                 SelectionDisplayFields: {
                     Type: "MultipleStringValues"
                 }

@@ -53,13 +53,15 @@ export class UsersListSetupComponent implements OnInit {
     this.userListData.TitleField = this.formDataSource.TitleField
     this.userListData.MappingResourceName = this.formDataSource.MappingResourceName
     this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
+    this.userListData.ResourceReferenceField = this.formDataSource.ResourceReferenceField
     this.dialogRef.close(this.userListData)
   }
 
   get isSaveButtonEnabled(): boolean{
     return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
     && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
-    && this.formDataSource.UserReferenceField != "" && this.userListData.SelectionDisplayFields != undefined
+    && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
+    && this.userListData.SelectionDisplayFields != undefined
   }
 
   async valueChange($event){
@@ -77,6 +79,9 @@ export class UsersListSetupComponent implements OnInit {
     }
     if($event.ApiName == "UserReferenceField"){
       this.validateUserReferenceField($event.Value)
+    }
+    if($event.ApiName == "ResourceReferenceField"){
+      this.validateResourceReferenceField($event.Value)
     }
 
   // update the data view with the desired data
@@ -106,7 +111,7 @@ export class UsersListSetupComponent implements OnInit {
     this.formDataSource.UserReferenceField = ""
     this.dataView.Fields[10].ReadOnly = true
     this.userListData.SelectionDisplayFields = undefined
-    this.dataView.Fields[12].ReadOnly = true
+    this.dataView.Fields[14].ReadOnly = true
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
     // enabling selection of the next field and updating options to select
@@ -127,17 +132,44 @@ export class UsersListSetupComponent implements OnInit {
     // validating that next fields are not selected, if mapping is changed it affects
     // the reference fields selected
     this.formDataSource.UserReferenceField = ""
+    this.formDataSource.ResourceReferenceField = ""
+    this.dataView.Fields[12].ReadOnly = true
     // saving the mapping resource name
     this.formDataSource.MappingResourceName = selectedMappingResource
     // enabling selection of reference fields and populating data to be selected
-    this.dataView.Fields[10]["OptionalValues"] = this.getUserReferenceFields(this.getSelectedMappingResource(selectedMappingResource))
+
+    const userReferenceOptions =  this.getUserReferenceFields(this.getSelectedMappingResource(selectedMappingResource))
+
+    this.dataView.Fields[10]["OptionalValues"] = userReferenceOptions
+
+    if(userReferenceOptions.length == 1){
+      this.formDataSource.UserReferenceField = userReferenceOptions[0].Key
+      this.validateUserReferenceField(userReferenceOptions[0].Key)
+    }
+    // enabling display fields selection in drag and drop 
     this.dataView.Fields[10].ReadOnly = false
+  }
+  validateResourceReferenceField(selectedResourceReferenceField: string){
+    // saving the selected user reference field
+    this.formDataSource.ResourceReferenceField = selectedResourceReferenceField
+    // enabling display fields selection in drag and drop 
+    this.dataView.Fields[14].ReadOnly = false
   }
   validateUserReferenceField(selectedUserReferenceField: string){
     // saving the selected user reference field
     this.formDataSource.UserReferenceField = selectedUserReferenceField
+
+    const resourceReferenceOptions = this.getMappedResourceFields(this.getSelectedMappingResource(this.formDataSource.MappingResourceName), this.formDataSource.ResourceName)
+
+    this.dataView.Fields[12]["OptionalValues"] = resourceReferenceOptions
+    
+    if(resourceReferenceOptions.length == 1){
+      this.formDataSource.ResourceReferenceField = resourceReferenceOptions[0].Key
+      this.validateResourceReferenceField(resourceReferenceOptions[0].Key)
+    }
     // enabling display fields selection in drag and drop 
     this.dataView.Fields[12].ReadOnly = false
+    
   }
 
   validateSelectedDisplayFields(selectedDisplayFields: string[]){
