@@ -22,7 +22,7 @@
                 style="margin: auto auto !important; display: flex;" 
                 *ngIf="!selectedFields.length" 
                 > 
-                Drop here Selected Fields To Display
+                {{'Drop_Fields_Message' | translate }}
                 </p> 
                 <pep-draggable-items [items]="selectedFields" [dropAreaIds]="['cancelDropArea']">
                 </pep-draggable-items>
