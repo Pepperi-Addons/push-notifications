@@ -9,12 +9,12 @@ import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { DeviceManagmentComponent, DeviceManagmentModule } from './components/device-managment';
 import { NotificationsLogComponent, NotificationsLogModule } from './components/notifications-log';
 import { NotificationsSetupComponent, NotificationsSetupModule } from './components/notifications-setup';
+
 import { PopupDialogComponent } from './components/popup-dialog/popup-dialog.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import {NOTIFICATION_SETUP_ELEMENT} from 'shared'
-
 import { TranslateModule, TranslateLoader, TranslateStore, TranslateService } from '@ngx-translate/core';
 
 // import { AddonModule } from './components/addon/addon.module';
@@ -24,6 +24,7 @@ import { AppComponent } from './app.component';
 
 import { config } from './addon.config';
 import { SettingsComponent, SettingsModule } from './components/settings';
+import { PepDraggableItemsModule } from '@pepperi-addons/ngx-lib/draggable-items';
 
 @NgModule({
     declarations: [	
@@ -76,8 +77,8 @@ export class AppModule implements DoBootstrap {
         this.pepAddonService.defineCustomElement(`notifications-element-${config.AddonUUID}`, NotificationBlockComponent, this.injector);
         this.pepAddonService.defineCustomElement(`notifications-editor-element-${config.AddonUUID}`, NotificationBlockEditorComponent, this.injector);
 
-        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, SettingsComponent, this.injector);
-        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, SettingsComponent, this.injector);
-        this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, SettingsComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, DeviceManagmentComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, NotificationsLogComponent, this.injector);
+        this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, NotificationsSetupComponent, this.injector);
     }
 }

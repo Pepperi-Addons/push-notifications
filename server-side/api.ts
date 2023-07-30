@@ -50,14 +50,6 @@ export async function delete_notifications_users_lists(client: Client, request: 
     }
 }
 
-export async function get_resource_lists(client:Client, request:Request) {
-    const usersListsService = new UsersListsService(client)
-
-    if (request.method === 'GET') {
-    return usersListsService.getResourceLists(request.query);
-    }
-}
-
 export async function update_notifications_read_status(client: Client, request: Request) {
     const service = new NotificationsService(client)
 

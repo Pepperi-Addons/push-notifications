@@ -208,7 +208,7 @@ class NotificationsService {
         const user: User = await this.papiClient.users.uuid(userUUID).get();
         console.log(`got user - ${JSON.stringify(user)}`)
         if (user != undefined) {
-            return (user.FirstName ?? "") + (user.LastName ?? "") 
+            return (user.FirstName ?? "") +" "+ (user.LastName ?? "") 
         }
     }
 

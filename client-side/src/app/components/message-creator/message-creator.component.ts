@@ -1,4 +1,4 @@
-import { Component, DebugElement, OnInit, ViewChild, ViewContainerRef} from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren,QueryList} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -11,7 +11,9 @@ import { config } from '../../addon.config';
 import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-
+import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
+import { UniqueSelectionDispatcher } from '@angular/cdk/collections';
+  
 
 
 @Component({
@@ -22,6 +24,8 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 export class MessageCreatorComponent implements OnInit {
   private currentSnackBar: MatSnackBarRef<PepDefaultSnackBarComponent> | null = null;
   @ViewChild('chipsComp') chipsComp: PepChipsComponent;
+  @ViewChildren('userListChips') userListChips: QueryList<PepChipsComponent>;
+  
 
   message: MessageObject = {
     UsersUUID: [],
@@ -30,10 +34,12 @@ export class MessageCreatorComponent implements OnInit {
     Body: ""
   };
   chips: any[] = [];
+  usersLists: any[] = []
   dialogRef: MatDialogRef<any> 
 
   constructor(
     private notificationsService: NotificationsService,
+    private notificationsSetupService: NotificationsSetupService,
     private addonService: AddonService,
     public route: ActivatedRoute,
     private translate: TranslateService,
@@ -46,6 +52,14 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   ngOnInit() {
+    const queryParams = this.route.snapshot.queryParams;
+    if (queryParams != undefined) {
+      this.message.Title = queryParams.Title;
+      this.message.Body = queryParams.Body;
+    }
+    this.notificationsSetupService.getUsersLists().then(list => {
+      this.usersLists = list
+    })
   }
 
   ngAfterViewInit() {
@@ -126,6 +140,36 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
+  async userListClicked(list,index){
+    this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
+      container: this.viewContainerRef,
+      name: 'ResourcePicker',
+      hostObject: {
+        resource: list.MappingResourceUUID,
+        selectionMode: 'multi'
+      },hostEventsCallback: async ($event) => {
+        if($event.action == 'on-save'){
+          let newChips: any[]  = [];
+          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
+            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.UserReferenceField,list.MappingResourceUUID,chip)
+            let chipObj = { 
+              value: uuid,
+              // value: await this.addonService.getUserEmailByUUID(uuid),
+              key: uuid
+            }
+            if(!this.userListChips.toArray()[index].chips.includes(chipObj))
+            newChips.push(chipObj)
+          }))
+          this.userListChips.toArray()[index].addChipsToList(newChips);  
+          this.dialogRef.close();
+        }
+        if($event.action == 'on-cancel'){
+          this.dialogRef.close();
+        }
+      }
+    })
+  }
+  
   getUsersList(): any{
     return {
       List: {

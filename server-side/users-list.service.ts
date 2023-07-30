@@ -1,4 +1,4 @@
-import { PapiClient, AddonData,AddonDataScheme } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { USERS_LISTS_TABLE_NAME } from 'shared'
 import { v4 as uuid } from 'uuid';
@@ -8,7 +8,7 @@ class UsersListsService {
     addonSecretKey: string
     addonUUID: string;
     accessToken: string;
-    constructor(private client: Client) {
+    constructor(client: Client) {
         this.papiClient = new PapiClient({
             baseURL: client.BaseURL,
             token: client.OAuthAccessToken,
@@ -47,35 +47,28 @@ class UsersListsService {
         }))
     }
 
-    async getResourceLists(query){
-        let resourceList: string[] = []
-        let resources = await this.papiClient.resources.resource('resources').get()
-        for(let resource in resources){
-            resourceList.push(resources[resource]['Name'])
-        }
-        return resourceList
-    }
-
     async createUsersListsResource(papiClient:PapiClient) {
         const notificationsUsersListsScheme: AddonDataScheme={
             Name: USERS_LISTS_TABLE_NAME,
             Type: 'meta_data',
             Fields: {
-       
-                ResourceListUUID: {
+                ListName: {
                     Type: 'String'
                 },
-                SelectionViewUUID: {
+                ResourceName: {
                     Type: 'String'
                 },
-                DisplayTitleField: {
+                TitleField: {
                     Type: 'String'
                 },
-                MappingResourceUUID: {
+                MappingResourceName: {
                     Type: 'String'
                 },
                 UserReferenceField: {
                     Type: 'String'
+                },
+                SelectionDisplayFields: {
+                    Type: "MultipleStringValues"
                 }
             }
             
