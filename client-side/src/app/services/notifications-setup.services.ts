@@ -15,17 +15,10 @@ export class NotificationsSetupService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
-    async getDisplayTitleFromResource(mappingField,resource,key){
-        let userUUID:string[] =[]
-        let url = `/resources/${resource}`
-        await this.addonService.pepGet(encodeURI(url)).toPromise().then(res =>{
-            res.map(user =>{
-                  if(key == user.Key){
-                    return userUUID.push(user[mappingField])
-                  } 
-            })
-        });
-        return userUUID.pop()
+    async getDisplayTitleFromResource(titleField: string, resourceName: string, key: string): Promise<string>{
+        let url = `/resources/${resourceName}?where=Key='${key}'`
+        const res = await this.addonService.pepGet(encodeURI(url)).toPromise()
+        return res[0][titleField]
        }
 
     async deleteSendToList(sendToLists){

@@ -8,10 +8,11 @@ import { PepSnackBarData, PepSnackBarService } from '@pepperi-addons/ngx-lib/sna
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/default-snack-bar.component';
 import { config } from '../../addon.config';
-import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
+import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
+import { UsersLists } from 'shared';
   
 
 
@@ -139,6 +140,18 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
+  async handleSetupListChipSelection(chipIndex: number, chipSelected: string, setupList: UsersLists){
+    let title = await this.notificationsSetupService.getDisplayTitleFromResource(setupList.TitleField, setupList.ResourceName, chipSelected)
+    let chipObj: IPepChip = { 
+      value: title,
+      // value: await this.addonService.getUserEmailByUUID(uuid),
+      key: chipSelected
+    }
+    if(!this.userListChips.toArray()[chipIndex].chips.includes(chipObj)){
+      return chipObj
+    }
+  }
+
   async userListClicked(list,index){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
@@ -146,18 +159,11 @@ export class MessageCreatorComponent implements OnInit {
       hostObject: this.getGenericHostObject(list),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          let newChips: any[]  = [];
+          let chipsToAdd: any[]  = [];
           await Promise.all($event.data.selectedObjects.map( async chip => {
-            let title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, chip)
-            let chipObj = { 
-              value: title,
-              // value: await this.addonService.getUserEmailByUUID(uuid),
-              key: title
-            }
-            if(!this.userListChips.toArray()[index].chips.includes(chipObj))
-            newChips.push(chipObj)
+            chipsToAdd.push(await this.handleSetupListChipSelection(index, chip, list))
           }))
-          this.userListChips.toArray()[index].addChipsToList(newChips);  
+          this.userListChips.toArray()[index].addChipsToList(chipsToAdd);  
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
