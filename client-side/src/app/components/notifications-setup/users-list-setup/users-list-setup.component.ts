@@ -6,7 +6,7 @@ import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
 import { FieldSelectorComponent } from '../field-selector/field-selector.component';
-import { defaultFormViewForListSetup, defaultDataSourceForListSetup } from 'shared'
+import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes } from 'shared'
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -96,9 +96,9 @@ export class UsersListSetupComponent implements OnInit {
     // saving the list name 
     this.formDataSource.ListName = listNameSelected
     // updating data in resource selection
-    this.dataView.Fields[4]["OptionalValues"] = this.getSelectionResources()
+    this.dataView.Fields[setupListViewIndexes.ResourceName]["OptionalValues"] = this.getSelectionResources()
     // enabling resource selection
-    this.dataView.Fields[4].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = false
   }
 
   validateResources(resourceSelected: string){
@@ -107,53 +107,59 @@ export class UsersListSetupComponent implements OnInit {
     this.formDataSource.TitleField = ""
     // not setting display title to read only because it need to be selected next
     this.formDataSource.MappingResourceName = ""
-    this.dataView.Fields[8].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.MappingResourceName].ReadOnly = true
     this.formDataSource.UserReferenceField = ""
-    this.dataView.Fields[10].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.UserReferenceField].ReadOnly = true
+    this.formDataSource.ResourceReferenceField = ""
+    this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = true
     this.userListData.SelectionDisplayFields = undefined
-    this.dataView.Fields[14].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.DisplayFieldsSelector].ReadOnly = true
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
     // enabling selection of the next field and updating options to select
-    this.dataView.Fields[6]["OptionalValues"] = this.getResourceFields(resourceSelected)
-    this.dataView.Fields[6].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = this.getResourceFields(resourceSelected)
+    this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = false
   }
 
   validateDisplayTitleField(displayTitleSelected: string){
     // saving the list name 
     this.formDataSource.TitleField = displayTitleSelected
     // updating data in mapping resource selection
-    this.dataView.Fields[8]["OptionalValues"] = this.getMappingCollections(this.formDataSource.ResourceName)
+    this.dataView.Fields[setupListViewIndexes.MappingResourceName]["OptionalValues"] = this.getMappingCollections(this.formDataSource.ResourceName)
     // enabling mapping resource selection
-    this.dataView.Fields[8].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.MappingResourceName].ReadOnly = false
   }
 
   validateMappingResource(selectedMappingResource: string){
     // validating that next fields are not selected, if mapping is changed it affects
     // the reference fields selected
     this.formDataSource.UserReferenceField = ""
+    this.dataView.Fields[setupListViewIndexes.UserReferenceField].ReadOnly = true
     this.formDataSource.ResourceReferenceField = ""
-    this.dataView.Fields[12].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = true
     // saving the mapping resource name
     this.formDataSource.MappingResourceName = selectedMappingResource
     // enabling selection of reference fields and populating data to be selected
 
     const userReferenceOptions =  this.getUserReferenceFields(this.getSelectedMappingResource(selectedMappingResource))
 
-    this.dataView.Fields[10]["OptionalValues"] = userReferenceOptions
+    this.dataView.Fields[setupListViewIndexes.UserReferenceField]["OptionalValues"] = userReferenceOptions
 
     if(userReferenceOptions.length == 1){
       this.formDataSource.UserReferenceField = userReferenceOptions[0].Key
       this.validateUserReferenceField(userReferenceOptions[0].Key)
     }
-    // enabling display fields selection in drag and drop 
-    this.dataView.Fields[10].ReadOnly = false
+    else{
+      // enabling user reference fields selection 
+      this.dataView.Fields[setupListViewIndexes.UserReferenceField].ReadOnly = false
+    }
+
   }
   validateResourceReferenceField(selectedResourceReferenceField: string){
     // saving the selected user reference field
     this.formDataSource.ResourceReferenceField = selectedResourceReferenceField
     // enabling display fields selection in drag and drop 
-    this.dataView.Fields[14].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.DisplayFieldsSelector].ReadOnly = false
   }
   validateUserReferenceField(selectedUserReferenceField: string){
     // saving the selected user reference field
@@ -161,15 +167,16 @@ export class UsersListSetupComponent implements OnInit {
 
     const resourceReferenceOptions = this.getMappedResourceFields(this.getSelectedMappingResource(this.formDataSource.MappingResourceName), this.formDataSource.ResourceName)
 
-    this.dataView.Fields[12]["OptionalValues"] = resourceReferenceOptions
+    this.dataView.Fields[setupListViewIndexes.ResourceReferenceField]["OptionalValues"] = resourceReferenceOptions
     
     if(resourceReferenceOptions.length == 1){
       this.formDataSource.ResourceReferenceField = resourceReferenceOptions[0].Key
       this.validateResourceReferenceField(resourceReferenceOptions[0].Key)
     }
-    // enabling display fields selection in drag and drop 
-    this.dataView.Fields[12].ReadOnly = false
-    
+    else{
+      // enabling display fields selection in drag and drop 
+      this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = false
+    }
   }
 
   validateSelectedDisplayFields(selectedDisplayFields: string[]){
