@@ -12,7 +12,7 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersLists } from 'shared';
+import { UsersListDataView, UsersLists } from 'shared';
   
 
 
@@ -167,30 +167,14 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
-  async handleSetupListChipSelection(chipIndex: number, chipSelected: string, setupList: UsersLists){
-    let title = await this.notificationsSetupService.getDisplayTitleFromResource(setupList.TitleField, setupList.ResourceName, chipSelected)
-    let chipObj: IPepChip = { 
-      value: title,
-      // value: await this.addonService.getUserEmailByUUID(uuid),
-      key: JSON.stringify({chipKey: chipSelected, listKey: setupList.Key})
-    }
-    if(!this.userListChips.toArray()[chipIndex].chips.includes(chipObj)){
-      return chipObj
-    }
-  }
-
-  async userListClicked(list,index){
+  async userListClicked(list: UsersLists ,cipsSelectorIndex: number){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
       name: 'List',
       hostObject: this.getGenericHostObject(list),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          let chipsToAdd: any[]  = [];
-          await Promise.all($event.data.selectedObjects.map( async chip => {
-            chipsToAdd.push(await this.handleSetupListChipSelection(index, chip, list))
-          }))
-          this.userListChips.toArray()[index].addChipsToList(chipsToAdd);  
+          await this.handleListSetupSelection($event.data.selectedObjects, list, cipsSelectorIndex)
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -199,70 +183,35 @@ export class MessageCreatorComponent implements OnInit {
       }
     })
   }
-  
+
+  async handleListSetupSelection(selectedKeys: string[], list: UsersLists, cipsSelectorIndex: number) {
+    // prepare the chips to add
+    const chipsToAdd: IPepChip[] = await Promise.all(selectedKeys.map( async selectedKey => {
+      const title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, selectedKey)
+      const chipObj: IPepChip = {
+        value: title,
+        key: selectedKey
+      }
+      return chipObj;
+    }));
+
+    // add the chips to the chips selector
+    this.addChipsToList(chipsToAdd, cipsSelectorIndex);    
+  }
+
+  private addChipsToList(chipsToAdd: IPepChip[], cipsSelectorIndex: number) {
+    // filter out chips that already exist in the chips selector
+    const filteredChipsToAdd = chipsToAdd.filter(chip => !this.isChipAlreadyExist(chip, cipsSelectorIndex));
+    if (filteredChipsToAdd.length > 0) {
+      this.userListChips.toArray()[cipsSelectorIndex].addChipsToList(filteredChipsToAdd);
+    }  
+  }
+  private isChipAlreadyExist(chip: IPepChip, cipsSelectorIndex: number): boolean {
+    return this.userListChips.toArray()[cipsSelectorIndex].chips.some(existingChip => existingChip.key === chip.key);
+  }
+
   getUsersList(): any{
-    return {
-      List: {
-        Key: "Notifications_Users_List",
-        Name: "Users list",
-        Resource: "users",
-        Views: [{
-          Key: "notifications_users_view",
-          Type: "Grid",
-          Title: "Users",
-          Blocks: [{
-            Title: "Email",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "Email",
-                Width: 10
-            }, 
-          },
-          {
-            Title: "First Name",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "FirstName",
-                Width: 10
-            },
-          },
-          {
-            Title: "Last Name",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "LastName",
-                Width: 10
-            },
-          },
-          {
-            Title: "User UUID",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "Key",
-                Width: 10
-            },
-          }],
-        }],
-        SelectionType: "Multi",
-        Search: {
-          Fields: [
-              {
-                  FieldID: "FirstName"
-              },
-              {
-                  FieldID: "LastName"
-              },
-              {
-                  FieldID: "Email"
-              }
-          ]
-        },
-        Sorting: {Ascending: true, FieldID: "FirstName"},     
-      },
-      State: {
-        ListKey: "Notifications_Users_List",
-      },          
-    }
+    return UsersListDataView;
   }
 
   getGenericPickerList(list){
