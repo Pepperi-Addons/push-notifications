@@ -1,5 +1,23 @@
 import { FormDataView } from "@pepperi-addons/papi-sdk";
 
+export const setupListViewIndexes = {
+  AddGroupList: 0,
+  ListNameDesc: 1,
+  ListName: 2,
+  ResourceNameDesc: 3,
+  ResourceName: 4,
+  TitleFieldDesc: 5,
+  TitleField: 6,
+  MappingResourceNameDesc: 7,
+  MappingResourceName: 8,
+  UserReferenceFieldDesc: 9,
+  UserReferenceField: 10,
+  ResourceReferenceFieldDesc: 11,
+  ResourceReferenceField: 12,
+  DisplayFieldsSelectorDesc: 13,
+  DisplayFieldsSelector: 14
+}
+
 export const defaultFormViewForListSetup: FormDataView = {
     Type: "Form",
     Hidden: false,
@@ -24,7 +42,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 0
+            Y: setupListViewIndexes.AddGroupList
           },
           Size: {
             Width: 1,
@@ -47,7 +65,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 1
+            Y: setupListViewIndexes.ListNameDesc
           },
           Size: {
             Width: 1,
@@ -70,7 +88,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 2
+            Y: setupListViewIndexes.ListName
           },
           Size: {
             Width: 1,
@@ -93,7 +111,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 3
+            Y: setupListViewIndexes.ResourceNameDesc
           },
           Size: {
             Width: 1,
@@ -116,7 +134,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 4
+            Y: setupListViewIndexes.ResourceName
           },
           Size: {
             Width: 1,
@@ -139,7 +157,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 5
+            Y: setupListViewIndexes.TitleFieldDesc
           },
           Size: {
             Width: 1,
@@ -162,7 +180,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 6
+            Y: setupListViewIndexes.TitleField
           },
           Size: {
             Width: 1,
@@ -185,7 +203,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 7
+            Y: setupListViewIndexes.MappingResourceNameDesc
           },
           Size: {
             Width: 1,
@@ -208,7 +226,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 8
+            Y: setupListViewIndexes.MappingResourceName
           },
           Size: {
             Width: 1,
@@ -231,7 +249,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 9
+            Y: setupListViewIndexes.UserReferenceFieldDesc
           },
           Size: {
             Width: 1,
@@ -254,7 +272,53 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 10
+            Y: setupListViewIndexes.UserReferenceField
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
+      },
+      {
+        FieldID: "ResourceReferenceFieldDesc",
+        Type: "RichTextHTML",
+        Title: "",
+        Mandatory: false,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: setupListViewIndexes.ResourceReferenceFieldDesc
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
+      },
+      {
+        FieldID: "ResourceReferenceField",
+        Type: "MapDataDropDown",
+        Title: "Resource Reference Field",
+        Mandatory: true,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: setupListViewIndexes.ResourceReferenceField
           },
           Size: {
             Width: 1,
@@ -277,7 +341,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 11
+            Y: setupListViewIndexes.DisplayFieldsSelectorDesc
           },
           Size: {
             Width: 1,
@@ -300,7 +364,7 @@ export const defaultFormViewForListSetup: FormDataView = {
         Layout: {
           Origin: {
             X: 0,
-            Y: 12
+            Y: setupListViewIndexes.DisplayFieldsSelector
           },
           Size: {
             Width: 1,
@@ -329,8 +393,12 @@ export const defaultDataSourceForListSetup = {
     MappingResourceNameDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
     +" to <br> the selection list chosen above are available in this dropdown</p>",
     MappingResourceName:"",
-    UserReferenceFieldDesc:"<p>Please select the field that references user resource in the mapping resource</p>",
+    UserReferenceFieldDesc:"<p> Please select the field that references user resource in the mapping"
+    +" resource <br> if there is only one field available it will be selected automatically </p>",
     UserReferenceField:'',
+    ResourceReferenceFieldDesc:"<p> Please select the field that references the selected resource in the mapping"
+    +" resource <br> if there is only one field available it will be selected automatically </p>",
+    ResourceReferenceField:'',
     DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
     DisplayFieldsSelector: 'Press To Select Fields To Display'
 }
