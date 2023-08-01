@@ -88,7 +88,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         });
         const usersListsService = new UsersListsService(client)
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
-        return { success: notificationsUsersListsRes.success && relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+        const userDeviceResourceRes = await createUserDeviceResource(papiClient);
+        return { success: notificationsUsersListsRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
     }
     else{
         return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
@@ -314,6 +315,10 @@ async function createUserDeviceResource(papiClient: PapiClient) {
                 Type: 'String',
                 Indexed: true
             },
+            Username: {
+                Type: 'String'
+            },
+
             DeviceKey: {
                 Type: 'String'
             },

@@ -42,6 +42,7 @@ export interface NotificationLog extends AddonData {
 
 export interface UserDevice {
     UserUUID: string,
+    Username: string,
     DeviceKey: string,
     DeviceName: string,
     DeviceType: string,
@@ -165,6 +166,10 @@ export const userDeviceSchema: Schema = {
     type: "object",
     properties: {
         UserUUID: {
+            type: "string",
+            required: false
+        },
+        Username: {
             type: "string",
             required: false
         },
