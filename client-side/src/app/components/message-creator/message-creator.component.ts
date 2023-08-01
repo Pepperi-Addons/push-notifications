@@ -130,7 +130,7 @@ export class MessageCreatorComponent implements OnInit {
     return {
       List: {
         Key: "Notifications_Employees_List",
-        Name: "Employees list",
+        Name: "Users list",
         Resource: "employees",
         Views: [{
           Key: "notifications_employees_view",
