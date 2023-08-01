@@ -129,11 +129,11 @@ export class MessageCreatorComponent implements OnInit {
   getUsersList(): any{
     return {
       List: {
-        Key: "Notifications_Users_List",
-        Name: "Users list",
-        Resource: "users",
+        Key: "Notifications_Employees_List",
+        Name: "Employees list",
+        Resource: "employees",
         Views: [{
-          Key: "notifications_users_view",
+          Key: "notifications_employees_view",
           Type: "Grid",
           Title: "Users",
           Blocks: [{
@@ -186,7 +186,7 @@ export class MessageCreatorComponent implements OnInit {
         Sorting: {Ascending: true, FieldID: "FirstName"},     
       },
       State: {
-        ListKey: "Notifications_Users_List",
+        ListKey: "Notifications_Employees_List",
       },          
     }
   }
