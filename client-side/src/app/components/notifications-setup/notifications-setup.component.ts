@@ -33,19 +33,6 @@ export class NotificationsSetupComponent implements OnInit {
       async ngOnInit() {
         this.dataSource = await this.getListDataSource()
       }
-    
-   
-
-
-      // async saveList(){
-      //   this.userListData.SelectionDisplayField = this.selectedFields.map(field => {return field.title})
-      //   this.dialogRef.close()
-      //   await this.notificationsSetupService.saveList(this.userListData)
-      //   // this.formDataSource = this.getFormDataSource()
-      //   this.dataSource = await this.getListDataSource()
-      // }
-
-
   
     async getListDataSource(){
       return {

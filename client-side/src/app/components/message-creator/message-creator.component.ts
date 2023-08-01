@@ -8,11 +8,11 @@ import { PepSnackBarData, PepSnackBarService } from '@pepperi-addons/ngx-lib/sna
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { PepDefaultSnackBarComponent } from '@pepperi-addons/ngx-lib/snack-bar/default-snack-bar.component';
 import { config } from '../../addon.config';
-import { PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
+import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UniqueSelectionDispatcher } from '@angular/cdk/collections';
+import { UsersListDataView, UsersLists } from 'shared';
   
 
 
@@ -140,27 +140,14 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
-  async userListClicked(list,index){
+  async userListClicked(list: UsersLists ,cipsSelectorIndex: number){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
-      name: 'ResourcePicker',
-      hostObject: {
-        resource: list.MappingResourceUUID,
-        selectionMode: 'multi'
-      },hostEventsCallback: async ($event) => {
-        if($event.action == 'on-save'){
-          let newChips: any[]  = [];
-          await Promise.all($event.data.selectedObjectKeys.map( async chip => {
-            let uuid = await this.notificationsSetupService.getUserUUIDFromView(list.UserReferenceField,list.MappingResourceUUID,chip)
-            let chipObj = { 
-              value: uuid,
-              // value: await this.addonService.getUserEmailByUUID(uuid),
-              key: uuid
-            }
-            if(!this.userListChips.toArray()[index].chips.includes(chipObj))
-            newChips.push(chipObj)
-          }))
-          this.userListChips.toArray()[index].addChipsToList(newChips);  
+      name: 'List',
+      hostObject: this.getGenericHostObject(list),
+      hostEventsCallback: async ($event) => {
+        if($event.action == 'on-done'){
+          await this.handleListSetupSelection($event.data.selectedObjects, list, cipsSelectorIndex)
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -169,71 +156,76 @@ export class MessageCreatorComponent implements OnInit {
       }
     })
   }
-  
+
+  async handleListSetupSelection(selectedKeys: string[], list: UsersLists, cipsSelectorIndex: number) {
+    // prepare the chips to add
+    const chipsToAdd: IPepChip[] = await Promise.all(selectedKeys.map( async selectedKey => {
+      const title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, selectedKey)
+      const chipObj: IPepChip = {
+        value: title,
+        key: selectedKey
+      }
+      return chipObj;
+    }));
+
+    // add the chips to the chips selector
+    this.addChipsToList(chipsToAdd, cipsSelectorIndex);    
+  }
+
+  private addChipsToList(chipsToAdd: IPepChip[], cipsSelectorIndex: number) {
+    // filter out chips that already exist in the chips selector
+    const filteredChipsToAdd = chipsToAdd.filter(chip => !this.isChipAlreadyExist(chip, cipsSelectorIndex));
+    if (filteredChipsToAdd.length > 0) {
+      this.userListChips.toArray()[cipsSelectorIndex].addChipsToList(filteredChipsToAdd);
+    }  
+  }
+  private isChipAlreadyExist(chip: IPepChip, cipsSelectorIndex: number): boolean {
+    return this.userListChips.toArray()[cipsSelectorIndex].chips.some(existingChip => existingChip.key === chip.key);
+  }
+
   getUsersList(): any{
+    return UsersListDataView;
+  }
+
+  getGenericPickerList(list){
+    console.log(list)
     return {
       List: {
-        Key: "Notifications_Users_List",
-        Name: "Users list",
-        Resource: "users",
+        Key: `Notifications_List_${list.ListName}`,
+        Name: `list ${list.ListName}`,
+        Resource: list.ResourceName,
         Views: [{
-          Key: "notifications_users_view",
+          Key: `notifications_${list.ListName}_view`,
           Type: "Grid",
-          Title: "Users",
-          Blocks: [{
-            Title: "Email",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "Email",
-                Width: 10
-            }, 
-          },
-          {
-            Title: "First Name",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "FirstName",
-                Width: 10
-            },
-          },
-          {
-            Title: "Last Name",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "LastName",
-                Width: 10
-            },
-          },
-          {
-            Title: "User UUID",
-            Configuration: {
-                Type: "TextBox",
-                FieldID: "Key",
-                Width: 10
-            },
-          }],
-        }],
-        SelectionType: "Multi",
-        Search: {
-          Fields: [
-              {
-                  FieldID: "FirstName"
-              },
-              {
-                  FieldID: "LastName"
-              },
-              {
-                  FieldID: "Email"
-              }
-          ]
-        },
-        Sorting: {Ascending: true, FieldID: "FirstName"},     
+          Title: list.ListName,
+          Blocks: list.SelectionDisplayFields.map(field => this.getSingleGenericField(field))
+        }]
       },
       State: {
-        ListKey: "Notifications_Users_List",
-      },          
+        ListKey: `Notifications_List_${list.ListName}`,
+      }
     }
   }
+
+  getSingleGenericField(field: string){
+    return {
+      Title: field,
+      Configuration: {
+          Type: "TextBox",
+          FieldID: field,
+          Width: 10
+      }
+  }
+}
+
+getGenericHostObject(list){
+  const hostObject = {
+    listContainer: this.getGenericPickerList(list),
+    inDialog: true
+  }
+  return hostObject
+}
+
 
   getUsersHostObject(){
     const hostObject = {

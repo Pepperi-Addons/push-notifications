@@ -334,3 +334,66 @@ export const defaultDataSourceForListSetup = {
     DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
     DisplayFieldsSelector: 'Press To Select Fields To Display'
 }
+
+export const UsersListDataView = {
+  List: {
+    Key: "Notifications_Users_List",
+    Name: "Users list",
+    Resource: "users",
+    Views: [{
+      Key: "notifications_users_view",
+      Type: "Grid",
+      Title: "Users",
+      Blocks: [{
+        Title: "Email",
+        Configuration: {
+            Type: "TextBox",
+            FieldID: "Email",
+            Width: 10
+        }, 
+      },
+      {
+        Title: "First Name",
+        Configuration: {
+            Type: "TextBox",
+            FieldID: "FirstName",
+            Width: 10
+        },
+      },
+      {
+        Title: "Last Name",
+        Configuration: {
+            Type: "TextBox",
+            FieldID: "LastName",
+            Width: 10
+        },
+      },
+      {
+        Title: "User UUID",
+        Configuration: {
+            Type: "TextBox",
+            FieldID: "Key",
+            Width: 10
+        },
+      }],
+    }],
+    SelectionType: "Multi",
+    Search: {
+      Fields: [
+          {
+              FieldID: "FirstName"
+          },
+          {
+              FieldID: "LastName"
+          },
+          {
+              FieldID: "Email"
+          }
+      ]
+    },
+    Sorting: {Ascending: true, FieldID: "FirstName"},     
+  },
+  State: {
+    ListKey: "Notifications_Users_List",
+  },          
+}

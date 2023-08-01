@@ -77,8 +77,8 @@ export class AppModule implements DoBootstrap {
         this.pepAddonService.defineCustomElement(`notifications-element-${config.AddonUUID}`, NotificationBlockComponent, this.injector);
         this.pepAddonService.defineCustomElement(`notifications-editor-element-${config.AddonUUID}`, NotificationBlockEditorComponent, this.injector);
 
-        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, DeviceManagmentComponent, this.injector);
-        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, NotificationsLogComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`device-managment-element-${config.AddonUUID}`, SettingsComponent, this.injector);
+        this.pepAddonService.defineCustomElement(`notifications-log-element-${config.AddonUUID}`, SettingsComponent, this.injector);
         this.pepAddonService.defineCustomElement(NOTIFICATION_SETUP_ELEMENT, NotificationsSetupComponent, this.injector);
     }
 }
