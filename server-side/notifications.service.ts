@@ -14,6 +14,7 @@ import {NotifiactionsSnsService} from './notifications-sns.service'
 import { UserDeviceHandlingFactory } from './register-device.service'
 import * as encryption from 'shared'
 import { PayloadData } from 'shared'
+import UsersListsService from './users-list.service';
 
 abstract class PlatformBase {
     protected notificationsSnsService: NotifiactionsSnsService
@@ -258,6 +259,12 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
     }
 
+
+    async upsertUsersSetupListNotification(listKey, notification){
+        const usersListService = new UsersListsService(this.client)
+        const list = await usersListService.getNotificationsUsersSetupListByKey(listKey)
+    }
+
     async upsertNotification(body) {
         if (body.Key != undefined) {
             return await this.updateNotification(body);
@@ -366,7 +373,6 @@ class NotificationsService {
     }
 
     async populateUserDevice(deviceDataToPopulate){
-        const addonSecretKey = this.client.AddonSecretKey ?? "";
 
         deviceDataToPopulate.UserUUID = this.currentUserUUID;
         deviceDataToPopulate.Username = await this.getEmailByUserUUID(this.currentUserUUID)
@@ -686,9 +692,14 @@ class NotificationsService {
 
     // create notifications using DIMX
     async bulkNotifications(body): Promise<any> {
+        const usersListsService = new UsersListsService(this.client)
         let ans = await this.upsertNotificationLog(body);
         console.log('ans from upload notifications log', ans);
         const creatorName = await this.getUserName(this.currentUserUUID)
+
+        if(body.listKey && body.selectedGroupKey){
+            body.UsersUUID = await usersListsService.getGroupUsersToSendNotification(body.listKey, body.selectedGroupKey)
+        }
 
         if (body.UsersUUID != undefined) {
             if (body.UsersUUID.length > 100) {

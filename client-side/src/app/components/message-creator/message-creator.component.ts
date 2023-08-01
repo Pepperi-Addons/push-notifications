@@ -92,14 +92,41 @@ export class MessageCreatorComponent implements OnInit {
    
   }
   async sendNotifications() {
-    this.message.Email = this.chipsComp.chips.map(chips => chips.value)
-    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
-    this.router.navigate(['../'], {
-      relativeTo: this.route,
-      queryParamsHandling: 'merge',
+    debugger
+    if(this.userListChips.length>0){
+      this.sendGroupNotifications()
+    }
+    else{
+      this.message.Email = this.chipsComp.chips.map(chips => chips.value)
+      this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
+      this.router.navigate(['../'], {
+        relativeTo: this.route,
+        queryParamsHandling: 'merge',
+      })
+      let ans = await this.notificationsService.bulkNotifications(this.message);
+      this.showFinishDialog(ans);
+    }
+  }
+
+  async sendGroupNotifications() {
+    let ans 
+    debugger
+    this.userListChips.toArray().forEach(async listChips =>{
+      listChips.chips.map(async listChip =>{
+        const chipKeyData = JSON.parse(listChip.key)
+        this.message.Email = [listChip.value]
+        this.message.selectedGroupKey = chipKeyData.chipKey
+        this.message.listKey = chipKeyData.listKey
+        this.router.navigate(['../'], {
+          relativeTo: this.route,
+          queryParamsHandling: 'merge',
+        })
+        const ansFromBulk = await this.notificationsService.bulkNotifications(this.message);
+        console.log(ansFromBulk)
+      })
     })
-    let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
+
   }
 
   showFinishDialog(ansFromBulkNotifications) {
@@ -145,7 +172,7 @@ export class MessageCreatorComponent implements OnInit {
     let chipObj: IPepChip = { 
       value: title,
       // value: await this.addonService.getUserEmailByUUID(uuid),
-      key: chipSelected
+      key: JSON.stringify({chipKey: chipSelected, listKey: setupList.Key})
     }
     if(!this.userListChips.toArray()[chipIndex].chips.includes(chipObj)){
       return chipObj
@@ -318,5 +345,7 @@ export type MessageObject = {
   UsersUUID?: string[],
   Email: string[],
   Title: string,
-  Body: string
+  Body: string,
+  listKey?: string,
+  selectedGroupKey?: string
 } 
