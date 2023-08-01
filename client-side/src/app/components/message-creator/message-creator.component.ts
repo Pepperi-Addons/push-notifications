@@ -91,6 +91,7 @@ export class MessageCreatorComponent implements OnInit {
     }
    
   }
+  
   async sendNotifications() {
     debugger
     if(this.userListChips.length>0){
