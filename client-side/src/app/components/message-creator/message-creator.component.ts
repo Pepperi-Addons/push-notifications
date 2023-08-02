@@ -168,18 +168,6 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
-  async handleSetupListChipSelection(chipIndex: number, chipSelected: string, setupList: UsersLists){
-    let title = await this.notificationsSetupService.getDisplayTitleFromResource(setupList.TitleField, setupList.ResourceName, chipSelected)
-    let chipObj: IPepChip = { 
-      value: title,
-      // value: await this.addonService.getUserEmailByUUID(uuid),
-      key: JSON.stringify({chipKey: chipSelected, listKey: setupList.Key})
-    }
-    if(!this.userListChips.toArray()[chipIndex].chips.includes(chipObj)){
-      return chipObj
-    }
-  }
-
   async userListClicked(list: UsersLists ,cipsSelectorIndex: number){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
