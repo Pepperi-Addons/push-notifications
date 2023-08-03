@@ -25,6 +25,16 @@ export interface Notification {
     NavigationPath?: string
 }
 
+export interface BulkMessageObject {
+    UsersUUID?: string[],
+    SentTo: string[],
+    Title: string,
+    Body: string,
+    ListKey?: string,
+    SelectedGroupKey?: string,
+    Read?: boolean
+  } 
+
 export interface PayloadData {
     Notification: Notification,
     Endpoint: string,
@@ -34,7 +44,7 @@ export interface PayloadData {
 
 export interface NotificationLog extends AddonData {
     CreatorUUID: string,
-    UsersList: string[],
+    SentTo: string[],
     Title: string,
     Body?: string
     Key: string

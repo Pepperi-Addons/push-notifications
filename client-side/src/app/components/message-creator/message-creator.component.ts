@@ -12,7 +12,7 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersListDataView, UsersLists } from 'shared';
+import { UsersListDataView, UsersLists, BulkMessageObject } from 'shared';
   
 
 
@@ -27,9 +27,9 @@ export class MessageCreatorComponent implements OnInit {
   @ViewChildren('userListChips') userListChips: QueryList<PepChipsComponent>;
   
 
-  message: MessageObject = {
+  message: BulkMessageObject = {
     UsersUUID: [],
-    Email: [],
+    SentTo: [],
     Title: "",
     Body: ""
   };
@@ -93,40 +93,34 @@ export class MessageCreatorComponent implements OnInit {
   }
   
   async sendNotifications() {
-    debugger
-    if(this.userListChips.length>0){
+    if(this.userListChips.length > 0){
       this.sendGroupNotifications()
     }
-    else{
-      this.message.Email = this.chipsComp.chips.map(chips => chips.value)
+    if(this.chipsComp.chips.length > 0){
+      this.message.SentTo = this.chipsComp.chips.map(chips => chips.value)
       this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
-      this.router.navigate(['../'], {
-        relativeTo: this.route,
-        queryParamsHandling: 'merge',
-      })
       let ans = await this.notificationsService.bulkNotifications(this.message);
       this.showFinishDialog(ans);
     }
+    this.router.navigate(['../'], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+    })
+
   }
 
   async sendGroupNotifications() {
-    let ans 
-    debugger
-    this.userListChips.toArray().forEach(async listChips =>{
-      listChips.chips.map(async listChip =>{
-        const chipKeyData = JSON.parse(listChip.key)
-        this.message.Email = [listChip.value]
-        this.message.selectedGroupKey = chipKeyData.chipKey
-        this.message.listKey = chipKeyData.listKey
-        this.router.navigate(['../'], {
-          relativeTo: this.route,
-          queryParamsHandling: 'merge',
-        })
-        const ansFromBulk = await this.notificationsService.bulkNotifications(this.message);
-        console.log(ansFromBulk)
+    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
+      const listKey = this.usersLists[listIndex]
+      listsChips.chips.map(async listChip =>{
+        this.message.SentTo = [listChip.value]
+        this.message.SelectedGroupKey = listChip.value
+        this.message.ListKey = listKey
+        let ans = await this.notificationsService.bulkNotifications(this.message);
+        this.showFinishDialog(ans);
       })
     })
-    this.showFinishDialog(ans);
+
 
   }
 
@@ -140,7 +134,7 @@ export class MessageCreatorComponent implements OnInit {
     if (dialogMessage === undefined) {
       let snackbarData : PepSnackBarData = {
         title: this.translate.instant("Success"),
-        content: this.translate.instant("Messages_Sent_Successfuly")
+        content: this.translate.instant("Messages_Sent_Successfully")
       }
       this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
       this.currentSnackBar.instance.closeClick.subscribe(() => {
@@ -168,14 +162,14 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
-  async userListClicked(list: UsersLists ,cipsSelectorIndex: number){
+  async userListClicked(list: UsersLists ,chipsSelectorIndex: number){
     this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
       container: this.viewContainerRef,
       name: 'List',
       hostObject: this.getGenericHostObject(list),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          await this.handleListSetupSelection($event.data.selectedObjects, list, cipsSelectorIndex)
+          await this.handleListSetupSelection($event.data.selectedObjects, list, chipsSelectorIndex)
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -185,7 +179,7 @@ export class MessageCreatorComponent implements OnInit {
     })
   }
 
-  async handleListSetupSelection(selectedKeys: string[], list: UsersLists, cipsSelectorIndex: number) {
+  async handleListSetupSelection(selectedKeys: string[], list: UsersLists, chipsSelectorIndex: number) {
     // prepare the chips to add
     const chipsToAdd: IPepChip[] = await Promise.all(selectedKeys.map( async selectedKey => {
       const title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, selectedKey)
@@ -197,18 +191,19 @@ export class MessageCreatorComponent implements OnInit {
     }));
 
     // add the chips to the chips selector
-    this.addChipsToList(chipsToAdd, cipsSelectorIndex);    
+    this.addChipsToList(chipsToAdd, chipsSelectorIndex);    
   }
 
-  private addChipsToList(chipsToAdd: IPepChip[], cipsSelectorIndex: number) {
+  private addChipsToList(chipsToAdd: IPepChip[], chipsSelectorIndex: number) {
     // filter out chips that already exist in the chips selector
-    const filteredChipsToAdd = chipsToAdd.filter(chip => !this.isChipAlreadyExist(chip, cipsSelectorIndex));
+    const filteredChipsToAdd = chipsToAdd.filter(chip => !this.isChipAlreadyExist(chip, chipsSelectorIndex));
     if (filteredChipsToAdd.length > 0) {
-      this.userListChips.toArray()[cipsSelectorIndex].addChipsToList(filteredChipsToAdd);
+      this.userListChips.toArray()[chipsSelectorIndex].addChipsToList(filteredChipsToAdd);
     }  
   }
-  private isChipAlreadyExist(chip: IPepChip, cipsSelectorIndex: number): boolean {
-    return this.userListChips.toArray()[cipsSelectorIndex].chips.some(existingChip => existingChip.key === chip.key);
+
+  private isChipAlreadyExist(chip: IPepChip, chipsSelectorIndex: number): boolean {
+    return this.userListChips.toArray()[chipsSelectorIndex].chips.some(existingChip => existingChip.key === chip.key);
   }
 
   getUsersList(): any{
@@ -290,12 +285,3 @@ getGenericHostObject(list){
     })
   }
 }
-
-export type MessageObject = {
-  UsersUUID?: string[],
-  Email: string[],
-  Title: string,
-  Body: string,
-  listKey?: string,
-  selectedGroupKey?: string
-} 

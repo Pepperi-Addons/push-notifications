@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject
 } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
@@ -690,37 +690,48 @@ class NotificationsService {
         return body;
     }
 
-    // create notifications using DIMX
-    async bulkNotifications(body): Promise<any> {
+    async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
         const usersListsService = new UsersListsService(this.client)
-        let ans = await this.upsertNotificationLog(body);
-        console.log('ans from upload notifications log', ans);
+        if(bulkNotification.ListKey && bulkNotification.SelectedGroupKey){
+            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersListsService.getGroupUsersToSendNotification(bulkNotification.ListKey, bulkNotification.SelectedGroupKey)]
+        }
+        // return only distinct user uuids to prevent duplicates
+        bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];
+
+        if (bulkNotification.UsersUUID!.length > 100) {
+            throw new Error('Max 100 hard coded users');
+        }
+        if (bulkNotification.UsersUUID!.length == 0) {
+            throw new Error('no users to send notification');
+        }
+        return bulkNotification
+    }
+
+    // create notifications using DIMX
+    async bulkNotifications(notificationToSend: BulkMessageObject): Promise<any> {
+        
+        notificationToSend = await this.handleUsersUUIDsForBulk(notificationToSend)
+
         const creatorName = await this.getUserName(this.currentUserUUID)
 
-        if(body.listKey && body.selectedGroupKey){
-            body.UsersUUID = await usersListsService.getGroupUsersToSendNotification(body.listKey, body.selectedGroupKey)
-        }
-
-        if (body.UsersUUID != undefined) {
-            if (body.UsersUUID.length > 100) {
-                throw new Error('Max 100 hard coded users');
-            }
-            else {
-                let notifications: Notification[] = [];
-                for (let uuid of body.UsersUUID) {
-                    let notification: Notification = {
-                        "UserUUID": uuid,
-                        "Title": body.Title,
-                        "Body": body.Body,
-                        "CreatorName": creatorName,
-                        "Read": body.Read ?? false
-                    }
-                    notifications.push(notification);
+        if (notificationToSend.UsersUUID != undefined) {
+            let notifications: Notification[] = [];
+            for (let uuid of notificationToSend.UsersUUID) {
+                let notification: Notification = {
+                    "UserUUID": uuid,
+                    "Title": notificationToSend.Title,
+                    "Body": notificationToSend.Body,
+                    "CreatorName": creatorName,
+                    "Read": notificationToSend.Read ?? false
                 }
-                // To create notifications and upload to PFS use function
-                // return await this.uploadFileAndImport(notifications);
-                return await this.uploadNotificationsToDIMX(notifications)
+                notifications.push(notification);
             }
+            // To create notifications and upload to PFS use function
+            // return await this.uploadFileAndImport(notifications);
+            const res = await this.uploadNotificationsToDIMX(notifications)
+            let ans = await this.upsertNotificationLog(notificationToSend);
+            console.log('ans from upload notifications log', ans);
+            return res
         }
     }
 
@@ -928,7 +939,7 @@ class NotificationsService {
 
         let notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
-            'UsersList': body.Email,
+            'SentTo': body.SentTo,
             'Title': body.Title,
             'Body': body.Body,
             'Key': uuid()
