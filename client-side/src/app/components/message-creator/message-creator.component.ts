@@ -72,7 +72,7 @@ export class MessageCreatorComponent implements OnInit {
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title || '';
       this.message.Body = queryParams.Body || '';
-      this.handleUserList(queryParams.UsersList);
+      this.handleUserList(queryParams.SentTo);
     }
   }
   
