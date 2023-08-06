@@ -40,18 +40,12 @@ class UsersListsService {
         }
     }
 
-    async getGroupUsersToSendNotification(listKey: string, selectedGroupKey: string): Promise<string[]>{
+    async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
         const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField} = '${selectedGroupKey}'`})
         return resourceData.map(resource =>{
             return resource[`${listData.UserReferenceField}`]
         })
-    }
-
-    async getNotificationsUsersSetupListByKey(key: string): Promise<UsersLists | undefined>{
-        const availableLists = await this.getNotificationsUsersLists() as UsersLists[]
-        const res = availableLists.filter(list => list.Key == key)
-        return res.length>0 ? res[0]: undefined
     }
 
     async upsertNotificationsUsersLists(body){
