@@ -259,12 +259,6 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).iter(query).toArray();
     }
 
-
-    async upsertUsersSetupListNotification(listKey, notification){
-        const usersListService = new UsersListsService(this.client)
-        const list = await usersListService.getNotificationsUsersSetupListByKey(listKey)
-    }
-
     async upsertNotification(body) {
         if (body.Key != undefined) {
             return await this.updateNotification(body);
@@ -693,7 +687,7 @@ class NotificationsService {
     async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
         const usersListsService = new UsersListsService(this.client)
         if(bulkNotification.ListKey && bulkNotification.SelectedGroupKey){
-            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersListsService.getGroupUsersToSendNotification(bulkNotification.ListKey, bulkNotification.SelectedGroupKey)]
+            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersListsService.getUserUUIDsFromGroup(bulkNotification.ListKey, bulkNotification.SelectedGroupKey)]
         }
         // return only distinct user uuids to prevent duplicates
         bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];

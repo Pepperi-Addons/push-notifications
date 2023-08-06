@@ -2,7 +2,6 @@ import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk
 import { Client } from '@pepperi-addons/debug-server';
 import { USERS_LISTS_TABLE_NAME, UsersLists } from 'shared'
 import { v4 as uuid } from 'uuid';
-import { AddonUUID } from '../addon.config.json'
 
 class UsersListsService {
     papiClient: PapiClient
@@ -40,7 +39,7 @@ class UsersListsService {
         }
     }
 
-    async getGroupUsersToSendNotification(listKey: string, selectedGroupKey: string): Promise<string[]>{
+    async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
         if(!await this.validateListBeforeSendingNotification(listData)){
             throw new Error(`Could not send message, resource does not exists`)
@@ -59,12 +58,6 @@ class UsersListsService {
     validateResourceExists(resourceName: string, resources: AddonData[]): boolean{
         const resourceExist = resources.find(resource =>{ resource.Name == resourceName})
         return resourceExist? true : false
-    }
-
-    async getNotificationsUsersSetupListByKey(key: string): Promise<UsersLists | undefined>{
-        const availableLists = await this.getNotificationsUsersLists() as UsersLists[]
-        const res = availableLists.filter(list => list.Key == key)
-        return res.length>0 ? res[0]: undefined
     }
 
     async upsertNotificationsUsersLists(body){
