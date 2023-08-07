@@ -29,7 +29,7 @@ export class MessageCreatorComponent implements OnInit {
 
   message: BulkMessageObject = {
     UsersUUID: [],
-    SentTo: [],
+    SentTo: {Users: [], Groups:[]},
     Title: "",
     Body: ""
   };
@@ -72,11 +72,11 @@ export class MessageCreatorComponent implements OnInit {
     if (queryParams != undefined) {
       this.message.Title = queryParams.Title || '';
       this.message.Body = queryParams.Body || '';
-      this.handleUserList(queryParams.SentTo);
+      this.handleDuplicateUsers(queryParams.SentTo.Users);
     }
   }
   
-  private handleUserList(usersList: string) {
+  private handleDuplicateUsers(usersList: string) {
     // users list is a string of users emails separated by comma
     if (usersList != undefined) {
       const users = usersList.split(',');
@@ -91,36 +91,39 @@ export class MessageCreatorComponent implements OnInit {
     }
    
   }
+
+
+  handleUserChips(){
+    this.message.SentTo.Users = this.chipsComp.chips.map(chips => chips.value)
+    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
+  }
+
+  handleGroupsChips(){
+    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
+      const listKey = this.usersLists[listIndex].Key
+      console.log(listKey)
+      listsChips.chips.map(async listChip =>{
+        this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
+      })
+    })
+  }
+
   
   async sendNotifications() {
-    if(this.userListChips.length > 0){
-      this.sendGroupNotifications()
-    }
+    debugger
     if(this.chipsComp.chips.length > 0){
-      this.message.SentTo = this.chipsComp.chips.map(chips => chips.value)
-      this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
-      let ans = await this.notificationsService.bulkNotifications(this.message);
-      this.showFinishDialog(ans);
+      this.handleUserChips()
     }
+    if(this.userListChips.length > 0 ){
+      debugger
+      this.handleGroupsChips()
+    }
+    let ans = await this.notificationsService.bulkNotifications(this.message);
+    this.showFinishDialog(ans);
     this.router.navigate(['../'], {
       relativeTo: this.route,
       queryParamsHandling: 'merge',
     })
-
-  }
-
-  async sendGroupNotifications() {
-    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
-      const listKey = this.usersLists[listIndex]
-      listsChips.chips.map(async listChip =>{
-        this.message.SentTo = [listChip.value]
-        this.message.SelectedGroupKey = listChip.value
-        this.message.ListKey = listKey
-        let ans = await this.notificationsService.bulkNotifications(this.message);
-        this.showFinishDialog(ans);
-      })
-    })
-
 
   }
 

@@ -686,15 +686,20 @@ class NotificationsService {
 
     async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
         const usersListsService = new UsersListsService(this.client)
-        if(bulkNotification.ListKey && bulkNotification.SelectedGroupKey){
-            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersListsService.getUserUUIDsFromGroup(bulkNotification.ListKey, bulkNotification.SelectedGroupKey)]
+        if (bulkNotification.UsersUUID!.length + bulkNotification.SentTo.Groups?.length!> 100) {
+            throw new Error('Max 100 hard coded users and groups');
+        }
+        if(bulkNotification.SentTo.Groups?.length! > 0){
+            const usersFromGroups: string[] = []
+            bulkNotification.SentTo.Groups?.forEach(async group =>{
+                usersFromGroups.push(...await usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey))
+            })
+            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...usersFromGroups]
         }
         // return only distinct user uuids to prevent duplicates
         bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];
 
-        if (bulkNotification.UsersUUID!.length > 100) {
-            throw new Error('Max 100 hard coded users');
-        }
+       
         if (bulkNotification.UsersUUID!.length == 0) {
             throw new Error('no users to send notification');
         }
@@ -916,8 +921,8 @@ class NotificationsService {
     }
 
     // Notifications Log
-    async getNotificationsLog() {
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).iter({ where: `CreatorUUID='${this.currentUserUUID}'` }).toArray();
+    async getNotificationsLog(): Promise<NotificationLog[]> {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).iter({ where: `CreatorUUID='${this.currentUserUUID}'` }).toArray() as NotificationLog[];
     }
 
     async upsertNotificationLog(body) {
@@ -936,7 +941,7 @@ class NotificationsService {
             'SentTo': body.SentTo,
             'Title': body.Title,
             'Body': body.Body,
-            'Key': uuid()
+            'Key': body.Key || uuid()
 
         };
 

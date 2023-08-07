@@ -86,10 +86,12 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
         });
+        const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
+        await migrateUpNotificationsLog(client)
         const usersListsService = new UsersListsService(client)
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-        return { success: notificationsUsersListsRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
+        return { success: notificationsUsersListsRes.success && notificationsLogViewRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
     }
     else{
         return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
@@ -97,7 +99,30 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') > 0){
+        await migrateDownNotificationsLog(client)
+    }
     return { success: true, resultObject: {} }
+}
+
+async function migrateUpNotificationsLog(client: Client){
+    const service = new NotificationsService(client)
+    let logs = await service.getNotificationsLog()
+    logs.forEach(async (log) => {
+        log.SentTo = {Users: log.UsersList};
+        delete log.UsersList
+        await service.upsertNotificationLog(log);
+    })
+}
+
+
+async function migrateDownNotificationsLog(client: Client){
+    const service = new NotificationsService(client)
+    let logs = await service.getNotificationsLog()
+    logs.forEach(async (log) => {
+        log.UsersList = log.SentTo.Users
+        await service.upsertNotificationLog(log);
+    })
 }
 
 async function createPageBlockRelation(client: Client): Promise<any> {
@@ -279,7 +304,7 @@ async function createNotificationsLogViewResource(papiClient: PapiClient) {
                 Type: 'String'
             },
             SentTo: {
-                Type: 'Array'
+                Type: 'Object'
             },
             Title: {
                 Type: 'String',
