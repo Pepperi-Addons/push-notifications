@@ -1,7 +1,8 @@
 import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { USERS_LISTS_TABLE_NAME } from 'shared'
+import { USERS_LISTS_TABLE_NAME, UsersLists } from 'shared'
 import { v4 as uuid } from 'uuid';
+import { AddonUUID } from '../addon.config.json'
 
 class UsersListsService {
     papiClient: PapiClient
@@ -21,8 +22,30 @@ class UsersListsService {
     this.accessToken = client.OAuthAccessToken;
     }
 
-    async getNotificationsUsersLists(query){
-        return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).iter(query).toArray();
+    async getNotificationsUsersLists(query?): Promise<AddonData[]>{
+        try{
+            return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).iter(query).toArray();
+        }
+        catch(error){
+            throw error
+        }
+    }
+
+    async getSetupListByKey(key: string): Promise<UsersLists>{
+        try{
+            return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).key(key).get() as UsersLists
+        }
+        catch(error){
+            throw error
+        }
+    }
+
+    async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
+        const listData: UsersLists = await this.getSetupListByKey(listKey);
+        const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField} = '${selectedGroupKey}'`})
+        return resourceData.map(resource =>{
+            return resource[`${listData.UserReferenceField}`]
+        })
     }
 
     async upsertNotificationsUsersLists(body){
@@ -86,7 +109,7 @@ class UsersListsService {
         catch (err) {
             return {
                 success: false,
-                errorMessage: err ? err : 'Unknown Error Occured',
+                errorMessage: err ? err : 'Unknown Error Occurred',
             }
         }
     }

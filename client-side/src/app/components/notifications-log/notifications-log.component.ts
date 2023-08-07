@@ -77,7 +77,7 @@ export class NotificationsLogComponent implements OnInit {
                 ReadOnly: true
               },
               {
-                FieldID: 'UsersList',
+                FieldID: 'SentTo',
                 Type: 'TextBox',
                 Title: this.translate.instant("Sent_To"),
                 Mandatory: false,
@@ -172,7 +172,7 @@ export class NotificationsLogComponent implements OnInit {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "UsersList": notification.Fields[2]?.FormattedValue,
+          "SentTo": notification.Fields[2]?.FormattedValue,
           "Title": notification.Fields[0]?.FormattedValue,
           "Body": notification.Fields[1]?.FormattedValue,
         }

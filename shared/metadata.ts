@@ -405,11 +405,11 @@ export const defaultDataSourceForListSetup = {
 
 export const UsersListDataView = {
   List: {
-    Key: "Notifications_Users_List",
+    Key: "Notifications_Employees_List",
     Name: "Users list",
-    Resource: "users",
+    Resource: "employees",
     Views: [{
-      Key: "notifications_users_view",
+      Key: "notifications_employees_view",
       Type: "Grid",
       Title: "Users",
       Blocks: [{
@@ -462,6 +462,6 @@ export const UsersListDataView = {
     Sorting: {Ascending: true, FieldID: "FirstName"},     
   },
   State: {
-    ListKey: "Notifications_Users_List",
+    ListKey: "Notifications_Employees_List",
   },          
 }

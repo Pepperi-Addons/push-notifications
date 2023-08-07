@@ -278,7 +278,7 @@ async function createNotificationsLogViewResource(papiClient: PapiClient) {
             CreatorUUID: {
                 Type: 'String'
             },
-            UsersList: {
+            SentTo: {
                 Type: 'Array'
             },
             Title: {
