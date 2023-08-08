@@ -38,7 +38,7 @@ export class NotificationsLogComponent implements OnInit {
     this.noDataMessage = this.translate.instant("No_Notifications_Log_Error")
     return {
       init: async (params: any) => {
-        let notificationsList = await this.notificationsLogService.getNotificationsLog();
+        let notificationsList = await this.notificationsLogService.getNotificationsLogView();
         this.notificationsLogService.handleSorting(params, notificationsList);
         if (params.searchString) {
           notificationsList = notificationsList.filter(notification => {
@@ -77,9 +77,16 @@ export class NotificationsLogComponent implements OnInit {
                 ReadOnly: true
               },
               {
-                FieldID: 'SentTo',
+                FieldID: 'SentToUsers',
                 Type: 'TextBox',
-                Title: this.translate.instant("Sent_To"),
+                Title: this.translate.instant("Sent_To_Users"),
+                Mandatory: false,
+                ReadOnly: true
+              },
+              {
+                FieldID: 'SentToGroups',
+                Type: 'TextBox',
+                Title: this.translate.instant("Sent_To_Groups"),
                 Mandatory: false,
                 ReadOnly: true
               },
@@ -92,6 +99,9 @@ export class NotificationsLogComponent implements OnInit {
               }
             ],
             Columns: [
+              {
+                Width: 20
+              },
               {
                 Width: 20
               },

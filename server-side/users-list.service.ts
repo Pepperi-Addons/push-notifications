@@ -56,7 +56,7 @@ class UsersListsService {
     }
 
     validateResourceExists(resourceName: string, resources: AddonData[]): boolean{
-        const resourceExist = resources.find(resource =>{ resource.Name == resourceName})
+        const resourceExist = resources.find(resource => resource.Name == resourceName)
         return resourceExist? true : false
     }
 

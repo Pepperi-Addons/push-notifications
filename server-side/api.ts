@@ -241,6 +241,16 @@ export async function notifications_log(client: Client, request: Request) {
     }
 }
 
+export async function notifications_log_view(client: Client, request: Request) {
+    const service = new NotificationsService(client);
+    if (request.method == 'GET') {
+        return service.getNotificationsLogView();
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function delete_notifications_log(client: Client, request: Request) {
     const service = new NotificationsService(client);
     if (request.method == 'POST') {

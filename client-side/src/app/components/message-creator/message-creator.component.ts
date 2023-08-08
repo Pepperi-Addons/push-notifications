@@ -12,7 +12,7 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersListDataView, UsersLists, BulkMessageObject } from 'shared';
+import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup } from 'shared';
   
 
 
@@ -73,6 +73,7 @@ export class MessageCreatorComponent implements OnInit {
       this.message.Title = queryParams.Title || '';
       this.message.Body = queryParams.Body || '';
       this.handleDuplicateUsers(queryParams.SentTo.Users);
+      this.handleDuplicateGroups(queryParams.SentTo.Groups)
     }
   }
   
@@ -89,7 +90,16 @@ export class MessageCreatorComponent implements OnInit {
         this.chipsComp.addChipsToList(this.chips)
       }); 
     }
-   
+  }
+
+  async handleDuplicateGroups(groupsList: UsersGroup[]) {
+    // users list is a string of users emails separated by comma
+    if (groupsList.length > 0 ) {
+      await Promise.all(groupsList.map(async group => {
+        const chipIndex = this.usersLists.findIndex(list => list.Key == group.ListKey)
+        await this.handleListSetupSelection([group.SelectedGroupKey],this.usersLists[chipIndex], chipIndex)      
+      }))
+    }
   }
 
 

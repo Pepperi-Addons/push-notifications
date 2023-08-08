@@ -3,7 +3,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, NotificationLogView
 } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
@@ -686,15 +686,17 @@ class NotificationsService {
 
     async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
         const usersListsService = new UsersListsService(this.client)
+
         if (bulkNotification.UsersUUID!.length + bulkNotification.SentTo.Groups?.length!> 100) {
             throw new Error('Max 100 hard coded users and groups');
         }
+
         if(bulkNotification.SentTo.Groups?.length! > 0){
             const usersFromGroups: string[] = []
             bulkNotification.SentTo.Groups?.forEach(async group =>{
                 usersFromGroups.push(...await usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey))
             })
-            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...usersFromGroups]
+            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersFromGroups]
         }
         // return only distinct user uuids to prevent duplicates
         bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];
@@ -923,6 +925,15 @@ class NotificationsService {
     // Notifications Log
     async getNotificationsLog(): Promise<NotificationLog[]> {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).iter({ where: `CreatorUUID='${this.currentUserUUID}'` }).toArray() as NotificationLog[];
+    }
+
+    async getNotificationsLogView(): Promise<NotificationLogView[]>{
+        const logs = await this.getNotificationsLog() as NotificationLogView[]
+        logs.forEach(async log => {
+            log.SendToUsers = log.SentTo.Users
+            log.SentToUGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title})
+        }) 
+        return logs
     }
 
     async upsertNotificationLog(body) {
