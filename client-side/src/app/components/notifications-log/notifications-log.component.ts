@@ -145,7 +145,7 @@ export class NotificationsLogComponent implements OnInit {
           title: this.translate.instant("Duplicate"),
           handler: async (objs) => {
             let notification = this.glist1.getItemById(objs.rows[0]);
-            this.goToMessageCreator(notification);
+            await this.goToMessageCreator(notification);
           }
       });
       }
@@ -170,7 +170,7 @@ export class NotificationsLogComponent implements OnInit {
     }
   }
   
-  goToMessageCreator(notification?) {
+  async goToMessageCreator(notification?) {
     if (notification === undefined) {
         this.router.navigate(['message_creator'], {
         relativeTo: this.route,
@@ -182,9 +182,7 @@ export class NotificationsLogComponent implements OnInit {
         relativeTo: this.route,
         queryParamsHandling: 'merge',
         queryParams: {
-          "SentTo": notification.Fields[2]?.FormattedValue,
-          "Title": notification.Fields[0]?.FormattedValue,
-          "Body": notification.Fields[1]?.FormattedValue,
+          "LogKey": notification.UID
         }
       })
     }

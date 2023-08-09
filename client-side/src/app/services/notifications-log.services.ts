@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { config } from '../addon.config';
 import { AddonService } from './addon.service';
+import { NotificationLogView } from 'shared';
 // import { IPepListSortingData } from '@pepperi-addons/ngx-lib/list';
 
 @Injectable({
@@ -14,6 +15,11 @@ export class NotificationsLogService {
         private route: ActivatedRoute
     ) {
         this.addonService.addonUUID = config.AddonUUID;
+    }
+
+    async getNotificationLogByKey(key: string){
+        const logs: NotificationLogView[] = await this.getNotificationsLogView()
+        return logs.find(log => log.Key == key)
     }
 
     getNotificationsLog() {
