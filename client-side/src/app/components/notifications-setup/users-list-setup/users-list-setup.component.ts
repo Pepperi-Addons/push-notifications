@@ -17,7 +17,6 @@ export class UsersListSetupComponent implements OnInit {
   dataView:FormDataView
   formDataSource:AddonData = {}
   userListData:AddonData = {}
-  isSaveListDisabled: boolean = true
   selectedResource: AddonData
   selectedMappingResource: AddonData
   availableResources: AddonData[]
@@ -61,7 +60,7 @@ export class UsersListSetupComponent implements OnInit {
     return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
     && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
     && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
-    && this.userListData.SelectionDisplayFields != undefined
+    && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
   }
 
   async valueChange($event){
@@ -114,6 +113,8 @@ export class UsersListSetupComponent implements OnInit {
     this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = true
     this.userListData.SelectionDisplayFields = undefined
     this.dataView.Fields[setupListViewIndexes.DisplayFieldsSelector].ReadOnly = true
+    this.userListData.SmartSearchFields = undefined
+    this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = true
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
     // enabling selection of the next field and updating options to select
@@ -186,10 +187,19 @@ export class UsersListSetupComponent implements OnInit {
     else{
       // saving selected fields
       this.userListData.SelectionDisplayFields = selectedDisplayFields
-      // enabling saving the list
-      this.isSaveListDisabled = false
+      this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = false
+      this.refreshFormData()
     }
+  }
 
+  validateSmartSearchFields(selectedSearchFields: string[]){
+    if(selectedSearchFields.length == 0){
+      throw new Error('Fields Must Be Selected!')
+    }
+    else{
+      // saving selected fields
+      this.userListData.SmartSearchFields = selectedSearchFields
+    }
   }
 
   refreshFormData(){
@@ -202,6 +212,14 @@ export class UsersListSetupComponent implements OnInit {
       this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
         if(res){
           this.validateSelectedDisplayFields(res)
+        }
+      },
+      this.resourceFields)
+    }
+    if($event.ApiName == "SmartSearchFields"){
+      this.notificationsDialogService.openDialog(FieldSelectorComponent,(res) => {
+        if(res){
+          this.validateSmartSearchFields(res)
         }
       },
       this.resourceFields)

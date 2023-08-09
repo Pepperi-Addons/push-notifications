@@ -15,7 +15,9 @@ export const setupListViewIndexes = {
   ResourceReferenceFieldDesc: 11,
   ResourceReferenceField: 12,
   DisplayFieldsSelectorDesc: 13,
-  DisplayFieldsSelector: 14
+  DisplayFieldsSelector: 14,
+  SmartSearchFieldsDesc: 15,
+  SmartSearchFields: 16
 }
 
 export const defaultFormViewForListSetup: FormDataView = {
@@ -377,6 +379,52 @@ export const defaultFormViewForListSetup: FormDataView = {
             Vertical: "Stretch"
           }
         }
+      },
+      {
+        FieldID: "SmartSearchFieldsDesc",
+        Type: "RichTextHTML",
+        Title: "",
+        Mandatory: true,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: setupListViewIndexes.SmartSearchFieldsDesc
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
+      },
+      {
+        FieldID: "SmartSearchFields",
+        Type: "Button",
+        Title: "Select Fields To Search By When Selecting Groups For Sending Notifications",
+        Mandatory: true,
+        ReadOnly: true,
+        Layout: {
+          Origin: {
+            X: 0,
+            Y: setupListViewIndexes.SmartSearchFieldsDesc
+          },
+          Size: {
+            Width: 1,
+            Height: 0
+          }
+        },
+        Style: {
+          Alignment: {
+            Horizontal: "Stretch",
+            Vertical: "Stretch"
+          }
+        }
       }
     ],
     Rows: []
@@ -400,7 +448,9 @@ export const defaultDataSourceForListSetup = {
     +" resource <br> if there is only one field available it will be selected automatically </p>",
     ResourceReferenceField:'',
     DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
-    DisplayFieldsSelector: 'Press To Select Fields To Display'
+    DisplayFieldsSelector: 'Press To Select Fields To Display',
+    SmartSearchFieldsDesc: '<p> Fields to search by in Notifications Sending </p>',
+    SmartSearchFields: 'Press To Select Fields To Search By'
 }
 
 export const UsersListDataView = {

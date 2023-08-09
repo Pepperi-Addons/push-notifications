@@ -111,7 +111,6 @@ export class MessageCreatorComponent implements OnInit {
   handleGroupsChips(){
     this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
       const listKey = this.usersLists[listIndex].Key
-      console.log(listKey)
       listsChips.chips.map(async listChip =>{
         this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
       })
@@ -120,12 +119,10 @@ export class MessageCreatorComponent implements OnInit {
 
   
   async sendNotifications() {
-    debugger
     if(this.chipsComp.chips.length > 0){
       this.handleUserChips()
     }
     if(this.userListChips.length > 0 ){
-      debugger
       this.handleGroupsChips()
     }
     let ans = await this.notificationsService.bulkNotifications(this.message);
@@ -223,8 +220,13 @@ export class MessageCreatorComponent implements OnInit {
     return UsersListDataView;
   }
 
-  getGenericPickerList(list){
-    console.log(list)
+  getSearchFields(fields: string[]){
+    return fields.map(field => {
+      return { FieldID: field }
+    })
+  }
+
+  getGenericPickerList(list: UsersLists){
     return {
       List: {
         Key: `Notifications_List_${list.ListName}`,
@@ -234,8 +236,12 @@ export class MessageCreatorComponent implements OnInit {
           Key: `notifications_${list.ListName}_view`,
           Type: "Grid",
           Title: list.ListName,
-          Blocks: list.SelectionDisplayFields.map(field => this.getSingleGenericField(field))
-        }]
+          Blocks: list.SelectionDisplayFields.map(field => this.getSingleGenericField(field)),
+        }],
+        SelectionType: "Multi",
+        Search: {
+          Fields: this.getSearchFields(list.SmartSearchFields),
+        }
       },
       State: {
         ListKey: `Notifications_List_${list.ListName}`,
@@ -278,7 +284,6 @@ getGenericHostObject(list){
       hostObject: this.getUsersHostObject(),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          console.log($event)
           let newChips: any[]  = [];
           await Promise.all($event.data.selectedObjects.map( async chip => {
             let chipObj = { 
