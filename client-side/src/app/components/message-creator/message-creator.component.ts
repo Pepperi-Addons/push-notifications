@@ -12,8 +12,9 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup } from 'shared';
+import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup, NotificationLogView } from 'shared';
 import { AddonData } from '@pepperi-addons/papi-sdk';
+import { NotificationsLogService } from 'src/app/services/notifications-log.services';
 
 
 @Component({
@@ -46,7 +47,8 @@ export class MessageCreatorComponent implements OnInit {
     private router: Router,
     private pepSnackBarService: PepSnackBarService,
     private addonBlockService: PepAddonBlockLoaderService,
-    private viewContainerRef: ViewContainerRef
+    private viewContainerRef: ViewContainerRef,
+    private notificationsLogService: NotificationsLogService
   ) {
     this.addonService.addonUUID = config.AddonUUID;
   }
@@ -66,22 +68,22 @@ export class MessageCreatorComponent implements OnInit {
     this.handleDuplicateMessageParams();
   }
 
-  private handleDuplicateMessageParams() {
+  private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
     if (queryParams != undefined) {
-      this.message.Title = queryParams.Title || '';
-      this.message.Body = queryParams.Body || '';
-      this.handleDuplicateUsers(queryParams.SentTo.Users);
-      this.handleDuplicateGroups(queryParams.SentTo.Groups)
+      const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.LogKey)
+      this.message.Title = notificationLog.Title || '';
+      this.message.Body = notificationLog.Body || '';
+      this.handleDuplicateUsers(notificationLog.SentTo.Users);
+      this.handleDuplicateGroups(notificationLog.SentTo.Groups)
     }
   }
   
-  private handleDuplicateUsers(usersList: string) {
+  private handleDuplicateUsers(usersList: string[]) {
     // users list is a string of users emails separated by comma
     if (usersList != undefined) {
-      const users = usersList.split(',');
-      Promise.all(users.map(async user => {
+      Promise.all(usersList.map(async user => {
         const userUUID = await this.addonService.getUUIDByEmail(user);
         this.chips.push({ key: userUUID, value: user });       
 

@@ -692,11 +692,10 @@ class NotificationsService {
         }
 
         if(bulkNotification.SentTo.Groups?.length! > 0){
-            const usersFromGroups: string[] = []
-            bulkNotification.SentTo.Groups?.forEach(async group =>{
-                usersFromGroups.push(...await usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey))
-            })
-            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...await usersFromGroups]
+            const usersFromGroups: string[][] = await Promise.all(bulkNotification.SentTo.Groups!.map(async group =>{
+                return usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey)
+            }))
+            bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...usersFromGroups.flat()]
         }
         // return only distinct user uuids to prevent duplicates
         bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];
@@ -930,8 +929,8 @@ class NotificationsService {
     async getNotificationsLogView(): Promise<NotificationLogView[]>{
         const logs = await this.getNotificationsLog() as NotificationLogView[]
         logs.forEach(async log => {
-            log.SendToUsers = log.SentTo.Users
-            log.SentToUGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title})
+            log.SentToUsers = log.SentTo.Users
+            log.SentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
         }) 
         return logs
     }

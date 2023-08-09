@@ -39,15 +39,18 @@ class UsersListsService {
         }
     }
 
+    // this function ...
     async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
+        const usersUUIDs: string[] = [];
         if(!await this.validateListBeforeSendingNotification(listData)){
-            throw new Error(`Could not send message, resource does not exists`)
+            throw new Error(`Could not send message, resource does not exists`);
         }
-        const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField} = '${selectedGroupKey}'`})
-        return resourceData.map(resource =>{
-            return resource[`${listData.UserReferenceField}`]
+        const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField}='${selectedGroupKey}'`});
+        resourceData.forEach(row =>{
+            usersUUIDs.push(row[`${listData.UserReferenceField}`]);
         })
+        return usersUUIDs;
     }
 
     async validateListBeforeSendingNotification(listData: UsersLists): Promise<boolean>{
