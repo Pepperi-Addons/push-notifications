@@ -13,6 +13,7 @@ import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loade
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
 import { UsersListDataView, UsersLists, BulkMessageObject } from 'shared';
+import { AddonData } from '@pepperi-addons/papi-sdk';
   
 
 
@@ -162,21 +163,52 @@ export class MessageCreatorComponent implements OnInit {
     });
   }
 
+  popErrorMessage(errorMessage: string){
+    let snackbarData : PepSnackBarData = {
+      title: this.translate.instant("Cannot Use This List"),
+      content: this.translate.instant(errorMessage)
+    }
+    this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
+    this.currentSnackBar.instance.closeClick.subscribe(() => {
+  });
+  }
+
+  async validateListBeforeSendingNotification(listData: UsersLists): Promise<boolean>{
+    const resources = await this.addonService.papiClient.resources.resource('resources').get()
+    let res:boolean = true
+    if(!this.validateResourceExists(listData.ResourceName, resources)){
+      this.popErrorMessage(`Resource ${listData.ResourceName} does not exist`)
+      res = false
+    }
+    if(!this.validateResourceExists(listData.MappingResourceName, resources)){
+      this.popErrorMessage(`Resource ${listData.MappingResourceName} does not exist`)
+      res = false
+    }
+    return res
+  }
+
+  validateResourceExists(resourceName: string, resources: AddonData[]): boolean{
+      const resourceExist = resources.find(resource => resource.Name == resourceName)
+      return resourceExist? true : false
+  }
+
   async userListClicked(list: UsersLists ,chipsSelectorIndex: number){
-    this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
-      container: this.viewContainerRef,
-      name: 'List',
-      hostObject: this.getGenericHostObject(list),
-      hostEventsCallback: async ($event) => {
-        if($event.action == 'on-done'){
-          await this.handleListSetupSelection($event.data.selectedObjects, list, chipsSelectorIndex)
-          this.dialogRef.close();
+    if(await this.validateListBeforeSendingNotification(list)){
+      this.dialogRef = this.addonBlockService.loadAddonBlockInDialog({
+        container: this.viewContainerRef,
+        name: 'List',
+        hostObject: this.getGenericHostObject(list),
+        hostEventsCallback: async ($event) => {
+          if($event.action == 'on-done'){
+            await this.handleListSetupSelection($event.data.selectedObjects, list, chipsSelectorIndex)
+            this.dialogRef.close();
+          }
+          if($event.action == 'on-cancel'){
+            this.dialogRef.close();
+          }
         }
-        if($event.action == 'on-cancel'){
-          this.dialogRef.close();
-        }
-      }
-    })
+      })
+    }
   }
 
   async handleListSetupSelection(selectedKeys: string[], list: UsersLists, chipsSelectorIndex: number) {
