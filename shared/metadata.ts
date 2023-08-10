@@ -1,4 +1,5 @@
 import { FormDataView } from "@pepperi-addons/papi-sdk";
+import { UsersLists } from "./entities";
 
 export const setupListViewIndexes = {
   AddGroupList: 0,
@@ -514,4 +515,16 @@ export const UsersListDataView = {
   State: {
     ListKey: "Notifications_Employees_List",
   },          
+}
+
+export const DefaultAccountBuyersList: UsersLists = {
+  Key: 'account_buyers',
+  ListName: 'Account Buyers',
+  ResourceName: 'accounts', 
+  TitleField: 'Name',
+  MappingResourceName: 'account_buyers',
+  UserReferenceField: 'User',
+  ResourceReferenceField: 'Account',
+  SelectionDisplayFields: ["Email", "Name", "Key"],
+  SmartSearchFields: ["Email", "Name"]
 }

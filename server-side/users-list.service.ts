@@ -1,6 +1,6 @@
 import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { USERS_LISTS_TABLE_NAME, UsersLists } from 'shared'
+import { USERS_LISTS_TABLE_NAME, UsersLists, DefaultAccountBuyersList } from 'shared'
 import { v4 as uuid } from 'uuid';
 
 class UsersListsService {
@@ -83,6 +83,22 @@ class UsersListsService {
                 throw new Error(`Could not delete list with UUID ${list.Key}`)
             }
         }))
+    }
+
+    async createDefaultLists(){
+        try {
+            await this.upsertNotificationsUsersLists(DefaultAccountBuyersList)
+            return {
+                success: true,
+                errorMessage: ""
+            }
+        }
+        catch (err) {
+            return {
+                success: false,
+                errorMessage: err ? err : 'Unknown Error Occurred',
+            }
+        }
     }
 
     async createUsersListsResource(papiClient:PapiClient) {
