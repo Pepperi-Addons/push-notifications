@@ -41,23 +41,10 @@ class UsersListsService {
 
     async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
-        if(!await this.validateListBeforeSendingNotification(listData)){
-            throw new Error(`Could not send message, resource does not exists`)
-        }
         const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField} = '${selectedGroupKey}'`})
         return resourceData.map(resource =>{
             return resource[`${listData.UserReferenceField}`]
         })
-    }
-
-    async validateListBeforeSendingNotification(listData: UsersLists): Promise<boolean>{
-        const resources = await this.papiClient.resources.resource('resources').get()
-        return this.validateResourceExists(listData.ResourceName, resources) && this.validateResourceExists(listData.MappingResourceName, resources)
-    }
-
-    validateResourceExists(resourceName: string, resources: AddonData[]): boolean{
-        const resourceExist = resources.find(resource =>{ resource.Name == resourceName})
-        return resourceExist? true : false
     }
 
     async upsertNotificationsUsersLists(body){
