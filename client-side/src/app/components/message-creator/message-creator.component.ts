@@ -71,7 +71,7 @@ export class MessageCreatorComponent implements OnInit {
   private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams.log_key != undefined) {
+    if (queryParams?.log_key != undefined) {
       const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.log_key)
       this.message.Title = notificationLog.Title || '';
       this.message.Body = notificationLog.Body || '';
@@ -111,9 +111,9 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   handleGroupsChips(){
-    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
+    this.userListChips.toArray().forEach((listsChips, listIndex) =>{
       const listKey = this.usersLists[listIndex].Key
-      listsChips.chips.map(async listChip =>{
+      listsChips.chips.map(listChip =>{
         this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
       })
     })
@@ -126,9 +126,7 @@ export class MessageCreatorComponent implements OnInit {
       this.handleUserChips()
     }
     // if there are groups selected, add them to the message object
-    if(this.userListChips.length > 0 ){
-      this.handleGroupsChips()
-    }
+    this.handleGroupsChips()
     // handling message sending
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
