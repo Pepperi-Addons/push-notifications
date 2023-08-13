@@ -4,8 +4,8 @@ The return object format MUST contain the field 'success':
 {success:true}
 
 If the result of your code is 'false' then return:
-{success:false, erroeMessage:{the reason why it is false}}
-The error Message is importent! it will be written in the audit log and help the user to understand what happen
+{success:false, error Message:{the reason why it is false}}
+The error Message is important! it will be written in the audit log and help the user to understand what happen
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
@@ -37,6 +37,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
     const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
+    const defaultListRes = await usersListsService.createDefaultLists()
     
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -44,9 +45,9 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success && notificationsUsersListsRes.success,
+        success: notificationsResourceRes.success && defaultListRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success && notificationsUsersListsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
-        notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
+        defaultListRes: ${defaultListRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
          relationsRes: ${relationsRes.errorMessage}, settingsRelationsRes: ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
          platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}, notificationsUsersListsRes: ${notificationsUsersListsRes.errorMessage}`
     };
@@ -88,12 +89,12 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         });
         // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
-        await migrateUpNotificationsLog(client);
-
-        const usersListsService = new UsersListsService(client);
+        const migrateUpLogRes = await migrateUpNotificationsLog(client)
+        const usersListsService = new UsersListsService(client)
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
+        const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-        return { success: notificationsUsersListsRes.success && notificationsLogViewRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
+        return { success: notificationsUsersListsRes.success && migrateUpLogRes.success && defaultListRes.success && notificationsLogViewRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
     }
     else{
         return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
@@ -109,23 +110,35 @@ export async function downgrade(client: Client, request: Request): Promise<any> 
 }
 
 async function migrateUpNotificationsLog(client: Client){
-    const service = new NotificationsService(client)
-    let logs = await service.getNotificationsLog()
-    await Promise.all(logs.map(async (log) => {
-        log.SentTo = {Users: log.UsersList};
-        log.UsersList = []
-        await service.upsertNotificationLog(log);
-    }))
+    try{
+        const service = new NotificationsService(client)
+        let logs = await service.getNotificationsLog()
+        logs.forEach(async (log) => {
+            log.SentTo = {Users: log.UsersList};
+            delete log.UsersList
+            await service.upsertNotificationLog(log);
+        })
+        return { success: true, resultObject: '' };
+    } 
+    catch (err) {
+        return { success: false, errorMessage: err ? err : 'Unknown Error Occurred' };
+    }
 }
 
 
 async function migrateDownNotificationsLog(client: Client){
-    const service = new NotificationsService(client)
-    let logs = await service.getNotificationsLog()
-    await Promise.all(logs.map(async (log) => {
-        log.UsersList = log.SentTo.Users
-        await service.upsertNotificationLog(log);
-    }))
+    try{
+        const service = new NotificationsService(client)
+        let logs = await service.getNotificationsLog()
+        logs.forEach(async (log) => {
+            log.UsersList = log.SentTo.Users
+            await service.upsertNotificationLog(log);
+        })
+        return { success: true, resultObject: '' };
+    } 
+    catch (err) {
+        return { success: false, errorMessage: err ? err : 'Unknown Error Occurred' };
+    }
 }
 
 async function createPageBlockRelation(client: Client): Promise<any> {
