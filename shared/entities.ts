@@ -91,6 +91,7 @@ export interface UsersLists{
     UserReferenceField: string;
     ResourceReferenceField: string;
     SelectionDisplayFields: string[];
+    SmartSearchFields: string[];
 }
 export interface notificationReadStatus{
     Read: boolean,

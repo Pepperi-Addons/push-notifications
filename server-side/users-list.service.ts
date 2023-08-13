@@ -98,6 +98,9 @@ class UsersListsService {
                 },
                 SelectionDisplayFields: {
                     Type: "MultipleStringValues"
+                },
+                SmartSearchFields: {
+                    Type: "MultipleStringValues"
                 }
             }
             
