@@ -33,7 +33,7 @@
       "webapp": "17.15.106",
       "papi": "9.5.538",
       "resource_list": "0.9.110",
-      "core_resources": "1.0.0"
+      "core_resources": "1.0.1"
     },
     "CPISide": [
       "addon-cpi.ts"
