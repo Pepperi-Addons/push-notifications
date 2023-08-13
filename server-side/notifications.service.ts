@@ -3,13 +3,13 @@ import { Client } from '@pepperi-addons/debug-server';
 import { User } from '@pepperi-addons/papi-sdk';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, NotificationLogView
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, NotificationLogView, UsersGroup
 } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
-import { Agent } from 'https';
-import fetch from 'node-fetch';
+// import { Agent } from 'https';
+// import fetch from 'node-fetch';
 import {NotifiactionsSnsService} from './notifications-sns.service'
 import { UserDeviceHandlingFactory } from './register-device.service'
 import * as encryption from 'shared'
@@ -684,17 +684,25 @@ class NotificationsService {
         return body;
     }
 
-    async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
-        const usersListsService = new UsersListsService(this.client)
-
-        if (bulkNotification.UsersUUID!.length + bulkNotification.SentTo.Groups?.length!> 100) {
+    validateRecipientLimit(users: string[], groups: UsersGroup[]) {
+        // validating that there are no more than 100 hard coded users and groups
+        if (users.length + groups.length> 100) {
             throw new Error('Max 100 hard coded users and groups');
         }
 
+    }
+
+    async handleUsersUUIDsForBulk(bulkNotification: BulkMessageObject): Promise<BulkMessageObject>{
+        const usersListsService = new UsersListsService(this.client)
+
+        this.validateRecipientLimit(bulkNotification.UsersUUID || [], bulkNotification.SentTo.Groups || [])
+
+        // if there are groups selected, get all users uuids from the groups
         if(bulkNotification.SentTo.Groups?.length! > 0){
             const usersFromGroups: string[][] = await Promise.all(bulkNotification.SentTo.Groups!.map(async group =>{
                 return usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey)
             }))
+            // merge all of the hard coded users and users from groups
             bulkNotification.UsersUUID = [...bulkNotification.UsersUUID!, ...usersFromGroups.flat()]
         }
         // return only distinct user uuids to prevent duplicates
@@ -746,109 +754,110 @@ class NotificationsService {
         const ansFromImport = await this.papiClient.post(url, {Objects:body});
         return ansFromImport
     }
+    // we are currently not using this functions, however when we will use PFS & ADAL instead of DIMX we will use this functions
 
-    async uploadFileAndImport(body) {
-        let fileURL = await this.uploadObject();
-        //upload Object To S3
-        await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());
-        if (fileURL != undefined && fileURL.URL != undefined) {
-            const file = {
-                'URI': fileURL.URL,
-                'OverwriteObject': false,
-                'Delimiter': ';',
-                "Version": "1.0.3"
-            }
-            const url = `/addons/data/import/file/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
-            const ansFromImport = await this.papiClient.post(url, file);
-            const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
-            if (ansFromAuditLog.success === true) {
-                const downloadURL = JSON.parse(ansFromAuditLog.resultObject).URI;
-                return await this.DownloadResultArray(downloadURL);
-            }
-            return ansFromAuditLog;
-        }
-    }
+    // async uploadFileAndImport(body) {
+    //     let fileURL = await this.uploadObject();
+    //     //upload Object To S3
+    //     await this.apiCall('PUT', fileURL.PresignedURL, body).then((res) => res.text());
+    //     if (fileURL != undefined && fileURL.URL != undefined) {
+    //         const file = {
+    //             'URI': fileURL.URL,
+    //             'OverwriteObject': false,
+    //             'Delimiter': ';',
+    //             "Version": "1.0.3"
+    //         }
+    //         const url = `/addons/data/import/file/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
+    //         const ansFromImport = await this.papiClient.post(url, file);
+    //         const ansFromAuditLog = await this.pollExecution(this.papiClient, ansFromImport.ExecutionUUID);
+    //         if (ansFromAuditLog.success === true) {
+    //             const downloadURL = JSON.parse(ansFromAuditLog.resultObject).URI;
+    //             return await this.DownloadResultArray(downloadURL);
+    //         }
+    //         return ansFromAuditLog;
+    //     }
+    // }
 
-    async DownloadResultArray(downloadURL): Promise<any[]> {
-        console.log(`OutputArrayObject: Downloading file`);
-        try {
-            const response = await fetch(downloadURL);
-            const data: string = await response.text();
-            const DIMXObjectArr: any[] = JSON.parse(data);
-            return DIMXObjectArr;
-        }
-        catch (ex) {
-            console.log(`DownloadResultArray: ${ex}`);
-            throw new Error((ex as { message: string }).message);
-        }
-    }
+    // async DownloadResultArray(downloadURL): Promise<any[]> {
+    //     console.log(`OutputArrayObject: Downloading file`);
+    //     try {
+    //         const response = await fetch(downloadURL);
+    //         const data: string = await response.text();
+    //         const DIMXObjectArr: any[] = JSON.parse(data);
+    //         return DIMXObjectArr;
+    //     }
+    //     catch (ex) {
+    //         console.log(`DownloadResultArray: ${ex}`);
+    //         throw new Error((ex as { message: string }).message);
+    //     }
+    // }
 
-    async uploadObject() {
-        const url = `/addons/pfs/${this.addonUUID}/${PFS_TABLE_NAME}`
-        let expirationDateTime = new Date();
-        expirationDateTime.setDate(expirationDateTime.getDate() + 1);
-        const body = {
-            "Key": "/tempBulkAPI/" + uuid() + ".json",
-            "MIME": "application/json",
-            "ExpirationDateTime": expirationDateTime
-        }
-        return await this.papiClient.post(url, body);
-    }
+    // async uploadObject() {
+    //     const url = `/addons/pfs/${this.addonUUID}/${PFS_TABLE_NAME}`
+    //     let expirationDateTime = new Date();
+    //     expirationDateTime.setDate(expirationDateTime.getDate() + 1);
+    //     const body = {
+    //         "Key": "/tempBulkAPI/" + uuid() + ".json",
+    //         "MIME": "application/json",
+    //         "ExpirationDateTime": expirationDateTime
+    //     }
+    //     return await this.papiClient.post(url, body);
+    // }
 
-    async apiCall(method: HttpMethod, url: string, body: any = undefined) {
+    // async apiCall(method: HttpMethod, url: string, body: any = undefined) {
 
-        const agent = new Agent({
-            rejectUnauthorized: false,
-        })
+    //     const agent = new Agent({
+    //         rejectUnauthorized: false,
+    //     })
 
-        const options: any = {
-            method: method,
-            agent: agent,
-            headers: { 'Content-Type': 'application/json' }
-        };
+    //     const options: any = {
+    //         method: method,
+    //         agent: agent,
+    //         headers: { 'Content-Type': 'application/json' }
+    //     };
 
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
+    //     if (body) {
+    //         options.body = JSON.stringify(body);
+    //     }
 
-        const res = await fetch(url, options);
-
-
-        if (!res.ok) {
-            // try parsing error as json
-            let error = '';
-            try {
-                error = JSON.stringify(await res.json());
-            } catch { }
-
-            throw new Error(`${url} failed with status: ${res.status} - ${res.statusText} error: ${error}`);
-        }
-        return res;
-    }
+    //     const res = await fetch(url, options);
 
 
-    async pollExecution(papiClient: PapiClient, ExecutionUUID: string, interval = 1000, maxAttempts = 60, validate = (res) => {
-        return res != null && (res.Status.Name === 'Failure' || res.Status.Name === 'Success');
-    }) {
-        let attempts = 0;
+    //     if (!res.ok) {
+    //         // try parsing error as json
+    //         let error = '';
+    //         try {
+    //             error = JSON.stringify(await res.json());
+    //         } catch { }
 
-        const executePoll = async (resolve, reject) => {
-            const result = await papiClient.get(`/audit_logs/${ExecutionUUID}`);
-            attempts++;
+    //         throw new Error(`${url} failed with status: ${res.status} - ${res.statusText} error: ${error}`);
+    //     }
+    //     return res;
+    // }
 
-            if (validate(result)) {
-                return resolve({ "success": result.Status.Name === 'Success', "errorCode": 0, 'resultObject': result.AuditInfo.ResultObject });
-            }
-            else if (maxAttempts && attempts === maxAttempts) {
-                return resolve({ "success": false, "errorCode": 1 });
-            }
-            else {
-                setTimeout(executePoll, interval, resolve, reject);
-            }
-        };
 
-        return new Promise<any>(executePoll);
-    }
+    // async pollExecution(papiClient: PapiClient, ExecutionUUID: string, interval = 1000, maxAttempts = 60, validate = (res) => {
+    //     return res != null && (res.Status.Name === 'Failure' || res.Status.Name === 'Success');
+    // }) {
+    //     let attempts = 0;
+
+    //     const executePoll = async (resolve, reject) => {
+    //         const result = await papiClient.get(`/audit_logs/${ExecutionUUID}`);
+    //         attempts++;
+
+    //         if (validate(result)) {
+    //             return resolve({ "success": result.Status.Name === 'Success', "errorCode": 0, 'resultObject': result.AuditInfo.ResultObject });
+    //         }
+    //         else if (maxAttempts && attempts === maxAttempts) {
+    //             return resolve({ "success": false, "errorCode": 1 });
+    //         }
+    //         else {
+    //             setTimeout(executePoll, interval, resolve, reject);
+    //         }
+    //     };
+
+    //     return new Promise<any>(executePoll);
+    // }
 
     async getNotificationsSoftLimit() {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).key(NOTIFICATIONS_VARS_TABLE_NAME).get();
@@ -926,13 +935,8 @@ class NotificationsService {
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).iter({ where: `CreatorUUID='${this.currentUserUUID}'` }).toArray() as NotificationLog[];
     }
 
-    async getNotificationsLogView(): Promise<NotificationLogView[]>{
-        const logs = await this.getNotificationsLog() as NotificationLogView[]
-        logs.forEach(async log => {
-            log.SentToUsers = log.SentTo.Users
-            log.SentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
-        }) 
-        return logs
+    async getNotificationsLogByKey(logKey: string): Promise<NotificationLog> {
+        return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).key(logKey).get() as NotificationLog;
     }
 
     async upsertNotificationLog(body) {
@@ -951,6 +955,8 @@ class NotificationsService {
             'SentTo': body.SentTo,
             'Title': body.Title,
             'Body': body.Body,
+            // when migration from 1.1 to 1.2 we are changing data in notifications log,
+            // so we need to check if the notification log already has a key to update the proper record
             'Key': body.Key || uuid()
 
         };

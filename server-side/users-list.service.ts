@@ -39,7 +39,8 @@ class UsersListsService {
         }
     }
 
-    // this function ...
+    // this function is getting a list key, and selected group and returns a list of users UUIDs 
+    // that are in the selected group using the list data - resource and mapping resource and reference fields
     async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
         const usersUUIDs: string[] = [];
