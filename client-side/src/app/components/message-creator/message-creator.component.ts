@@ -111,10 +111,9 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   handleGroupsChips(){
-    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
+    this.userListChips.toArray().forEach((listsChips, listIndex) =>{
       const listKey = this.usersLists[listIndex].Key
-      console.log(listKey)
-      listsChips.chips.map(async listChip =>{
+      listsChips.chips.map(listChip =>{
         this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
       })
     })
