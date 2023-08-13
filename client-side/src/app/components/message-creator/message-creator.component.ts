@@ -83,8 +83,8 @@ export class MessageCreatorComponent implements OnInit {
   private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams != undefined) {
-      const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.LogKey)
+    if (queryParams.log_key != undefined) {
+      const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.log_key)
       this.message.Title = notificationLog.Title || '';
       this.message.Body = notificationLog.Body || '';
       this.handleDuplicateUsers(notificationLog.SentTo.Users);
@@ -131,16 +131,20 @@ export class MessageCreatorComponent implements OnInit {
     })
   }
 
-  
+  // handling notification sending to users and groups
   async sendNotifications() {
+    // if there are users selected, add them to the message object
     if(this.chipsComp.chips.length > 0){
       this.handleUserChips()
     }
+    // if there are groups selected, add them to the message object
     if(this.userListChips.length > 0 ){
       this.handleGroupsChips()
     }
+    // handling message sending
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
+    // return to the previous page - notification log
     this.router.navigate(['../'], {
       relativeTo: this.route,
       queryParamsHandling: 'merge',
@@ -192,20 +196,22 @@ export class MessageCreatorComponent implements OnInit {
       content: this.translate.instant(errorMessage)
     }
     this.currentSnackBar = this.pepSnackBarService.openDefaultSnackBar(snackbarData);
-    this.currentSnackBar.instance.closeClick.subscribe(() => {
-  });
   }
 
   async validateListBeforeSendingNotification(listData: UsersLists): Promise<boolean>{
     const resources = await this.addonService.papiClient.resources.resource('resources').get()
+    let errMessage = ''
     let res:boolean = true
     if(!this.validateResourceExists(listData.ResourceName, resources)){
-      this.popErrorMessage(`Resource ${listData.ResourceName} does not exist`)
+      errMessage += `Resource ${listData.ResourceName} does not exist \n`
       res = false
     }
     if(!this.validateResourceExists(listData.MappingResourceName, resources)){
-      this.popErrorMessage(`Resource ${listData.MappingResourceName} does not exist`)
+      errMessage += `Resource ${listData.MappingResourceName} does not exist \n`
       res = false
+    }
+    if(!res){
+      this.popErrorMessage(errMessage)
     }
     return res
   }

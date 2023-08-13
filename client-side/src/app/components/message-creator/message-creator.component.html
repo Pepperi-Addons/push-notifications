@@ -12,7 +12,7 @@
         <div class="message-creator">
             <div class="to">
                 <pep-chips #chipsComp [type]="'select'" [chips]="chips" [styleType]="'weak'" [orientation] ="'vertical'" [placeholder]="'AddRecipient' | translate" (fieldClick)="externalSourceClicked()"></pep-chips>
-                <pep-chips class="pep-spacing-element-negative" *ngFor="let userList of usersLists;let indexOfElement=index;" #userListChips [type]="'select'" [placeholder]="'Add Users From '+userList.ListName" (fieldClick)="userListClicked(userList,indexOfElement)"></pep-chips>
+                <pep-chips *ngFor="let userList of usersLists;let indexOfElement=index;" #userListChips [styleType]="'weak'" [type]="'select'" [placeholder]="'Add Users From '+userList.ListName" (fieldClick)="userListClicked(userList,indexOfElement)"></pep-chips>
             </div>
             <div class="subject">
                 <pep-textbox [label]="'Subject' | translate" [(value)]="message.Title" [disabled]="false" [readonly]="false"></pep-textbox>

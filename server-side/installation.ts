@@ -4,8 +4,8 @@ The return object format MUST contain the field 'success':
 {success:true}
 
 If the result of your code is 'false' then return:
-{success:false, erroeMessage:{the reason why it is false}}
-The error Message is importent! it will be written in the audit log and help the user to understand what happen
+{success:false, error Message:{the reason why it is false}}
+The error Message is important! it will be written in the audit log and help the user to understand what happen
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
@@ -79,7 +79,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     const settingsRelationsRes = await createSettingsRelation(client);
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') < 0){
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
         const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -87,6 +87,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
         });
+        // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
         const migrateUpLogRes = await migrateUpNotificationsLog(client)
         const usersListsService = new UsersListsService(client)
@@ -101,9 +102,9 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') > 0){
-        const migrateDownLogRes = await migrateDownNotificationsLog(client)
-        return {success: migrateDownLogRes.success }
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! > 0){
+        // reverting back to UsersList from SentTo
+        await migrateDownNotificationsLog(client)
     }
     return { success: true, resultObject: {} }
 }
