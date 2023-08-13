@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren,QueryList} from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren,QueryList, ChangeDetectorRef} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -62,6 +62,14 @@ export class MessageCreatorComponent implements OnInit {
     this.notificationsSetupService.getUsersLists().then(list => {
       this.usersLists = list
     })
+  }
+
+  // enables sending messages only if user or group selected
+  get isUsersSelected(){
+    if(this.chipsComp && this.userListChips){
+      // user list chip is an array, so foreach is necessary to validate if any of the chips in the array was selected
+      return this.chipsComp.chips.length > 0 || this.userListChips.some(list => list.chips.length > 0)
+    }
   }
 
   ngAfterViewInit() {

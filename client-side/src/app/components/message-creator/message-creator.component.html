@@ -21,7 +21,7 @@
                 <pep-textarea [label]="'Body' | translate" [(value)]="message.Body" [readonly]="false" [rowSpan]="2"  ></pep-textarea>
             </div>
             <pep-button  class="sendButton" [sizeType]="'sm'" [classNames]="'pep-spacing-element'" [value]="'Send'| translate"
-            [styleType]="'strong'" (buttonClick)="sendNotifications()"></pep-button>
+            [styleType]="'strong'" (buttonClick)="sendNotifications()" [disabled]= "!isUsersSelected"></pep-button>
         </div>
     </ng-container>
 </pep-page-layout>
