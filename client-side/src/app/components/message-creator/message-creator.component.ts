@@ -65,7 +65,7 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   // enables sending messages only if user or group selected
-  get isUsersSelected(){
+  get isUsersSelected(): boolean{
     if(this.chipsComp && this.userListChips){
       // user list chip is an array, so foreach is necessary to validate if any of the chips in the array was selected
       return this.chipsComp.chips.length > 0 || this.userListChips.some(list => list.chips.length > 0)
