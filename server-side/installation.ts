@@ -78,7 +78,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     const settingsRelationsRes = await createSettingsRelation(client);
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') < 0){
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
         const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -86,9 +86,11 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
         });
+        // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
-        await migrateUpNotificationsLog(client)
-        const usersListsService = new UsersListsService(client)
+        await migrateUpNotificationsLog(client);
+
+        const usersListsService = new UsersListsService(client);
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
         return { success: notificationsUsersListsRes.success && notificationsLogViewRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
@@ -99,7 +101,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0') > 0){
+    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! > 0){
+        // reverting back to UsersList from SentTo
         await migrateDownNotificationsLog(client)
     }
     return { success: true, resultObject: {} }
@@ -108,21 +111,21 @@ export async function downgrade(client: Client, request: Request): Promise<any> 
 async function migrateUpNotificationsLog(client: Client){
     const service = new NotificationsService(client)
     let logs = await service.getNotificationsLog()
-    logs.forEach(async (log) => {
+    await Promise.all(logs.map(async (log) => {
         log.SentTo = {Users: log.UsersList};
-        delete log.UsersList
+        log.UsersList = []
         await service.upsertNotificationLog(log);
-    })
+    }))
 }
 
 
 async function migrateDownNotificationsLog(client: Client){
     const service = new NotificationsService(client)
     let logs = await service.getNotificationsLog()
-    logs.forEach(async (log) => {
+    await Promise.all(logs.map(async (log) => {
         log.UsersList = log.SentTo.Users
         await service.upsertNotificationLog(log);
-    })
+    }))
 }
 
 async function createPageBlockRelation(client: Client): Promise<any> {
