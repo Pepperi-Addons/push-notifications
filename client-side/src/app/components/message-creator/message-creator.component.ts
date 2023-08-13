@@ -71,7 +71,7 @@ export class MessageCreatorComponent implements OnInit {
   private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams.log_key != undefined) {
+    if (queryParams?.log_key != undefined) {
       const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.log_key)
       this.message.Title = notificationLog.Title || '';
       this.message.Body = notificationLog.Body || '';
