@@ -126,9 +126,7 @@ export class MessageCreatorComponent implements OnInit {
       this.handleUserChips()
     }
     // if there are groups selected, add them to the message object
-    if(this.userListChips.length > 0 ){
-      this.handleGroupsChips()
-    }
+    this.handleGroupsChips()
     // handling message sending
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);

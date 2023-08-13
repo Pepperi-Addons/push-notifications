@@ -936,6 +936,9 @@ class NotificationsService {
     }
 
     async getNotificationsLogByKey(logKey: string): Promise<NotificationLog> {
+        if(logKey == undefined){
+            throw new Error('Log Key is undefined')
+        }
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).key(logKey).get() as NotificationLog;
     }
 
