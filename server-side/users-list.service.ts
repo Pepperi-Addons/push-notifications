@@ -39,12 +39,16 @@ class UsersListsService {
         }
     }
 
+    // this function is getting a list key, and selected group and returns a list of users UUIDs 
+    // that are in the selected group using the list data - resource and mapping resource and reference fields
     async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
-        const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField} = '${selectedGroupKey}'`})
-        return resourceData.map(resource =>{
-            return resource[`${listData.UserReferenceField}`]
+        const usersUUIDs: string[] = [];
+        const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField}='${selectedGroupKey}'`});
+        resourceData.forEach(row =>{
+            usersUUIDs.push(row[`${listData.UserReferenceField}`]);
         })
+        return usersUUIDs;
     }
 
     async upsertNotificationsUsersLists(body){

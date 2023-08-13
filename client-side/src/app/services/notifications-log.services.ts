@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { config } from '../addon.config';
 import { AddonService } from './addon.service';
+import { NotificationLogView } from 'shared';
 // import { IPepListSortingData } from '@pepperi-addons/ngx-lib/list';
 
 @Injectable({
@@ -16,9 +17,24 @@ export class NotificationsLogService {
         this.addonService.addonUUID = config.AddonUUID;
     }
 
+    async getNotificationLogByKey(key: string){
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log_by_key?Key=${key}`
+        return await this.addonService.pepGet(encodeURI(url)).toPromise();
+    }
+
     getNotificationsLog() {
-        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
+    }
+
+    async getNotificationsLogView() {
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
+        const logs = await this.addonService.pepGet(encodeURI(url)).toPromise() as NotificationLogView[]
+        logs.forEach(log => {
+            log.SentToUsers = log.SentTo.Users
+            log.SentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
+        }) 
+        return logs
     }
 
     deleteNotificationsLog(notifications) {

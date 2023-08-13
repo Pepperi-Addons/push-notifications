@@ -241,6 +241,17 @@ export async function notifications_log(client: Client, request: Request) {
     }
 }
 
+// notifications log by key
+export async function notifications_log_by_key(client: Client, request: Request) {
+    const service = new NotificationsService(client);
+    if (request.method == 'GET') {
+        return service.getNotificationsLogByKey(request.query.Key);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function delete_notifications_log(client: Client, request: Request) {
     const service = new NotificationsService(client);
     if (request.method == 'POST') {

@@ -27,7 +27,7 @@ export interface Notification {
 
 export interface BulkMessageObject {
     UsersUUID?: string[],
-    SentTo: string[],
+    SentTo: SentTo,
     Title: string,
     Body: string,
     ListKey?: string,
@@ -44,10 +44,26 @@ export interface PayloadData {
 
 export interface NotificationLog extends AddonData {
     CreatorUUID: string,
-    SentTo: string[],
+    SentTo: SentTo,
     Title: string,
     Body?: string
     Key: string
+}
+
+export interface SentTo{
+    Users: string[],
+    Groups?: UsersGroup[]
+}
+
+export interface UsersGroup{
+    Title: string,
+    ListKey: string,
+    SelectedGroupKey: string
+}
+
+export interface NotificationLogView extends NotificationLog {
+    SentToUsers: string[] // the users uuids
+    SentToGroups: string[],  // groups display titles
 }
 
 export interface UserDevice {

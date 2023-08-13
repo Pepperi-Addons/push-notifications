@@ -12,9 +12,9 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersListDataView, UsersLists, BulkMessageObject } from 'shared';
+import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup, NotificationLogView } from 'shared';
 import { AddonData } from '@pepperi-addons/papi-sdk';
-  
+import { NotificationsLogService } from 'src/app/services/notifications-log.services';
 
 
 @Component({
@@ -30,7 +30,7 @@ export class MessageCreatorComponent implements OnInit {
 
   message: BulkMessageObject = {
     UsersUUID: [],
-    SentTo: [],
+    SentTo: {Users: [], Groups:[]},
     Title: "",
     Body: ""
   };
@@ -47,7 +47,8 @@ export class MessageCreatorComponent implements OnInit {
     private router: Router,
     private pepSnackBarService: PepSnackBarService,
     private addonBlockService: PepAddonBlockLoaderService,
-    private viewContainerRef: ViewContainerRef
+    private viewContainerRef: ViewContainerRef,
+    private notificationsLogService: NotificationsLogService
   ) {
     this.addonService.addonUUID = config.AddonUUID;
   }
@@ -67,21 +68,22 @@ export class MessageCreatorComponent implements OnInit {
     this.handleDuplicateMessageParams();
   }
 
-  private handleDuplicateMessageParams() {
+  private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams != undefined) {
-      this.message.Title = queryParams.Title || '';
-      this.message.Body = queryParams.Body || '';
-      this.handleUserList(queryParams.UsersList);
+    if (queryParams?.log_key != undefined) {
+      const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.log_key)
+      this.message.Title = notificationLog.Title || '';
+      this.message.Body = notificationLog.Body || '';
+      this.handleDuplicateUsers(notificationLog.SentTo.Users);
+      this.handleDuplicateGroups(notificationLog.SentTo.Groups)
     }
   }
   
-  private handleUserList(usersList: string) {
+  private handleDuplicateUsers(usersList: string[]) {
     // users list is a string of users emails separated by comma
     if (usersList != undefined) {
-      const users = usersList.split(',');
-      Promise.all(users.map(async user => {
+      Promise.all(usersList.map(async user => {
         const userUUID = await this.addonService.getUUIDByEmail(user);
         this.chips.push({ key: userUUID, value: user });       
 
@@ -90,38 +92,49 @@ export class MessageCreatorComponent implements OnInit {
         this.chipsComp.addChipsToList(this.chips)
       }); 
     }
-   
   }
-  
+
+  async handleDuplicateGroups(groupsList: UsersGroup[]) {
+    // users list is a string of users emails separated by comma
+    if (groupsList.length > 0 ) {
+      await Promise.all(groupsList.map(async group => {
+        const chipIndex = this.usersLists.findIndex(list => list.Key == group.ListKey)
+        await this.handleListSetupSelection([group.SelectedGroupKey],this.usersLists[chipIndex], chipIndex)      
+      }))
+    }
+  }
+
+
+  handleUserChips(){
+    this.message.SentTo.Users = this.chipsComp.chips.map(chips => chips.value)
+    this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
+  }
+
+  handleGroupsChips(){
+    this.userListChips.toArray().forEach((listsChips, listIndex) =>{
+      const listKey = this.usersLists[listIndex].Key
+      listsChips.chips.map(listChip =>{
+        this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
+      })
+    })
+  }
+
+  // handling notification sending to users and groups
   async sendNotifications() {
-    if(this.userListChips.length > 0){
-      this.sendGroupNotifications()
-    }
+    // if there are users selected, add them to the message object
     if(this.chipsComp.chips.length > 0){
-      this.message.SentTo = this.chipsComp.chips.map(chips => chips.value)
-      this.message.UsersUUID = this.chipsComp.chips.map(chips => chips.key)
-      let ans = await this.notificationsService.bulkNotifications(this.message);
-      this.showFinishDialog(ans);
+      this.handleUserChips()
     }
+    // if there are groups selected, add them to the message object
+    this.handleGroupsChips()
+    // handling message sending
+    let ans = await this.notificationsService.bulkNotifications(this.message);
+    this.showFinishDialog(ans);
+    // return to the previous page - notification log
     this.router.navigate(['../'], {
       relativeTo: this.route,
       queryParamsHandling: 'merge',
     })
-
-  }
-
-  async sendGroupNotifications() {
-    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
-      const listKey = this.usersLists[listIndex]
-      listsChips.chips.map(async listChip =>{
-        this.message.SentTo = [listChip.value]
-        this.message.SelectedGroupKey = listChip.value
-        this.message.ListKey = listKey
-        let ans = await this.notificationsService.bulkNotifications(this.message);
-        this.showFinishDialog(ans);
-      })
-    })
-
 
   }
 
