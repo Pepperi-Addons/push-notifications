@@ -157,6 +157,7 @@ export class NotificationsSetupComponent implements OnInit {
 
 
 
+    // opens dialog to create the list, if a key is passed then the dialog opens in edit mode
     createNewListSetup(listKey?: string){
       this.notificationsDialogService.openDialog(UsersListSetupComponent,async (res) => {
         if(res){

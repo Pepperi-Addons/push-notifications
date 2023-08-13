@@ -44,9 +44,9 @@ export class UsersListSetupComponent implements OnInit {
     this.formDataSource = defaultDataSourceForListSetup
     this.loadAvailableResources().then(
       resources => this.availableResources = resources)
-    if(this.editMode){
-      this.loadDataForEditMode().then( list => this.existingList = list)
-    }
+      if(this.editMode){
+        this.loadDataForEditMode().then( list => this.existingList = list)
+      }
   }
 
 
@@ -84,7 +84,6 @@ export class UsersListSetupComponent implements OnInit {
     // saving all of the data in the form display
     this.populateUneditableFields(listData)
     // loading fields to select in drag & drop
-    debugger
     await this.getResourceFields(listData.ResourceName)
     // disabling all selection fields except the editable ones - display fields and smart search fields
     this.disableAllUneditableFields()
@@ -286,9 +285,6 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   async getResourceFields(selectedResourceName: string): Promise<optionalValuesData[]>{
-    if(this.editMode){
-      await this.loadAvailableResources()
-    }
     const resourceToSelect = this.availableResources!.filter(resource => resource.Name === selectedResourceName)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
