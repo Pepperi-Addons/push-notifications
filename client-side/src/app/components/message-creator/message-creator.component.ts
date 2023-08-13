@@ -37,7 +37,6 @@ export class MessageCreatorComponent implements OnInit {
   chips: any[] = [];
   usersLists: any[] = []
   dialogRef: MatDialogRef<any> 
-  private ref: ChangeDetectorRef
 
   constructor(
     private notificationsService: NotificationsService,
@@ -68,11 +67,8 @@ export class MessageCreatorComponent implements OnInit {
   // enables sending messages only if user or group selected
   get isUsersSelected(){
     if(this.chipsComp && this.userListChips){
-      console.log(this.chipsComp.chips.length)
-      let sum = 0
       // user list chip is an array, so foreach is necessary to validate if any of the chips in the array was selected
-      this.userListChips.toArray().forEach(list => {sum += list.chips.length})
-      return this.chipsComp.chips.length > 0 || sum > 0
+      return this.chipsComp.chips.length > 0 || this.userListChips.some(list => list.chips.length > 0)
     }
   }
 
