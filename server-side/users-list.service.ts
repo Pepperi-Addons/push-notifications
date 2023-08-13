@@ -2,7 +2,6 @@ import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk
 import { Client } from '@pepperi-addons/debug-server';
 import { USERS_LISTS_TABLE_NAME, UsersLists } from 'shared'
 import { v4 as uuid } from 'uuid';
-import { AddonUUID } from '../addon.config.json'
 
 class UsersListsService {
     papiClient: PapiClient
