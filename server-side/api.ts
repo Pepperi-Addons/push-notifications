@@ -241,10 +241,11 @@ export async function notifications_log(client: Client, request: Request) {
     }
 }
 
-export async function notifications_log_view(client: Client, request: Request) {
+// notifications log by key
+export async function notifications_log_by_key(client: Client, request: Request) {
     const service = new NotificationsService(client);
     if (request.method == 'GET') {
-        return service.getNotificationsLogView();
+        return service.getNotificationsLogByKey(request.query.Key);
     }
     else {
         throw new Error(`Method ${request.method} not supported`);

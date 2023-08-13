@@ -18,18 +18,23 @@ export class NotificationsLogService {
     }
 
     async getNotificationLogByKey(key: string){
-        const logs: NotificationLogView[] = await this.getNotificationsLogView()
-        return logs.find(log => log.Key == key)
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log_by_key?Key=${key}`
+        return await this.addonService.pepGet(encodeURI(url)).toPromise();
     }
 
     getNotificationsLog() {
-        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         return this.addonService.pepGet(encodeURI(url)).toPromise();
     }
 
-    getNotificationsLogView() {
-        let url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log_view`
-        return this.addonService.pepGet(encodeURI(url)).toPromise();
+    async getNotificationsLogView() {
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
+        const logs = await this.addonService.pepGet(encodeURI(url)).toPromise() as NotificationLogView[]
+        logs.forEach(log => {
+            log.SentToUsers = log.SentTo.Users
+            log.SentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
+        }) 
+        return logs
     }
 
     deleteNotificationsLog(notifications) {
