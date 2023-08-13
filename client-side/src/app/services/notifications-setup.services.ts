@@ -21,6 +21,11 @@ export class NotificationsSetupService {
         return res[0][titleField]
        }
 
+    async getListByKey(key: string){
+        const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_users_list_by_key?Key=${key}`
+        return await this.addonService.pepGet(encodeURI(url)).toPromise();
+    }
+
     async deleteSendToList(sendToLists){
         let listToDelete:any[] = []
         sendToLists.map(list=>{

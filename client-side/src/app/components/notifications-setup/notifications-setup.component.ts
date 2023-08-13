@@ -139,17 +139,31 @@ export class NotificationsSetupComponent implements OnInit {
             }
         });
         }
-  
+        if(data.rows.length == 1) {
+          actions.push({
+            title: this.translate.instant("Edit"),
+            handler: async (objs) => {
+              this.goToEditMode(objs.rows[0]);
+            }
+        });
+        }
         return actions;
       }
     }
+    
+    goToEditMode(selectedListKey: string){
+      this.createNewListSetup(selectedListKey)
+    }
 
-    createNewListSetup(){
-      this.notificationsDialogService.openDialog(UsersListSetupComponent,(res) => {
+
+
+    createNewListSetup(listKey?: string){
+      this.notificationsDialogService.openDialog(UsersListSetupComponent,async (res) => {
         if(res){
-          this.notificationsSetupService.saveList(res)
+          await this.notificationsSetupService.saveList(res)
+          this.dataSource = await this.getListDataSource();
         }
-      });
+      },listKey);
     } 
     
 }

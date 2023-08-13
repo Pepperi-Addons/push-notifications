@@ -1,12 +1,13 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
 import { FieldSelectorComponent } from '../field-selector/field-selector.component';
-import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes } from 'shared'
+import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes, UsersLists } from 'shared'
+import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -23,15 +24,19 @@ export class UsersListSetupComponent implements OnInit {
   notificationsDialogService: NotificationsDialogService
   resourceFields: string[]
   selectedDisplayFields: string[]
-
+  editMode: boolean = false
+  existingList: UsersLists
 
   constructor(
     private dialogRef: MatDialogRef<any>,
     private translate: TranslateService,
+    protected notificationsSetupService: NotificationsSetupService,
     private dialogService: PepDialogService,
-    protected addonService: AddonService
+    protected addonService: AddonService,
+    @Inject(MAT_DIALOG_DATA) private listKey: string
     ) { 
       this.notificationsDialogService = new NotificationsDialogService(this.dialogService)
+      this.editMode = this.listKey.length > 0
     }
 
   ngOnInit(): void {
@@ -39,6 +44,9 @@ export class UsersListSetupComponent implements OnInit {
     this.formDataSource = defaultDataSourceForListSetup
     this.loadAvailableResources().then(
       resources => this.availableResources = resources)
+    if(this.editMode){
+      this.loadDataForEditMode().then( list => this.existingList = list)
+    }
   }
 
 
@@ -53,14 +61,58 @@ export class UsersListSetupComponent implements OnInit {
     this.userListData.MappingResourceName = this.formDataSource.MappingResourceName
     this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
     this.userListData.ResourceReferenceField = this.formDataSource.ResourceReferenceField
+    if(this.editMode){
+      this.userListData.Key = this.existingList.Key
+    }
     this.dialogRef.close(this.userListData)
   }
 
   get isSaveButtonEnabled(): boolean{
-    return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
-    && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
-    && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
-    && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
+    if(this.editMode){
+      return this.userListData?.SelectionDisplayFields != this.existingList?.SelectionDisplayFields || this.userListData?.SmartSearchFields != this.existingList?.SmartSearchFields
+    }
+    else {
+      return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
+      && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
+      && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
+      && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
+    }
+  }
+
+  async loadDataForEditMode(){
+    const listData = await this.notificationsSetupService.getListByKey(this.listKey)
+    // saving all of the data in the form display
+    this.populateUneditableFields(listData)
+    // loading fields to select in drag & drop
+    debugger
+    await this.getResourceFields(listData.ResourceName)
+    // disabling all selection fields except the editable ones - display fields and smart search fields
+    this.disableAllUneditableFields()
+    return listData
+  }
+
+  populateUneditableFields(listData: UsersLists){
+    this.formDataSource.ListName = listData.ListName
+    this.formDataSource.ResourceName = listData.ResourceName
+    this.formDataSource.TitleField = listData.TitleField
+    this.formDataSource.MappingResourceName = listData.MappingResourceName
+    this.formDataSource.UserReferenceField = listData.UserReferenceField
+    this.formDataSource.ResourceReferenceField = listData.ResourceReferenceField
+    // this two fields are not editable in the form data source (the data source is the button text) - they are only for the user list data
+    this.userListData.SelectionDisplayFields = listData.SelectionDisplayFields
+    this.userListData.SmartSearchFields = listData.SmartSearchFields
+  }
+
+  disableAllUneditableFields(){
+    this.dataView.Fields[setupListViewIndexes.ListName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.MappingResourceName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.UserReferenceField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.DisplayFieldsSelector].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = false
+    this.refreshFormData()
   }
 
   async valueChange($event){
@@ -68,7 +120,7 @@ export class UsersListSetupComponent implements OnInit {
       this.validateListName($event.Value)
     }
     if($event.ApiName == "ResourceName"){
-      this.validateResources($event.Value)
+      await this.validateResources($event.Value)
     }
     if($event.ApiName == "TitleField"){
       this.validateDisplayTitleField($event.Value)
@@ -100,7 +152,7 @@ export class UsersListSetupComponent implements OnInit {
     this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = false
   }
 
-  validateResources(resourceSelected: string){
+  async validateResources(resourceSelected: string){
     // validating that next fields are not selected, if resource is changed it affects
     // the rest of the fields
     this.formDataSource.TitleField = ""
@@ -118,7 +170,7 @@ export class UsersListSetupComponent implements OnInit {
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
     // enabling selection of the next field and updating options to select
-    this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = this.getResourceFields(resourceSelected)
+    this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = await this.getResourceFields(resourceSelected)
     this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = false
   }
 
@@ -222,7 +274,7 @@ export class UsersListSetupComponent implements OnInit {
           this.validateSmartSearchFields(res)
         }
       },
-      this.resourceFields)
+      this.userListData.SelectionDisplayFields)
     }
   }
       
@@ -233,8 +285,11 @@ export class UsersListSetupComponent implements OnInit {
     });
   }
 
-  getResourceFields(selectedResourceName: string): optionalValuesData[]{
-    const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
+  async getResourceFields(selectedResourceName: string): Promise<optionalValuesData[]>{
+    if(this.editMode){
+      await this.loadAvailableResources()
+    }
+    const resourceToSelect = this.availableResources!.filter(resource => resource.Name === selectedResourceName)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
     return fields.map(field=>{

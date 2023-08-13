@@ -39,6 +39,17 @@ export async function notifications_users_lists(client: Client, request: Request
     }
 }
 
+export async function notifications_users_list_by_key(client: Client, request: Request) {
+    const usersListsService = new UsersListsService(client)
+
+    if (request.method === 'GET') {
+        return usersListsService.getSetupListByKey(request.query.Key);
+    }
+    else {
+        throw new Error(`Method ${request.method} not supported`);
+    }
+}
+
 export async function delete_notifications_users_lists(client: Client, request: Request) {
     const usersListsService = new UsersListsService(client)
 
