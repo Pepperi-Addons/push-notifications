@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren,QueryList, ChangeDetectorRef} from '@angular/core';
+import { Component, OnInit, ViewChild, ViewContainerRef, ViewChildren, QueryList } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsService } from 'src/app/services/notifications.services';
@@ -37,7 +37,6 @@ export class MessageCreatorComponent implements OnInit {
   chips: any[] = [];
   usersLists: any[] = []
   dialogRef: MatDialogRef<any> 
-  private ref: ChangeDetectorRef
 
   constructor(
     private notificationsService: NotificationsService,
@@ -66,13 +65,13 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   // enables sending messages only if user or group selected
-  get isUsersSelected(){
+  get isUsersSelected(): boolean{
     if(this.chipsComp && this.userListChips){
-      console.log(this.chipsComp.chips.length)
-      let sum = 0
       // user list chip is an array, so foreach is necessary to validate if any of the chips in the array was selected
-      this.userListChips.toArray().forEach(list => {sum += list.chips.length})
-      return this.chipsComp.chips.length > 0 || sum > 0
+      return this.chipsComp.chips.length > 0 || this.userListChips.some(list => list.chips.length > 0)
+    }
+    else{
+      return false
     }
   }
 
@@ -83,7 +82,7 @@ export class MessageCreatorComponent implements OnInit {
   private async handleDuplicateMessageParams() {
     // get query params from url, from the previous page that added by duplicate message
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams.log_key != undefined) {
+    if (queryParams?.log_key != undefined) {
       const notificationLog: NotificationLogView = await this.notificationsLogService.getNotificationLogByKey(queryParams.log_key)
       this.message.Title = notificationLog.Title || '';
       this.message.Body = notificationLog.Body || '';
@@ -123,9 +122,9 @@ export class MessageCreatorComponent implements OnInit {
   }
 
   handleGroupsChips(){
-    this.userListChips.toArray().forEach(async (listsChips, listIndex) =>{
+    this.userListChips.toArray().forEach((listsChips, listIndex) =>{
       const listKey = this.usersLists[listIndex].Key
-      listsChips.chips.map(async listChip =>{
+      listsChips.chips.map(listChip =>{
         this.message.SentTo.Groups.push({Title: listChip.value ,ListKey: listKey , SelectedGroupKey: listChip.key})
       })
     })
@@ -138,9 +137,7 @@ export class MessageCreatorComponent implements OnInit {
       this.handleUserChips()
     }
     // if there are groups selected, add them to the message object
-    if(this.userListChips.length > 0 ){
-      this.handleGroupsChips()
-    }
+    this.handleGroupsChips()
     // handling message sending
     let ans = await this.notificationsService.bulkNotifications(this.message);
     this.showFinishDialog(ans);
