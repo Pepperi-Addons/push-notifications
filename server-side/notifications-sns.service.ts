@@ -8,7 +8,7 @@ export class NotifiactionsSnsService{
     papiClient: PapiClient
 
     constructor(client: Client){
-        this.papiClient =  new PapiClient({
+        this.papiClient = new PapiClient({
             baseURL: client.BaseURL,
             token: client.OAuthAccessToken,
             addonUUID: client.AddonUUID,
@@ -36,7 +36,7 @@ export class NotifiactionsSnsService{
 
     async updateEndpointAttributes(endpoint: string, token:string){
         const attr:SetEndpointAttributesInput = {
-            EndpointArn:endpoint,
+            EndpointArn: endpoint,
             Attributes: { Enabled: 'true', Token: token }
         }
         await this.sns.setEndpointAttributes(attr).promise()

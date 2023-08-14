@@ -1,6 +1,6 @@
 import { PapiClient, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { USERS_LISTS_TABLE_NAME, UsersLists, DefaultAccountBuyersList } from 'shared'
+import { USERS_LISTS_TABLE_NAME, UsersLists, DefaultAccountBuyersList, usersListFields } from 'shared'
 import { v4 as uuid } from 'uuid';
 
 class UsersListsService {
@@ -22,37 +22,37 @@ class UsersListsService {
     }
 
     async getNotificationsUsersLists(query?): Promise<AddonData[]>{
-        try{
+        try {
             return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).iter(query).toArray();
         }
-        catch(error){
+        catch (error){
             throw error
         }
     }
 
     async getSetupListByKey(key: string): Promise<UsersLists>{
-        try{
+        try {
             return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).key(key).get() as UsersLists
         }
-        catch(error){
+        catch (error){
             throw error
         }
     }
 
-    // this function is getting a list key, and selected group and returns a list of users UUIDs 
+    // this function is getting a list key, and selected group and returns a list of users UUIDs
     // that are in the selected group using the list data - resource and mapping resource and reference fields
     async getUserUUIDsFromGroup(listKey: string, selectedGroupKey: string): Promise<string[]>{
         const listData: UsersLists = await this.getSetupListByKey(listKey);
         const usersUUIDs: string[] = [];
         const resourceData = await this.papiClient.resources.resource(listData.MappingResourceName).get({where: `${listData.ResourceReferenceField}='${selectedGroupKey}'`});
-        resourceData.forEach(row =>{
+        resourceData.forEach(row => {
             usersUUIDs.push(row[`${listData.UserReferenceField}`]);
         })
         return usersUUIDs;
     }
 
     async upsertNotificationsUsersLists(body){
-        if(!body.Key){
+        if (!body.Key){
             body.Key = uuid();
         }
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(body);
@@ -60,14 +60,14 @@ class UsersListsService {
 
     async deleteNotificationsUsersLists(lists){
         Promise.all(lists.map(async (list) => {
-            let deleteJson = {
-                Key:list.Key,
+            const deleteJson = {
+                Key: list.Key,
                 Hidden: true
             }
             try {
                 return await this.papiClient.addons.data.uuid(this.addonUUID).table(USERS_LISTS_TABLE_NAME).upsert(deleteJson)
             }
-            catch{
+            catch {
                 throw new Error(`Could not delete list with UUID ${list.Key}`)
             }
         }))
@@ -90,37 +90,7 @@ class UsersListsService {
     }
 
     async createUsersListsResource(papiClient:PapiClient) {
-        const notificationsUsersListsScheme: AddonDataScheme={
-            Name: USERS_LISTS_TABLE_NAME,
-            Type: 'meta_data',
-            Fields: {
-                ListName: {
-                    Type: 'String'
-                },
-                ResourceName: {
-                    Type: 'String'
-                },
-                TitleField: {
-                    Type: 'String'
-                },
-                MappingResourceName: {
-                    Type: 'String'
-                },
-                UserReferenceField: {
-                    Type: 'String'
-                },
-                ResourceReferenceField: {
-                    Type: 'String'
-                },
-                SelectionDisplayFields: {
-                    Type: "MultipleStringValues"
-                },
-                SmartSearchFields: {
-                    Type: "MultipleStringValues"
-                }
-            }
-            
-        };
+        const notificationsUsersListsScheme: AddonDataScheme = usersListFields
         try {
             await papiClient.addons.data.schemes.post(notificationsUsersListsScheme);
             return {

@@ -38,7 +38,10 @@ export async function install(client: Client, request: Request): Promise<any> {
     const settingsRelationsRes = await createSettingsRelation(client);
     const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     const defaultListRes = await usersListsService.createDefaultLists()
-    
+
+    const slugRes = await service.createNotificationsSlug();
+    const pageRes = await service.createNotificationsPage();
+
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
     await service.createPNSSubscriptionForPlatformApplicationRemoval();
@@ -46,14 +49,16 @@ export async function install(client: Client, request: Request): Promise<any> {
 
     return {
         success: notificationsResourceRes.success &&
-        defaultListRes.success && 
-        userDeviceResourceRes.success && 
-        relationsRes.success && 
-        settingsRelationsRes.success && 
-        notificationsVariablesRes.success && 
-        notificationsLogViewRes.success && 
-        platformApplicationResourceRes.success && 
-        pfsResourceRes.success && 
+        defaultListRes.success &&
+        slugRes.success &&
+        pageRes.success &&
+        userDeviceResourceRes.success &&
+        relationsRes.success &&
+        settingsRelationsRes.success &&
+        notificationsVariablesRes.success &&
+        notificationsLogViewRes.success &&
+        platformApplicationResourceRes.success &&
+        pfsResourceRes.success &&
         notificationsUsersListsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
         defaultListRes: ${defaultListRes.errorMessage}, 
@@ -89,12 +94,12 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-
+    const service = new NotificationsService(client)
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
         const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -109,22 +114,28 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
         const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-        return { success: notificationsUsersListsRes.success && 
-            migrateUpLogRes.success && 
-            defaultListRes.success && 
-            notificationsLogViewRes.success && 
-            relationsRes.success && 
-            settingsRelationsRes.success && 
-            userDeviceResourceRes.success, 
+
+        const slugRes = await service.createNotificationsSlug();
+        const pageRes = await service.createNotificationsPage();
+
+        return { success: notificationsUsersListsRes.success &&
+            slugRes.success &&
+            pageRes.success &&
+            migrateUpLogRes.success &&
+            defaultListRes.success &&
+            notificationsLogViewRes.success &&
+            relationsRes.success &&
+            settingsRelationsRes.success &&
+            userDeviceResourceRes.success,
             resultObject: {} }
     }
-    else{
+    else {
         return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
     }
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
-    if(request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! > 0){
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! > 0){
         // reverting back to UsersList from SentTo
         await migrateDownNotificationsLog(client)
     }
@@ -132,16 +143,16 @@ export async function downgrade(client: Client, request: Request): Promise<any> 
 }
 
 async function migrateUpNotificationsLog(client: Client){
-    try{
+    try {
         const service = new NotificationsService(client)
-        let logs = await service.getNotificationsLog()
+        const logs = await service.getNotificationsLog()
         logs.forEach(async (log) => {
             log.SentTo = {Users: log.UsersList};
             delete log.UsersList
             await service.upsertNotificationLog(log);
         })
         return { success: true, resultObject: '' };
-    } 
+    }
     catch (err) {
         return { success: false, errorMessage: err ? err : 'Unknown Error Occurred' };
     }
@@ -149,15 +160,15 @@ async function migrateUpNotificationsLog(client: Client){
 
 
 async function migrateDownNotificationsLog(client: Client){
-    try{
+    try {
         const service = new NotificationsService(client)
-        let logs = await service.getNotificationsLog()
+        const logs = await service.getNotificationsLog()
         logs.forEach(async (log) => {
             log.UsersList = log.SentTo.Users
             await service.upsertNotificationLog(log);
         })
         return { success: true, resultObject: '' };
-    } 
+    }
     catch (err) {
         return { success: false, errorMessage: err ? err : 'Unknown Error Occurred' };
     }
@@ -196,7 +207,7 @@ async function createPageBlockRelation(client: Client): Promise<any> {
 async function createSettingsRelation(client: Client): Promise<any> {
     try {
         const service = new NotificationsService(client);
-        
+
         const filename = 'notifications';
 
         let settingsBlockRelation: Relation = {
@@ -250,7 +261,7 @@ async function createSettingsRelation(client: Client): Promise<any> {
             ElementsModule: 'WebComponents',
             ElementName: NOTIFICATION_SETUP_ELEMENT,
         };
-        
+
         result = await service.upsertRelation(settingsBlockRelation);
 
 
@@ -261,7 +272,7 @@ async function createSettingsRelation(client: Client): Promise<any> {
 }
 
 async function createNotificationsResource(papiClient: PapiClient) {
-    var notificationsScheme: AddonDataScheme = {
+    const notificationsScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_TABLE_NAME,
         Type: 'meta_data',
         Fields: {
@@ -302,8 +313,8 @@ async function createNotificationsResource(papiClient: PapiClient) {
     }
 }
 
-async function createPlatformApplicationResource(papiClient:PapiClient) {
-    var notificationsScheme: AddonDataScheme = {
+async function createPlatformApplicationResource(papiClient: PapiClient) {
+    const notificationsScheme: AddonDataScheme = {
         Name: PLATFORM_APPLICATION_TABLE_NAME,
         Type: 'meta_data',
         Fields: {
@@ -334,7 +345,7 @@ async function createPlatformApplicationResource(papiClient:PapiClient) {
 
 //save a list of notifications sent by users
 async function createNotificationsLogViewResource(papiClient: PapiClient) {
-    var notificationsScheme: AddonDataScheme = {
+    const notificationsScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_LOGS_TABLE_NAME,
         Type: 'meta_data',
         Fields: {
@@ -349,7 +360,7 @@ async function createNotificationsLogViewResource(papiClient: PapiClient) {
             },
             Body: {
                 Type: 'String'
-            } 
+            }
         }
     };
 
@@ -370,7 +381,7 @@ async function createNotificationsLogViewResource(papiClient: PapiClient) {
 }
 
 async function createUserDeviceResource(papiClient: PapiClient) {
-    var userDeviceScheme: AddonDataScheme = {
+    const userDeviceScheme: AddonDataScheme = {
         Name: USER_DEVICE_TABLE_NAME,
         Type: 'indexed_data',
         Fields: {
@@ -423,7 +434,7 @@ async function createUserDeviceResource(papiClient: PapiClient) {
 }
 
 async function createNotificationsVariablesResource(papiClient: PapiClient, client) {
-    var variablesScheme: AddonDataScheme = {
+    const variablesScheme: AddonDataScheme = {
         Name: NOTIFICATIONS_VARS_TABLE_NAME,
         Type: 'meta_data',
         Fields: {
@@ -436,7 +447,7 @@ async function createNotificationsVariablesResource(papiClient: PapiClient, clie
     try {
         await papiClient.addons.data.schemes.post(variablesScheme);
         // Declare default.
-        let notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
+        const notificationsVars = { Key: NOTIFICATIONS_VARS_TABLE_NAME };
         notificationsVars[DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key] = DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.softValue;
         notificationsVars[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key] = DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.softValue;
         await papiClient.addons.data.uuid(client.AddonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(notificationsVars);
@@ -456,7 +467,7 @@ async function createNotificationsVariablesResource(papiClient: PapiClient, clie
 
 // PFS Scheme
 async function createPFSResource(papiClient: PapiClient) {
-    var pfsScheme : AddonDataScheme = {
+    const pfsScheme: AddonDataScheme = {
         "Name": PFS_TABLE_NAME,
         "Type": 'pfs'
     }
@@ -478,7 +489,7 @@ async function createPFSResource(papiClient: PapiClient) {
 }
 
 async function createRelations(papiClient: PapiClient) {
-    let relations: Relation[] = [
+    const relations: Relation[] = [
         //DIMX import
         {
             RelationName: "DataImportResource",
@@ -491,12 +502,12 @@ async function createRelations(papiClient: PapiClient) {
         // soft limit
         {
             RelationName: "VarSettings",
-            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e", 
+            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
             Name: "Notifications_Soft_Limit",
             Description: "Notifications relation to Var Settings, Var users can edit soft limit via the Var addon",
             Type: "AddonAPI",
             AddonRelativeURL: "/api/notifications_soft_limt",
-                                                                        
+
             Title: "Notifications Soft Limit",
             DataView: notificatiosDataView
         },

@@ -1,5 +1,34 @@
 import { FormDataView } from "@pepperi-addons/papi-sdk";
-import { UsersLists } from "./entities";
+import { USERS_LISTS_TABLE_NAME, UsersLists } from "./entities";
+
+export const notificationsSlug = {
+  Name: "Notifications",
+  Slug: "notifications",
+  Description: "Notifications Default Slug",
+}
+
+export const notificationsPage: any = {
+  Description: "Notifications Default Page",
+  Blocks:[{
+    Configuration: {
+      Resource: "Notifications",
+      Data: {},
+      AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e"
+    },
+    Relation: {
+      Type: "NgComponent",
+      SubType: "NG14",
+      ModuleName: "NotificationBlockModule",
+      RelationName: "PageBlock",
+      ComponentName: "NotificationBlockComponent",
+      AddonRelativeURL: "notifications",
+      AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
+      Name: "Notifications"
+    }
+  }],
+  Hidden: false,
+  Name: "Notifications"
+}
 
 export const setupListViewIndexes = {
   AddGroupList: 0,
@@ -20,6 +49,38 @@ export const setupListViewIndexes = {
   SmartSearchFieldsDesc: 15,
   SmartSearchFields: 16
 }
+
+export const usersListFields = {
+  Name: USERS_LISTS_TABLE_NAME,
+  Type: 'meta_data',
+  Fields: {
+      ListName: {
+          Type: 'String'
+      },
+      ResourceName: {
+          Type: 'String'
+      },
+      TitleField: {
+          Type: 'String'
+      },
+      MappingResourceName: {
+          Type: 'String'
+      },
+      UserReferenceField: {
+          Type: 'String'
+      },
+      ResourceReferenceField: {
+          Type: 'String'
+      },
+      SelectionDisplayFields: {
+          Type: "MultipleStringValues"
+      },
+      SmartSearchFields: {
+          Type: "MultipleStringValues"
+      }
+  }
+
+};
 
 export const defaultFormViewForListSetup: FormDataView = {
     Type: "Form",
