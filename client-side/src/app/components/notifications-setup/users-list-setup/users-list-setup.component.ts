@@ -1,12 +1,13 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { AddonService } from 'src/app/services/addon.service';
 import { NotificationsDialogService } from 'src/app/services/dialog-service.services';
 import { FieldSelectorComponent } from '../field-selector/field-selector.component';
-import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes } from 'shared'
+import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes, UsersLists } from 'shared'
+import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -23,24 +24,35 @@ export class UsersListSetupComponent implements OnInit {
   notificationsDialogService: NotificationsDialogService
   resourceFields: string[]
   selectedDisplayFields: string[]
-
+  editMode: boolean = false
+  existingList: UsersLists
 
   constructor(
     private dialogRef: MatDialogRef<any>,
     private translate: TranslateService,
+    protected notificationsSetupService: NotificationsSetupService,
     private dialogService: PepDialogService,
-    protected addonService: AddonService
+    protected addonService: AddonService,
+    @Inject(MAT_DIALOG_DATA) private editingListKey: string // if listKey is empty, we are in create mode, else we are in edit mode
     ) { 
       this.notificationsDialogService = new NotificationsDialogService(this.dialogService)
+      this.editMode = this.editingListKey.length > 0
     }
 
   ngOnInit(): void {
     this.dataView = defaultFormViewForListSetup
-    this.formDataSource = defaultDataSourceForListSetup
-    this.loadAvailableResources().then(
-      resources => this.availableResources = resources)
+    this.loadAvailableResources().then( () =>{
+      this.loadDataSource();
+    })
   }
 
+  loadDataSource(): any {
+    if(this.editMode){
+      this.loadDataForEditMode()
+    } else {
+      this.formDataSource = defaultDataSourceForListSetup
+    }
+  }
 
   cancel(){
      this.dialogRef.close();
@@ -57,10 +69,54 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   get isSaveButtonEnabled(): boolean{
-    return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
-    && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
-    && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
-    && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
+    let res = false;
+    if(this.editMode) {
+      // if we are in edit mode, we need to check if the user changed any of the fields
+      res = this.userListData?.SelectionDisplayFields != this.existingList?.SelectionDisplayFields || this.userListData?.SmartSearchFields != this.existingList?.SmartSearchFields
+    }
+    else {
+      res = this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
+      && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
+      && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
+      && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
+    }
+    return res
+  }
+
+  async loadDataForEditMode(){
+    this.existingList = await this.notificationsSetupService.getListByKey(this.editingListKey)
+    // saving the key will update the existing list
+    this.userListData.Key = this.existingList.Key
+    // saving all of the data in the form display
+    this.loadEditModeFormData(this.existingList)
+    // loading fields to select in drag & drop
+    this.loadResourceFields(this.existingList.ResourceName)
+    // disabling all selection fields except the editable ones - display fields and smart search fields
+    this.disableAllUneditableFields()
+  }
+
+  loadEditModeFormData(listData: UsersLists){
+    this.formDataSource.ListName = listData.ListName
+    this.formDataSource.ResourceName = listData.ResourceName
+    this.formDataSource.TitleField = listData.TitleField
+    this.formDataSource.MappingResourceName = listData.MappingResourceName
+    this.formDataSource.UserReferenceField = listData.UserReferenceField
+    this.formDataSource.ResourceReferenceField = listData.ResourceReferenceField
+    // this two fields are not editable in the form data source (the data source is the button text) - they are only for the user list data
+    this.userListData.SelectionDisplayFields = listData.SelectionDisplayFields
+    this.userListData.SmartSearchFields = listData.SmartSearchFields
+  }
+
+  disableAllUneditableFields(){
+    this.dataView.Fields[setupListViewIndexes.ListName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.MappingResourceName].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.UserReferenceField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.ResourceReferenceField].ReadOnly = true
+    this.dataView.Fields[setupListViewIndexes.DisplayFieldsSelector].ReadOnly = false
+    this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = false
+    this.refreshFormData()
   }
 
   async valueChange($event){
@@ -87,8 +143,9 @@ export class UsersListSetupComponent implements OnInit {
   this.refreshFormData()
   }
 
-  async loadAvailableResources(){
-    return await this.addonService.papiClient.resources.resource('resources').get()
+  async loadAvailableResources(): Promise<void>{
+    const res = await this.addonService.papiClient.resources.resource('resources').get()
+    this.availableResources = res
   }
 
   validateListName(listNameSelected: string){
@@ -222,7 +279,7 @@ export class UsersListSetupComponent implements OnInit {
           this.validateSmartSearchFields(res)
         }
       },
-      this.resourceFields)
+      this.userListData.SelectionDisplayFields)
     }
   }
       
@@ -233,11 +290,17 @@ export class UsersListSetupComponent implements OnInit {
     });
   }
 
-  getResourceFields(selectedResourceName: string): optionalValuesData[]{
+  loadResourceFields(selectedResourceName: string){
     const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
-    return fields.map(field=>{
+  }
+
+  getResourceFields(selectedResourceName: string): optionalValuesData[] {
+    if(!this.resourceFields || this.resourceFields.length == 0){
+      this.loadResourceFields(selectedResourceName)
+    }  
+    return this.resourceFields.map(field=>{
       return {Key:field, Value:field} as optionalValuesData
     })
   }

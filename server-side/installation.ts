@@ -45,11 +45,26 @@ export async function install(client: Client, request: Request): Promise<any> {
     await createRelations(papiClient);
 
     return {
-        success: notificationsResourceRes.success && defaultListRes.success && userDeviceResourceRes.success && relationsRes.success && settingsRelationsRes.success && notificationsVariablesRes.success && notificationsLogViewRes.success && platformApplicationResourceRes.success && pfsResourceRes.success && notificationsUsersListsRes.success,
+        success: notificationsResourceRes.success &&
+        defaultListRes.success && 
+        userDeviceResourceRes.success && 
+        relationsRes.success && 
+        settingsRelationsRes.success && 
+        notificationsVariablesRes.success && 
+        notificationsLogViewRes.success && 
+        platformApplicationResourceRes.success && 
+        pfsResourceRes.success && 
+        notificationsUsersListsRes.success,
         errorMessage: `notificationsResourceRes: ${notificationsResourceRes.errorMessage}, 
-        defaultListRes: ${defaultListRes.errorMessage}, notificationsLogViewRes: ${notificationsLogViewRes}, userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
-         relationsRes: ${relationsRes.errorMessage}, settingsRelationsRes: ${settingsRelationsRes.errorMessage}, notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
-         platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, pfsResourceRes: ${pfsResourceRes.errorMessage}, notificationsUsersListsRes: ${notificationsUsersListsRes.errorMessage}`
+        defaultListRes: ${defaultListRes.errorMessage}, 
+        notificationsLogViewRes: ${notificationsLogViewRes}, 
+        userDeviceResourceRes: ${userDeviceResourceRes.errorMessage},
+        relationsRes: ${relationsRes.errorMessage}, 
+        settingsRelationsRes: ${settingsRelationsRes.errorMessage}, 
+        notificationsVarsRes:  ${notificationsVariablesRes.errorMessage},
+        platformApplicationResourceRes: ${platformApplicationResourceRes.errorMessage}, 
+        pfsResourceRes: ${pfsResourceRes.errorMessage}, 
+        notificationsUsersListsRes: ${notificationsUsersListsRes.errorMessage}`
     };
 }
 
@@ -94,7 +109,14 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
         const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
-        return { success: notificationsUsersListsRes.success && migrateUpLogRes.success && defaultListRes.success && notificationsLogViewRes.success && relationsRes.success && settingsRelationsRes.success && userDeviceResourceRes.success, resultObject: {} }
+        return { success: notificationsUsersListsRes.success && 
+            migrateUpLogRes.success && 
+            defaultListRes.success && 
+            notificationsLogViewRes.success && 
+            relationsRes.success && 
+            settingsRelationsRes.success && 
+            userDeviceResourceRes.success, 
+            resultObject: {} }
     }
     else{
         return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
