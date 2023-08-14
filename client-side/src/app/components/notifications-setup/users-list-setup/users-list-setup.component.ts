@@ -65,33 +65,34 @@ export class UsersListSetupComponent implements OnInit {
     this.userListData.MappingResourceName = this.formDataSource.MappingResourceName
     this.userListData.UserReferenceField = this.formDataSource.UserReferenceField
     this.userListData.ResourceReferenceField = this.formDataSource.ResourceReferenceField
-    if(this.editMode){
-      this.userListData.Key = this.existingList.Key
-    }
     this.dialogRef.close(this.userListData)
   }
 
   get isSaveButtonEnabled(): boolean{
-    if(this.editMode){
-      return this.userListData?.SelectionDisplayFields != this.existingList?.SelectionDisplayFields || this.userListData?.SmartSearchFields != this.existingList?.SmartSearchFields
+    let res = false;
+    if(this.editMode) {
+      // if we are in edit mode, we need to check if the user changed any of the fields
+      res = this.userListData?.SelectionDisplayFields != this.existingList?.SelectionDisplayFields || this.userListData?.SmartSearchFields != this.existingList?.SmartSearchFields
     }
     else {
-      return this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
+      res = this.formDataSource.ListName != "" && this.formDataSource.ResourceName != ""
       && this.formDataSource.TitleField != "" && this.formDataSource.MappingResourceName != ""
       && this.formDataSource.UserReferenceField != "" && this.formDataSource.ResourceReferenceField != ""
       && this.userListData.SelectionDisplayFields != undefined && this.userListData.SmartSearchFields != undefined
     }
+    return res
   }
 
   async loadDataForEditMode(){
-    const listData = await this.notificationsSetupService.getListByKey(this.editingListKey)
+    this.existingList = await this.notificationsSetupService.getListByKey(this.editingListKey)
+    // saving the key will update the existing list
+    this.userListData.Key = this.existingList.Key
     // saving all of the data in the form display
-    this.loadEditModeFormData(listData)
+    this.loadEditModeFormData(this.existingList)
     // loading fields to select in drag & drop
-    this.loadResourceFields(listData.ResourceName)
+    this.loadResourceFields(this.existingList.ResourceName)
     // disabling all selection fields except the editable ones - display fields and smart search fields
     this.disableAllUneditableFields()
-    return listData
   }
 
   loadEditModeFormData(listData: UsersLists){
@@ -123,7 +124,7 @@ export class UsersListSetupComponent implements OnInit {
       this.validateListName($event.Value)
     }
     if($event.ApiName == "ResourceName"){
-      await this.validateResources($event.Value)
+      this.validateResources($event.Value)
     }
     if($event.ApiName == "TitleField"){
       this.validateDisplayTitleField($event.Value)
@@ -142,7 +143,7 @@ export class UsersListSetupComponent implements OnInit {
   this.refreshFormData()
   }
 
-  async loadAvailableResources(){
+  async loadAvailableResources(): Promise<void>{
     const res = await this.addonService.papiClient.resources.resource('resources').get()
     this.availableResources = res
   }
@@ -156,7 +157,7 @@ export class UsersListSetupComponent implements OnInit {
     this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = false
   }
 
-  async validateResources(resourceSelected: string){
+  validateResources(resourceSelected: string){
     // validating that next fields are not selected, if resource is changed it affects
     // the rest of the fields
     this.formDataSource.TitleField = ""
