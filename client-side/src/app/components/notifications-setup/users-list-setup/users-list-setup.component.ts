@@ -33,22 +33,26 @@ export class UsersListSetupComponent implements OnInit {
     protected notificationsSetupService: NotificationsSetupService,
     private dialogService: PepDialogService,
     protected addonService: AddonService,
-    @Inject(MAT_DIALOG_DATA) private listKey: string
+    @Inject(MAT_DIALOG_DATA) private editingListKey: string // if listKey is empty, we are in create mode, else we are in edit mode
     ) { 
       this.notificationsDialogService = new NotificationsDialogService(this.dialogService)
-      this.editMode = this.listKey.length > 0
+      this.editMode = this.editingListKey.length > 0
     }
 
   ngOnInit(): void {
     this.dataView = defaultFormViewForListSetup
-    this.formDataSource = defaultDataSourceForListSetup
-    this.loadAvailableResources().then(
-      resources => this.availableResources = resources)
-      if(this.editMode){
-        this.loadDataForEditMode().then( list => this.existingList = list)
-      }
+    this.loadAvailableResources().then( () =>{
+      this.loadDataSource();
+    })
   }
 
+  loadDataSource(): any {
+    if(this.editMode){
+      this.loadDataForEditMode()
+    } else {
+      this.formDataSource = defaultDataSourceForListSetup
+    }
+  }
 
   cancel(){
      this.dialogRef.close();
@@ -80,17 +84,17 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   async loadDataForEditMode(){
-    const listData = await this.notificationsSetupService.getListByKey(this.listKey)
+    const listData = await this.notificationsSetupService.getListByKey(this.editingListKey)
     // saving all of the data in the form display
-    this.populateUneditableFields(listData)
+    this.loadEditModeFormData(listData)
     // loading fields to select in drag & drop
-    await this.getResourceFields(listData.ResourceName)
+    this.loadResourceFields(listData.ResourceName)
     // disabling all selection fields except the editable ones - display fields and smart search fields
     this.disableAllUneditableFields()
     return listData
   }
 
-  populateUneditableFields(listData: UsersLists){
+  loadEditModeFormData(listData: UsersLists){
     this.formDataSource.ListName = listData.ListName
     this.formDataSource.ResourceName = listData.ResourceName
     this.formDataSource.TitleField = listData.TitleField
@@ -139,7 +143,8 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   async loadAvailableResources(){
-    return await this.addonService.papiClient.resources.resource('resources').get()
+    const res = await this.addonService.papiClient.resources.resource('resources').get()
+    this.availableResources = res
   }
 
   validateListName(listNameSelected: string){
@@ -169,7 +174,7 @@ export class UsersListSetupComponent implements OnInit {
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
     // enabling selection of the next field and updating options to select
-    this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = await this.getResourceFields(resourceSelected)
+    this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = this.getResourceFields(resourceSelected)
     this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = false
   }
 
@@ -284,11 +289,17 @@ export class UsersListSetupComponent implements OnInit {
     });
   }
 
-  async getResourceFields(selectedResourceName: string): Promise<optionalValuesData[]>{
-    const resourceToSelect = this.availableResources!.filter(resource => resource.Name === selectedResourceName)[0]
+  loadResourceFields(selectedResourceName: string){
+    const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
-    return fields.map(field=>{
+  }
+
+  getResourceFields(selectedResourceName: string): optionalValuesData[] {
+    if(!this.resourceFields || this.resourceFields.length == 0){
+      this.loadResourceFields(selectedResourceName)
+    }  
+    return this.resourceFields.map(field=>{
       return {Key:field, Value:field} as optionalValuesData
     })
   }
