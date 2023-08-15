@@ -982,7 +982,10 @@ class NotificationsService {
     async createNotificationsSlug(){
         try {
             const slugBody = notificationsSlug
-            await this.papiClient.post(`/slugs`, slugBody)
+            const existingSlugs = await this.papiClient.get(`/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`)
+            if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
+                await this.papiClient.post(`/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`, slugBody)
+            }
             return {success: true, errorMessage: ''}
         }
         catch (error){
@@ -993,8 +996,11 @@ class NotificationsService {
 
     async createNotificationsPage(){
         try {
+            const pages = await this.papiClient.pages.iter().toArray()
             const pageBody = notificationsPage
-            await this.papiClient.addons.data.relations.upsert(pageBody)
+            if(!pages.find(page => page.Blocks[0].Key === notificationsPage.Blocks[0].Key)){
+                await this.papiClient.pages.upsert(pageBody)
+            }
             return {success: true, errorMessage: ''}
         }
         catch (error){

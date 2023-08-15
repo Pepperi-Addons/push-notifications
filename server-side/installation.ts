@@ -118,7 +118,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         const slugRes = await service.createNotificationsSlug();
         const pageRes = await service.createNotificationsPage();
 
-        return { success: notificationsUsersListsRes.success &&
+        return { success: 
+            notificationsUsersListsRes.success &&
             slugRes.success &&
             pageRes.success &&
             migrateUpLogRes.success &&
@@ -130,7 +131,10 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             resultObject: {} }
     }
     else {
-        return {success: relationsRes.success && settingsRelationsRes.success, resultObject: {} }
+        return {success: 
+            relationsRes.success && 
+            settingsRelationsRes.success, 
+            resultObject: {} }
     }
 }
 
