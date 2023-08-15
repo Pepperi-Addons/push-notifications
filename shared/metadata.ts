@@ -1,8 +1,8 @@
 import { AddonDataScheme, FormDataView } from "@pepperi-addons/papi-sdk";
 import { USERS_LISTS_TABLE_NAME, UsersLists } from "./entities";
-// import {v4 as uuid} from 'uuid';
+import { AddonUUID } from '../addon.config.json';
 
-export const notificationsSlug = {
+export const DefaultNotificationsSlug = {
   slug:{
     Name: "Notifications",
     Slug: "notifications",
@@ -10,24 +10,14 @@ export const notificationsSlug = {
   }
 }
 
-export const notificationsPage: any = {
+export const DefaultNotificationsPage: any = {
   Description: "Notifications Default Page",
   Blocks:[{
-    Key:"notifications_95025423-9096-4a4f-a8cd-d0a17548e42e_BlockPage",
-    Relation: {
-      Type: "NgComponent",
-      SubType: "NG14",
-      ModuleName: "NotificationBlockModule",
-      RelationName: "PageBlock",
-      ComponentName: "NotificationBlockComponent",
-      AddonRelativeURL: "notifications",
-      AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
-      Name: "Notifications"
-    },
+    Key:`notifications_${AddonUUID}_BlockPage`,
     Configuration: {
       Resource: "Notifications",
       Data: {},
-      AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e"
+      AddonUUID: AddonUUID
     }
   }],
   Layout: {
@@ -39,11 +29,11 @@ export const notificationsPage: any = {
             Columns: [
                 {
                     BlockContainer: {
-                        BlockKey: "notifications_95025423-9096-4a4f-a8cd-d0a17548e42e_BlockPage"
+                        BlockKey: `notifications_${AddonUUID}_BlockPage`
                     }
                 }
             ],
-            Key: "notifications_95025423-9096-4a4f-a8cd-d0a17548e42e_Layout"
+            Key: `notifications_${AddonUUID}_Layout`
         }
     ],
     VerticalSpacing: "md",

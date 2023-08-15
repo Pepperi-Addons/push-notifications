@@ -2,7 +2,7 @@ import { PapiClient, User } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, UsersGroup, notificationsSlug, notificationsPage
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, UsersGroup, DefaultNotificationsSlug, DefaultNotificationsPage
 } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
@@ -979,12 +979,14 @@ class NotificationsService {
         return ans;
     }
 
+    // create notifications slug if not exists already
     async createNotificationsSlug(){
         try {
-            const slugBody = notificationsSlug
-            const existingSlugs = await this.papiClient.get(`/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`)
+            const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
+            const slugBody = DefaultNotificationsSlug
+            const existingSlugs = await this.papiClient.get(slugsUrl)
             if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
-                await this.papiClient.post(`/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`, slugBody)
+                await this.papiClient.post(slugsUrl, slugBody)
             }
             return {success: true, errorMessage: ''}
         }
@@ -994,11 +996,12 @@ class NotificationsService {
 
     }
 
+    // create notifications page if not exists already
     async createNotificationsPage(){
         try {
             const pages = await this.papiClient.pages.iter().toArray()
-            const pageBody = notificationsPage
-            if(!pages.find(page => page.Blocks[0].Key === notificationsPage.Blocks[0].Key)){
+            const pageBody = DefaultNotificationsPage
+            if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
                 await this.papiClient.pages.upsert(pageBody)
             }
             return {success: true, errorMessage: ''}
