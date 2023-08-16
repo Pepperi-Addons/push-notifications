@@ -138,15 +138,14 @@ export class MessageCreatorComponent implements OnInit {
     }
     // if there are groups selected, add them to the message object
     this.handleGroupsChips()
-    // handling message sending
-    let ans = await this.notificationsService.bulkNotifications(this.message);
-    this.showFinishDialog(ans);
     // return to the previous page - notification log
     this.router.navigate(['../'], {
       relativeTo: this.route,
       queryParamsHandling: 'merge',
     })
-
+    // handling message sending
+    let ans = await this.notificationsService.bulkNotifications(this.message);
+    this.showFinishDialog(ans);
   }
 
   showFinishDialog(ansFromBulkNotifications) {

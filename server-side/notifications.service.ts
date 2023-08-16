@@ -7,6 +7,8 @@ import {
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
+import split from 'just-split';
+
 // import { Agent } from 'https';
 // import fetch from 'node-fetch';
 import {NotifiactionsSnsService} from './notifications-sns.service'
@@ -735,11 +737,22 @@ class NotificationsService {
             }
             // To create notifications and upload to PFS use function
             // return await this.uploadFileAndImport(notifications);
-            const res = await this.uploadNotificationsToDIMX(notifications)
-            const ans = await this.upsertNotificationLog(notificationToSend);
-            console.log('ans from upload notifications log', ans);
-            return res
+            return await this.handleBulkChunkUpload(notifications, notificationToSend)
         }
+    }
+
+    // splitting notifications to chunks of 500 notifications due to DIMX and ADAL limitations,
+    // uploading the notifications and after finishing uploading log of the notifications
+    async handleBulkChunkUpload(notifications: Notification[], notificationToSend: BulkMessageObject){
+        const splitToChunks: Notification[][] = split(notifications, 500)
+        const chunkRes = await Promise.all(splitToChunks.map(async chunk => {
+            const res = await this.uploadNotificationsToDIMX(chunk)
+            return res
+        }))
+        
+        let ans = await this.upsertNotificationLog(notificationToSend);
+        console.log('ans from upload notifications log', ans);
+        return chunkRes
     }
 
     async batchUpsertReadStatusToAdal(notificationsToUpdate: Notification[]){
