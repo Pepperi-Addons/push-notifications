@@ -4,31 +4,44 @@
                 <div class="left-cont">
                     <div class="body-lg">{{ 'NOTIFICATIONS' | translate }}</div>
             </div>
-            <div *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</div>
+            <div class="header-buttons">
+                <!-- <div *ngIf="showMarkAllAsRead" class="color-link body-sm" (click)="onMarkAllAsReadClick($event)">{{ 'ACTIONS.MARK_ALL_AS_READ' | translate }}</div> -->
+                <pep-button *ngIf="showMarkAllAsRead" 
+                            value="{{'ACTIONS.MARK_ALL_AS_READ' | translate }}"
+                            class="pull-right flip"
+                            styleType="weak"
+                            styleStateType="system" 
+                            sizeType="xs"
+                            (buttonClick)="onMarkAllAsReadClick($event)" >
+                </pep-button>
+                <pep-button class="pull-right flip" iconName="system_filter" 
+                        [classNames]="'circle-btn'"
+                        sizeType="xs"
+                        [styleType]="showOnlyUnRead ? 'weak-invert' : 'weak'"
+                        (buttonClick)="onMsgFilterClick($event)" >
+                </pep-button>
+            </div>
             <!-- <pep-button *ngIf="showMarkAllAsRead" [value]="'ACTIONS.MARK_ALL_AS_READ' | translate" sizeType="sm" styleType="weak-invert" (buttonClick)="onMarkAllAsReadClick($event)"></pep-button> -->
             </div>
         </div>
-        <div *ngIf="!items" class="notifications-footer">
-            <img [src]="flagSImageSRC">
-            <span class="footer-text body-sm">
-                {{ 'NO_NOTIFICATIONS' | translate }}
-            </span>
-        </div>
+            
+        <pep-skeleton-loader *ngIf="items == null" [rowHeightType]="'xs'" [rowsNumber]="3" [lastRowOffset]="true"></pep-skeleton-loader>
+        
         <ul *ngIf="items" class="notifications-items">
             <li *ngFor="let item of items" mat-menu-item  (click)="onNotificationItemClick(item)">
                 <ng-container *ngTemplateOutlet="notificationItemTemplate; context: {item: item}"></ng-container>
             </li>
         </ul>
-        <div *ngIf="items" class="notifications-footer">
+        <div class="notifications-footer">
             <img [src]="flagSImageSRC">
             <span class="footer-text body-sm">
-                {{ 'NOTIFICATIONS_FOOTER_LINE' | translate }}
+                {{ ( items?.length > 0 ? 'NOTIFICATIONS_FOOTER_LINE' : 'NO_NOTIFICATIONS') | translate }}
             </span>
         </div>
 </div>
 
 <ng-template #notificationItemTemplate let-item="item">
-    <div class="notification-item pep-border-bottom">
+    <div *ngIf="((showOnlyUnRead && !item.read) || !showOnlyUnRead)" class="notification-item pep-border-bottom">
         <div class="msg-wrapper">
             <label class="body-md">{{ item.title }}</label>
             <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
