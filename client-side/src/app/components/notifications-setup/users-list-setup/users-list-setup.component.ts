@@ -41,6 +41,7 @@ export class UsersListSetupComponent implements OnInit {
 
   ngOnInit(): void {
     this.dataView = defaultFormViewForListSetup
+    this.formDataSource = defaultDataSourceForListSetup
     this.loadAvailableResources().then( () =>{
       this.loadDataSource();
     })
