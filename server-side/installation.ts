@@ -39,8 +39,8 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     const defaultListRes = await usersListsService.createDefaultLists()
 
-    const slugRes = await service.createNotificationsSlug();
-    const pageRes = await service.createNotificationsPage();
+    await service.createNotificationsSlug();
+    await service.createNotificationsPage();
 
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -50,8 +50,6 @@ export async function install(client: Client, request: Request): Promise<any> {
     return {
         success: notificationsResourceRes.success &&
         defaultListRes.success &&
-        slugRes.success &&
-        pageRes.success &&
         userDeviceResourceRes.success &&
         relationsRes.success &&
         settingsRelationsRes.success &&
@@ -115,13 +113,11 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
 
-        const slugRes = await service.createNotificationsSlug();
-        const pageRes = await service.createNotificationsPage();
+        await service.createNotificationsSlug();
+        await service.createNotificationsPage();
 
         return { success: 
             notificationsUsersListsRes.success &&
-            slugRes.success &&
-            pageRes.success &&
             migrateUpLogRes.success &&
             defaultListRes.success &&
             notificationsLogViewRes.success &&

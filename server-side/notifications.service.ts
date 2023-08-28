@@ -981,35 +981,21 @@ class NotificationsService {
 
     // create notifications slug if not exists already
     async createNotificationsSlug(){
-        try {
-            const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
-            const slugBody = DefaultNotificationsSlug
-            const existingSlugs = await this.papiClient.get(slugsUrl)
-            if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
-                await this.papiClient.post(slugsUrl, slugBody)
-            }
-            return {success: true, errorMessage: ''}
+        const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
+        const slugBody = DefaultNotificationsSlug
+        const existingSlugs = await this.papiClient.get(slugsUrl)
+        if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
+            await this.papiClient.post(slugsUrl, slugBody)
         }
-        catch (error){
-            return {success: false, errorMessage: error}
-        }
-
     }
 
     // create notifications page if not exists already
     async createNotificationsPage(){
-        try {
-            const pages = await this.papiClient.pages.iter().toArray()
-            const pageBody = DefaultNotificationsPage
-            if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
-                await this.papiClient.pages.upsert(pageBody)
-            }
-            return {success: true, errorMessage: ''}
+        const pages = await this.papiClient.pages.iter().toArray()
+        const pageBody = DefaultNotificationsPage
+        if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
+            await this.papiClient.pages.upsert(pageBody)
         }
-        catch (error){
-            return {success: false, errorMessage: error}
-        }
-
     }
 
 }
