@@ -5,8 +5,6 @@ import { PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { IPepDraggableItem, } from '@pepperi-addons/ngx-lib/draggable-items';
 import { AddonService } from 'src/app/services/addon.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
-import { PepDraggableItemsModule } from '@pepperi-addons/ngx-lib/draggable-items';
 
 @Component({
   selector: 'field-selector',

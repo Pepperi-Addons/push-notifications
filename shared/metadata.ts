@@ -112,7 +112,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "ListNameDesc",
         Type: "Separator",
-        Title: "Please insert list name",
+        Title: "Enter a name for the list, The name will appear in the 'New Message' screen",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -145,7 +145,7 @@ export const defaultFormViewForListSetup: FormDataView = {
           },
           Size: {
             Width: 1,
-            Height: 0
+            Height: 0.1
           }
         },
         Style: {
@@ -158,7 +158,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "ResourceNameDesc",
         Type: "Separator",
-        Title: "Select A Resource for group selection",
+        Title: "Select a Resource for group selection",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -251,8 +251,9 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "MappingResourceNameDesc",
         Type: "Separator",
-        Title: "Collections that contain a reference field to a User resource and a reference field"
-        +" to <br> the selection list chosen above are available in this dropdown",
+        Title: "Mapping resource is a resource that maps the selected resource to User resource"
+        +" Therefor it contains a reference fields to both (Selection & Users). These options are"
+        +"filtered in the dropdown",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -298,8 +299,8 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "UserReferenceFieldDesc",
         Type: "Separator",
-        Title: " Please select the field that references user resource in the mapping"
-        +" resource <br> if there is only one field available it will be selected automatically",
+        Title: " Please select the field that references user resource in the mapping."
+        +" if there is only one field available it will be selected automatically",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -345,8 +346,8 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "ResourceReferenceFieldDesc",
         Type: "Separator",
-        Title: "Please select the field that references the selected resource in the mapping"
-        +" resource <br> if there is only one field available it will be selected automatically",
+        Title: "Please select the field that references the selected resource in the mapping."
+        +" if there is only one field available it will be selected automatically",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -392,7 +393,8 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "DisplayFieldsSelectorDesc",
         Type: "Separator",
-        Title: " Display Fields Selection in Notifications Sending ",
+        Title: "Configure the columns to be shown when the selection list is opened. This columns"
+        +" will be used to search by",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -415,7 +417,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "DisplayFieldsSelector",
         Type: "Button",
-        Title: "Select Fields To Display When Selecting Groups For Sending Notifications",
+        Title: "Configure List Columns",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -438,7 +440,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "SmartSearchFieldsDesc",
         Type: "Separator",
-        Title: "Fields to search by in Notifications Sending",
+        Title: "Configure the fields to filter by when the selection list is opened",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -461,7 +463,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "SmartSearchFields",
         Type: "Button",
-        Title: "Select Fields To Search By When Selecting Groups For Sending Notifications",
+        Title: "Configure List Smart Filter",
         Mandatory: true,
         ReadOnly: true,
         Layout: {

@@ -19,12 +19,10 @@
         display: none;
         border-bottom: none;
     }
-    ::ng-deep mat-form-field{
+    ::ng-deep :not(:first-child) pep-separator{
+        padding-top: 1rem;
         padding-bottom: 1rem;
-        border-bottom-color: rgb(150, 150, 150) !important;
-        border-bottom: 1px solid;
-    }
-    ::ng-deep mat-grid-tile {
-        padding: 0;
+        border-top-color: rgb(150, 150, 150) !important;
+        border-top: 1px solid;
     }
 }
