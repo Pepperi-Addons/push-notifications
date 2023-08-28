@@ -563,7 +563,7 @@ export const UsersListDataView = {
 
 export const DefaultAccountBuyersList: UsersLists = {
   Key: 'account_buyers',
-  ListName: 'Account Buyers',
+  ListName: 'Account (Buyers)',
   ResourceName: 'accounts', 
   TitleField: 'Name',
   MappingResourceName: 'account_buyers',
