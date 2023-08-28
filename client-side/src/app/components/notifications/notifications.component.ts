@@ -14,7 +14,8 @@ export class NotificationsComponent implements OnInit {
     private _items: INotificationItem[] = null
     @Input()
     set items(value: INotificationItem[]) {
-        this._items = value?.length > 0 ? value : null;
+       this._items = value?.length >= 0 ? value : null;
+        //this._items = value?.length == 1 ? [] : null;
         this.calcShowMarkAllAsRead();
     }
     get items(): INotificationItem[] {
@@ -31,6 +32,7 @@ export class NotificationsComponent implements OnInit {
     itemReadClick: EventEmitter<INotificationItem> = new EventEmitter<INotificationItem>();
 
     showMarkAllAsRead: boolean = false;
+    showOnlyUnRead = false;
     flagSImageSRC = '';
 
     constructor(private pepAddonService: PepAddonService) { }
@@ -46,10 +48,13 @@ export class NotificationsComponent implements OnInit {
     }
 
     onMarkAllAsReadClick(btnEvent: IPepButtonClickEvent) {
-        console.log('onMarkAllAsReadClick');
         this._items.forEach(item => item.read = true);
         this.calcShowMarkAllAsRead();
         this.markAllAsReadClick.emit();
+    }
+
+    onMsgFilterClick(event){
+        this.showOnlyUnRead = !this.showOnlyUnRead;
     }
 
     onNotificationItemClick(item: INotificationItem) {
