@@ -293,6 +293,7 @@ class NotificationsService {
             body.CreatorName = await this.getUserName(this.currentUserUUID);
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
+            body.Source = 'API'
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
         }
         else {
@@ -731,7 +732,8 @@ class NotificationsService {
                     "Title": notificationToSend.Title,
                     "Body": notificationToSend.Body,
                     "CreatorName": creatorName,
-                    "Read": notificationToSend.Read ?? false
+                    "Read": notificationToSend.Read ?? false,
+                    "Source": "Webapp"
                 }
                 notifications.push(notification);
             }
@@ -927,7 +929,7 @@ class NotificationsService {
         const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         const firstDate = new Date(Date.now() - daysToSubtract)
 
-        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
+        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}' And Source='Webapp'` });
         return {
             Title: "Usage",
             "Resources": [

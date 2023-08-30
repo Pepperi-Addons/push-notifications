@@ -110,6 +110,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         });
         // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
+        // due to addition of source column, recreating scheme otherwise it will fail on usage monitor
+        const notificationsResourceRes = await createNotificationsResource(papiClient)
         const migrateUpLogRes = await migrateUpNotificationsLog(client)
         const usersListsService = new UsersListsService(client)
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
@@ -294,6 +296,9 @@ async function createNotificationsResource(papiClient: PapiClient) {
                 Type: 'Bool'
             },
             NavigationPath: {
+                Type: 'String'
+            },
+            Source: {
                 Type: 'String'
             }
         }
