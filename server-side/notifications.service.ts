@@ -1,9 +1,8 @@
-import { PapiClient } from '@pepperi-addons/papi-sdk'
+import { PapiClient, User } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { User } from '@pepperi-addons/papi-sdk';
 import {
-    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, PFS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice, HttpMethod,
-    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, NotificationLogView, UsersGroup
+    NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice,
+    DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, UsersGroup, DefaultNotificationsSlug, DefaultNotificationsPage
 } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
@@ -23,7 +22,7 @@ abstract class PlatformBase {
     }
 
     abstract createPlatformApplication(body: any): any;
-    abstract publish(pushNotification: any, numberOfUnreadNotifications: Number): any;
+    abstract publish(pushNotification: any, numberOfUnreadNotifications: number): any;
 }
 class PlatformIOS extends PlatformBase {
     async createPlatformApplication(body) {
@@ -31,7 +30,7 @@ class PlatformIOS extends PlatformBase {
             Name: body.AppKey,
             Platform: "APNS",
             Attributes: {
-                'PlatformCredential': body.Credential,// .p8
+                'PlatformCredential': body.Credential, // .p8
                 'PlatformPrincipal': body.AppleSigningKeyID,
                 'ApplePlatformTeamID': body.AppleTeamID,
                 'ApplePlatformBundleID': body.AppKey
@@ -41,7 +40,7 @@ class PlatformIOS extends PlatformBase {
     }
 
     createPayload(data, numberOfUnreadNotifications) {
-        let jsonData = JSON.stringify({ Notification: data.Notification})
+        const jsonData = JSON.stringify({ Notification: data.Notification})
         return {
             "default": `${data.Notification.Title}`,
             "APNS": JSON.stringify({
@@ -76,7 +75,7 @@ class PlatformAndroid extends PlatformBase {
             Name: body.AppKey,
             Platform: "GCM",
             Attributes: {
-                'PlatformCredential': body.Credential,// API Key
+                'PlatformCredential': body.Credential, // API Key
             }
         };
         return await this.notificationsSnsService.createPlatformApplication(params);
@@ -84,8 +83,8 @@ class PlatformAndroid extends PlatformBase {
 
     createPayload(data, numberOfUnreadNotifications) {
         console.log("@@@Android payload data", data)
-        let id = NotificationsService.hashCode(data.Notification.Key)
-        let jsonData = JSON.stringify({ Notification: data.Notification})
+        const id = NotificationsService.hashCode(data.Notification.Key)
+        const jsonData = JSON.stringify({ Notification: data.Notification})
         console.log("@@@Android jsonData", jsonData)
         return {
             "default": `${data.Notification.Title}`,
@@ -101,7 +100,7 @@ class PlatformAndroid extends PlatformBase {
         }
     }
 
-    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
+    publish(pushNotification: any, numberOfUnreadNotifications: number): any {
         const payload = this.createPayload(pushNotification, numberOfUnreadNotifications);
         const params = {
             Message: JSON.stringify(payload),
@@ -117,7 +116,7 @@ class PlatformAddon extends PlatformBase {
         throw new Error("Not implemented");
     }
 
-    publish(pushNotification: any, numberOfUnreadNotifications: Number): any {
+    publish(pushNotification: any, numberOfUnreadNotifications: number): any {
         console.log("@@@pushNotifications inside Addon before publish: ", pushNotification);
         return this.papiClient.post(pushNotification.Endpoint, pushNotification).then(console.log("@@@pushNotifications inside Addon after publish: ", pushNotification));
     }
@@ -151,7 +150,7 @@ class NotificationsService {
         this.notificationsSnsService = new NotifiactionsSnsService(this.client)
     }
 
-    // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives 
+    // subscribe to remove event in order to remove the user device endpoint from aws when the expiration date arrives
     createPNSSubscriptionForUserDeviceRemoval() {
         return this.papiClient.notification.subscriptions.upsert({
             AddonUUID: this.addonUUID,
@@ -180,7 +179,7 @@ class NotificationsService {
         });
     }
 
-    // subscribe to remove platform application from SNS when the expiration date arrives 
+    // subscribe to remove platform application from SNS when the expiration date arrives
     createPNSSubscriptionForPlatformApplicationRemoval() {
         return this.papiClient.notification.subscriptions.upsert({
             AddonUUID: this.addonUUID,
@@ -197,17 +196,17 @@ class NotificationsService {
 
     async getEmailByUserUUID(userUUID: string): Promise<string>{
         const userData = await this.papiClient.users.uuid(userUUID).get()
-        if(userData.Email != undefined){
+        if (userData.Email !== undefined){
             return userData.Email
         }
-        else{
+        else {
             throw new Error(`User with UUID ${userUUID} do not have email!`)
         }
     }
 
     async getUserUUIDByEmail(userEmail) {
-        let userUUID = (await this.users).find(u => u.Email?.toLowerCase() == userEmail.toLowerCase())?.UUID
-        if (userUUID != undefined) {
+        const userUUID = (await this.users).find(u => u.Email?.toLowerCase() === userEmail.toLowerCase())?.UUID
+        if (userUUID !== undefined) {
             return userUUID;
         }
         else {
@@ -218,8 +217,8 @@ class NotificationsService {
     async getUserName(userUUID: string) {
         const user: User = await this.papiClient.users.uuid(userUUID).get();
         console.log(`got user - ${JSON.stringify(user)}`)
-        if (user != undefined) {
-            return (user.FirstName ?? "") +" "+ (user.LastName ?? "") 
+        if (user !== undefined) {
+            return `${user.FirstName ?? "" } ${ user.LastName ?? ""}`
         }
     }
 
@@ -227,26 +226,26 @@ class NotificationsService {
     async unreadNotificationsCount() {
         return await this.getNumberOfUnreadNotifications(this.currentUserUUID);
     }
-    
+
     async getNumberOfUnreadNotifications(userUUID: string) {
-        let notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${userUUID}'`});
+        const notifications = await this.getNotifications({ where: `Read=${false} And UserUUID='${userUUID}'`});
         console.log(`number of unread notifications - ${notifications.length} for user - ${userUUID}`)
         return notifications.length;
     }
 
     public static hashCode(str) {
         let hash = 0, i, chr;
-        if (str.length === 0) return hash;
+        if (str.length === 0) { return hash; }
         for (i = 0; i < str.length; i++) {
-          chr   = str.charCodeAt(i);
-          hash  = ((hash << 5) - hash) + chr;
+          chr = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + chr;
           hash |= 0; // Convert to 32bit integer
-        }     
+        }
         // check if hashCode is positive number
         if (hash < 0) {
             // make it positive number
             hash = hash * -1;
-        }   
+        }
         return hash;
     }
 
@@ -260,7 +259,7 @@ class NotificationsService {
     }
 
     async upsertNotification(body) {
-        if (body.Key != undefined) {
+        if (body.Key !== undefined) {
             return await this.updateNotification(body);
         }
         else {
@@ -270,7 +269,7 @@ class NotificationsService {
 
     // create a single notification
     async createNotification(body) {
-        let validation = this.validateSchema(body, notificationOnCreateSchema);
+        const validation = this.validateSchema(body, notificationOnCreateSchema);
         if (validation.valid) {
             // replace Email by UserUUID
             if (body.UserEmail !== undefined) {
@@ -297,7 +296,7 @@ class NotificationsService {
         else {
             const errors = validation.errors.map(error => {
                 if (error.name === 'oneOf') {
-                    return error.message = "Exactly one of the following properties is required: " + error.argument;
+                    return error.message = `Exactly one of the following properties is required: ${ error.argument}`;
                 }
                 else {
                     return error.stack.replace("instance.", "");
@@ -308,10 +307,10 @@ class NotificationsService {
     }
 
     async updateNotification(body) {
-        let validation = this.validateSchema(body, notificationOnUpdateSchema);
+        const validation = this.validateSchema(body, notificationOnUpdateSchema);
         if (validation.valid) {
-            let notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
-            let notification = notifications.length > 0 ? notifications[0] : undefined
+            const notifications = await this.getNotifications({ where: `Key='${body.Key}'` })
+            const notification = notifications.length > 0 ? notifications[0] : undefined
             if (notification) {
                 notification.Hidden = body.Hidden
                 notification.Read = body.Read
@@ -324,7 +323,7 @@ class NotificationsService {
         else {
             const errors = validation.errors.map(error => {
                 if (error.name === 'anyOf') {
-                    return error.message = "One of the following properties is required: " + error.argument;
+                    return error.message = `One of the following properties is required: ${ error.argument}`;
                 }
                 else {
                     return error.stack.replace("instance.", "");
@@ -335,7 +334,7 @@ class NotificationsService {
     }
 
     async updateNotificationReadStatus(body){
-        let notification: Notification = {
+        const notification: Notification = {
             "Key": body.Key,
             "Read": body.Read,
         }
@@ -343,9 +342,9 @@ class NotificationsService {
     }
 
     async updateNotificationsReadStatus(body: notificationReadStatus) {
-        let notifications: Notification[] = [];
-        for (let key of body.Keys) {
-            let notification: Notification = {
+        const notifications: Notification[] = [];
+        for (const key of body.Keys) {
+            const notification: Notification = {
                 "Key": key,
                 "Read": body.Read
             }
@@ -376,9 +375,9 @@ class NotificationsService {
         //Entries in the token details on the server are considered valid in case they were updated in the last 30 days
         deviceDataToPopulate.ExpirationDateTime = this.getExpirationDateTime(30);
         console.log('Setting Expiration Time To ', deviceDataToPopulate.ExpirationDateTime)
-        
-        
-        return deviceDataToPopulate 
+
+
+        return deviceDataToPopulate
     }
 
     private getExpirationDateTime(days: number) {
@@ -388,19 +387,19 @@ class NotificationsService {
 
     async upsertUserDevice(body: UserDevice) { // body -> userDevice
         // Schema validation
-        
-        let validation = this.validateSchema(body, userDeviceSchema);
+
+        const validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
             let deviceData = await this.populateUserDevice(body)
 
             const userDeviceHandlingFactory = new UserDeviceHandlingFactory(this.client, deviceData)
 
             const strategy = await userDeviceHandlingFactory.getStrategy()
-            
+
             deviceData = await strategy.execute(deviceData)
             deviceData.Token = await encryption.encryptSecretKey(deviceData.Token, this.client.AddonSecretKey ?? "")
 
-            console.log('Upserting user device to ADAL ',deviceData)
+            console.log('Upserting user device to ADAL ', deviceData)
             return await this.upsertUserDeviceResource(deviceData);
         }
         else {
@@ -419,14 +418,14 @@ class NotificationsService {
     // remove devices from ADAL by deviceKey , it will remove from AWS in ExpirationDateTime
     async removeDevices(body) {
         await Promise.all(
-            body.DevicesKeys.map(async device =>{
+            body.DevicesKeys.map(async device => {
                 try {
-                    console.log('Removing device from Adal, with Key ',device)
+                    console.log('Removing device from Adal, with Key ', device)
                     const deviceToRemove = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).get(device);
                     deviceToRemove.Hidden = true;
                     await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).upsert(deviceToRemove);
                 }
-                catch(error) {
+                catch (error) {
                     console.log('error while removing device', error.message);
                 }
             })
@@ -435,18 +434,18 @@ class NotificationsService {
     // called by PNS when a notification is created
     async sendPushNotification(body) {
         console.log("@@@pushNotification body: ", body);
-        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
+        await Promise.all(body.Message.ModifiedObjects.map(async object => {
             try {
                 console.log("@@@pushNotification object: ", object);
                 const notification = await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).key(object.ObjectKey).get() as Notification;
                 //get user devices by user uuid
                 const userDevicesList: UserDevice[] = await this.getUserDevicesByUserUUID(notification.UserUUID) as any;
                 console.log("@@@pushNotification userDevicesList: ", userDevicesList);
-                if (userDevicesList != undefined) {
+                if (userDevicesList !== undefined) {
                     // for each user device send push notification
                     await Promise.all(userDevicesList.map(async(device) => {
                         try {
-                            let pushNotification: PayloadData = {
+                            const pushNotification: PayloadData = {
                                 Notification: notification,
                                 Endpoint: device.Endpoint,
                                 DeviceType: device.DeviceType,
@@ -456,7 +455,7 @@ class NotificationsService {
                             const ans = await this.publish(pushNotification);
                             console.log("@@@ans from publish: ", ans);
                         }
-                        catch(error) {
+                        catch (error) {
                             console.warn(`@@@error single publish failed with error:${error} for device: ${JSON.stringify(device)} and notification: ${JSON.stringify(notification)}`);
                         }
                     }));
@@ -486,7 +485,7 @@ class NotificationsService {
     }
 
     async upsertPlatformApplication(body) {
-        if (body.Key != undefined) {
+        if (body.Key !== undefined) {
             return await this.updatePlatformApplication(body);
         }
         else {
@@ -495,7 +494,7 @@ class NotificationsService {
     }
 
     async updatePlatformApplication(body) {
-        let application = await this.getPlatformApplication({ where: `Key='${body.Key}'` });
+        const application = await this.getPlatformApplication({ where: `Key='${body.Key}'` });
         if (application.length > 0) {
             application[0].Hidden = body.Hidden
             return await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).upsert(application[0]);
@@ -518,12 +517,12 @@ class NotificationsService {
     // Create PlatformApplication in order to register users mobile endpoints .
     async createPlatformApplication(body) {
         // Schema validation
-        let validation = this.validateSchema(body, platformApplicationsSchema);
+        const validation = this.validateSchema(body, platformApplicationsSchema);
         if (validation.valid) {
             // dist can have only one iOS & one Android platform
-            let applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
+            const applications = await this.getPlatformApplication({ where: `Type='${body.Type}'` });
             if (applications.length > 0) {
-                let error: any = new Error(`Platform for '${body.Type}' already exists`);
+                const error: any = new Error(`Platform for '${body.Type}' already exists`);
                 error.code = 403;
                 throw error;
             }
@@ -532,7 +531,7 @@ class NotificationsService {
 
             switch (body.Type) {
                 case "iOS":
-                    let validation = this.validateSchema(body, platformApplicationsIOSSchema);
+                    const validation = this.validateSchema(body, platformApplicationsIOSSchema);
                     if (validation.valid) {
                         basePlatform = new PlatformIOS(this.papiClient);
                         break;
@@ -550,9 +549,9 @@ class NotificationsService {
                     throw new Error(`Type not supported ${body.PlatformType}}`);
             }
 
-            let application = await basePlatform.createPlatformApplication(body)
+            const application = await basePlatform.createPlatformApplication(body)
 
-            if (application.PlatformApplicationArn != undefined) {
+            if (application.PlatformApplicationArn !== undefined) {
                 return await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).upsert({
                     "ApplicationARN": application.PlatformApplicationArn,
                     "Type": body.Type,
@@ -569,23 +568,23 @@ class NotificationsService {
     }
 
     /*
-    It will register mobile to platform application so that 
-    if we send notification to platform application it 
+    It will register mobile to platform application so that
+    if we send notification to platform application it
     will send notifications to all mobile endpoints registered
     */
 
     async deleteAllApplicationEndpoints() {
-        let devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter().toArray();
+        const devices = await this.papiClient.addons.data.uuid(this.addonUUID).table(USER_DEVICE_TABLE_NAME).iter().toArray();
 
-        await Promise.all(devices.map(async device =>{
+        await Promise.all(devices.map(async device => {
             await this.notificationsSnsService.deleteApplicationEndpoint(device.Endpoint);
         }))
     }
 
     async deleteAllPlatformsApplication() {
-        let platforms = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).iter().toArray();
+        const platforms = await this.papiClient.addons.data.uuid(this.addonUUID).table(PLATFORM_APPLICATION_TABLE_NAME).iter().toArray();
 
-        await Promise.all(platforms.map(async platform =>{
+        await Promise.all(platforms.map(async platform => {
             await this.notificationsSnsService.deleteApplication(platform.ApplicationARN);
         }))
     }
@@ -608,15 +607,15 @@ class NotificationsService {
             default:
                 throw new Error(`PlatformType not supported ${pushNotification.PlatformType}}`);
         }
-        let numberOfUnreadNotifications = await this.getNumberOfUnreadNotifications(pushNotification.Notification.UserUUID!!);
+        const numberOfUnreadNotifications = await this.getNumberOfUnreadNotifications(pushNotification.Notification.UserUUID!);
         return basePlatform.publish(pushNotification, numberOfUnreadNotifications)
     }
 
     //remove endpoint ARN
     async removeUserDeviceEndpoint(body) {
-        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
+        await Promise.all(body.Message.ModifiedObjects.map(async object => {
             console.log(`Removing device Endpoint From SNS ${object.Key}`)
-            if (object.EndpointARN != undefined) {
+            if (object.EndpointARN !== undefined) {
                 await this.notificationsSnsService.deleteApplicationEndpoint(object.EndpointARN);
             }
             else {
@@ -626,8 +625,8 @@ class NotificationsService {
     }
 
     async removePlatformApplication(body) {
-        await Promise.all(body.Message.ModifiedObjects.map(async object =>{
-            if (object.EndpointARN != undefined) {
+        await Promise.all(body.Message.ModifiedObjects.map(async object => {
+            if (object.EndpointARN !== undefined) {
                 await this.notificationsSnsService.deleteApplicationEndpoint(object.ApplicationARN);
             }
             else {
@@ -698,8 +697,8 @@ class NotificationsService {
         this.validateRecipientLimit(bulkNotification.UsersUUID || [], bulkNotification.SentTo.Groups || [])
 
         // if there are groups selected, get all users uuids from the groups
-        if(bulkNotification.SentTo.Groups?.length! > 0){
-            const usersFromGroups: string[][] = await Promise.all(bulkNotification.SentTo.Groups!.map(async group =>{
+        if (bulkNotification.SentTo?.Groups?.length! > 0){
+            const usersFromGroups: string[][] = await Promise.all(bulkNotification.SentTo.Groups!.map(async group => {
                 return usersListsService.getUserUUIDsFromGroup(group.ListKey, group.SelectedGroupKey)
             }))
             // merge all of the hard coded users and users from groups
@@ -708,8 +707,8 @@ class NotificationsService {
         // return only distinct user uuids to prevent duplicates
         bulkNotification.UsersUUID = [...new Set(bulkNotification.UsersUUID)];
 
-       
-        if (bulkNotification.UsersUUID!.length == 0) {
+
+        if (bulkNotification.UsersUUID!.length === 0) {
             throw new Error('no users to send notification');
         }
         return bulkNotification
@@ -717,16 +716,16 @@ class NotificationsService {
 
     // create notifications using DIMX
     async bulkNotifications(notificationToSend: BulkMessageObject): Promise<any> {
-        
+
         notificationToSend = await this.handleUsersUUIDsForBulk(notificationToSend)
 
         const creatorName = await this.getUserName(this.currentUserUUID)
 
-        if (notificationToSend.UsersUUID != undefined) {
-            let notifications: Notification[] = [];
-            for (let uuid of notificationToSend.UsersUUID) {
-                let notification: Notification = {
-                    "UserUUID": uuid,
+        if (notificationToSend.UsersUUID !== undefined) {
+            const notifications: Notification[] = [];
+            for (const userUuid of notificationToSend.UsersUUID) {
+                const notification: Notification = {
+                    "UserUUID": userUuid,
                     "Title": notificationToSend.Title,
                     "Body": notificationToSend.Body,
                     "CreatorName": creatorName,
@@ -737,7 +736,7 @@ class NotificationsService {
             // To create notifications and upload to PFS use function
             // return await this.uploadFileAndImport(notifications);
             const res = await this.uploadNotificationsToDIMX(notifications)
-            let ans = await this.upsertNotificationLog(notificationToSend);
+            const ans = await this.upsertNotificationLog(notificationToSend);
             console.log('ans from upload notifications log', ans);
             return res
         }
@@ -751,7 +750,7 @@ class NotificationsService {
     // Create Notifications only using DIMX, without PFS
     async uploadNotificationsToDIMX(body) : Promise<any>{
         const url = `/addons/data/import/${this.addonUUID}/${NOTIFICATIONS_TABLE_NAME}`
-        const ansFromImport = await this.papiClient.post(url, {Objects:body});
+        const ansFromImport = await this.papiClient.post(url, {Objects: body});
         return ansFromImport
     }
     // we are currently not using this functions, however when we will use PFS & ADAL instead of DIMX we will use this functions
@@ -880,7 +879,7 @@ class NotificationsService {
             varSettings['Key'] = NOTIFICATIONS_VARS_TABLE_NAME;
             return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_VARS_TABLE_NAME).upsert(varSettings);
         } else {
-            let nanVariableName = isNaN(notificationsNumberLimitation) ? DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key : DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key;
+            const nanVariableName = isNaN(notificationsNumberLimitation) ? DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION.key : DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key;
             throw new Error(`${nanVariableName} is not a number.`);
         }
     }
@@ -913,7 +912,7 @@ class NotificationsService {
 
     async getTotalNotificationsSentInTheLastWeekUsageData() {
         const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
-        let firstDate = new Date(Date.now() - daysToSubtract)
+        const firstDate = new Date(Date.now() - daysToSubtract)
 
         const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
         return {
@@ -936,7 +935,7 @@ class NotificationsService {
     }
 
     async getNotificationsLogByKey(logKey: string): Promise<NotificationLog> {
-        if(logKey == undefined){
+        if (logKey === undefined){
             throw new Error('Log Key is undefined')
         }
         return await this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_LOGS_TABLE_NAME).key(logKey).get() as NotificationLog;
@@ -953,7 +952,7 @@ class NotificationsService {
         //     usersList.push(userName);
         // }
 
-        let notificationLog: NotificationLog = {
+        const notificationLog: NotificationLog = {
             'CreatorUUID': this.currentUserUUID,
             'SentTo': body.SentTo,
             'Title': body.Title,
@@ -979,6 +978,26 @@ class NotificationsService {
         const ans = await Promise.all(ansArray);
         return ans;
     }
+
+    // create notifications slug if not exists already
+    async createNotificationsSlug(){
+        const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
+        const slugBody = DefaultNotificationsSlug
+        const existingSlugs = await this.papiClient.get(slugsUrl)
+        if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
+            await this.papiClient.post(slugsUrl, slugBody)
+        }
+    }
+
+    // create notifications page if not exists already
+    async createNotificationsPage(){
+        const pages = await this.papiClient.pages.iter().toArray()
+        const pageBody = DefaultNotificationsPage
+        if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
+            await this.papiClient.pages.upsert(pageBody)
+        }
+    }
+
 }
 
 export default NotificationsService;

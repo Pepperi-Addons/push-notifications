@@ -10,7 +10,7 @@ abstract class EndpointStrategy {
     protected papiClient: PapiClient
     protected accessToken: string
     constructor(protected client: Client) {
-        this.papiClient =  new PapiClient({
+        this.papiClient = new PapiClient({
             baseURL: client.BaseURL,
             token: client.OAuthAccessToken,
             addonUUID: client.AddonUUID,
@@ -29,7 +29,7 @@ export class CreateEndpointStrategy extends EndpointStrategy{
     currentUserUUID = this.parsedToken.sub;
 
     async execute(body: any) {
-        
+
         body = await this.createApplicationEndpoint(body)
 
         return body
@@ -37,7 +37,7 @@ export class CreateEndpointStrategy extends EndpointStrategy{
 
 
     protected async createApplicationEndpoint(body){
-        const pushNotificationsPlatform = body.PlatformType == "Android" ? "GCM" : "APNS";
+        const pushNotificationsPlatform = body.PlatformType === "Android" ? "GCM" : "APNS";
         const awsID = process.env.AccountID;
         const region = process.env.AWS_REGION
         console.log("@@@awsID:", awsID);
@@ -45,17 +45,17 @@ export class CreateEndpointStrategy extends EndpointStrategy{
 
         const appARN = `arn:aws:sns:${region}:${awsID}:app/${pushNotificationsPlatform}/${body.AppKey}`;
 
-        let endpointARN = await this.notificationsSnsService.createApplicationEndpoint({
+        const endpointARN = await this.notificationsSnsService.createApplicationEndpoint({
             AddonRelativeURL: body.AddonRelativeURL,
             PlatformType: body.PlatformType,
             PlatformApplicationArn: appARN,
             DeviceToken: body.Token
         });
 
-        if(endpointARN){
+        if (endpointARN){
             body.Endpoint = endpointARN
         }
-        else{
+        else {
             throw new Error("Failed to register user device")
         }
 
@@ -121,8 +121,8 @@ export class UserDeviceHandlingFactory{
     async getStrategy(): Promise<CreateEndpointStrategy | RecreateEndpointStrategy | UpdateEndpointStrategy>{
         await this.getUserDevices()
         let strategy
-        if(await this.isDeviceExist()){
-            if(await this.isTokenChanged()){
+        if (await this.isDeviceExist()){
+            if (await this.isTokenChanged()){
                 // if there is a new token, then update the endpoint with the old token
                 strategy = new UpdateEndpointStrategy(this.client, this.userDevices[0].Endpoint);
             }
@@ -130,47 +130,47 @@ export class UserDeviceHandlingFactory{
                 // if key exists old endpoint need to be removed and recreated
                 strategy = new RecreateEndpointStrategy(this.client, this.userDevices[0].Key)
             }
-            else{
+            else {
                 // default if no key and token changed but device exists
                 strategy = new CreateEndpointStrategy(this.client)
             }
         }
-        else{
+        else {
             // if device not exists then create a new device
             strategy = new CreateEndpointStrategy(this.client)
         }
         return strategy
     }
-    
+
     private async isTokenChanged(): Promise<boolean>{
         // isTokenChanged() - UpdateEndpointStrategy
         const userDeviceToken = await encryption.decryptSecretKey(this.userDevices[0].Token, this.addonSecretKey)
-        if (this.newUserDeviceData.Token != userDeviceToken){
+        if (this.newUserDeviceData.Token !== userDeviceToken){
             return true
         }
-        else{
+        else {
             return false
         }
-    } 
+    }
 
     private async isDeviceKeyChanged(): Promise<boolean>{
         // isDeviceKeyChanged() - RecreateEndpointStrategy
-        if(this.newUserDeviceData.Key != this.userDevices[0].Key){
+        if (this.newUserDeviceData.Key !== this.userDevices[0].Key){
             return true
         }
-        else{
+        else {
             return false
         }
-        
+
     }
 
     private async isDeviceExist(): Promise<boolean>{
         // isDeviceExist() - CreateEndpointStrategy
-        if(this.userDevices.length != 0){
+        if (this.userDevices.length !== 0){
             return true
         }
-        else{
+        else {
             return false
         }
-    }    
+    }
 }

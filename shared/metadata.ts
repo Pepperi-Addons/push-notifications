@@ -1,5 +1,47 @@
-import { FormDataView } from "@pepperi-addons/papi-sdk";
-import { UsersLists } from "./entities";
+import { AddonDataScheme, FormDataView } from "@pepperi-addons/papi-sdk";
+import { USERS_LISTS_TABLE_NAME, UsersLists } from "./entities";
+import { AddonUUID } from '../addon.config.json';
+
+export const DefaultNotificationsSlug = {
+  slug:{
+    Name: "Notifications",
+    Slug: "notifications",
+    Description: "Notifications Default Slug",
+  }
+}
+
+export const DefaultNotificationsPage: any = {
+  Description: "Notifications Default Page",
+  Blocks:[{
+    Key:`notifications_${AddonUUID}_BlockPage`,
+    Configuration: {
+      Resource: "Notifications",
+      Data: {},
+      AddonUUID: AddonUUID
+    }
+  }],
+  Layout: {
+    ColumnsGap: "md",
+    SectionsGap: "md",
+    HorizontalSpacing: "md",
+    Sections: [
+        {
+            Columns: [
+                {
+                    BlockContainer: {
+                        BlockKey: `notifications_${AddonUUID}_BlockPage`
+                    }
+                }
+            ],
+            Key: `notifications_${AddonUUID}_Layout`
+        }
+    ],
+    VerticalSpacing: "md",
+    MaxWidth: 0
+  },
+  Hidden: false,
+  Name: "Notifications"
+}
 
 export const setupListViewIndexes = {
   AddGroupList: 0,
@@ -20,6 +62,38 @@ export const setupListViewIndexes = {
   SmartSearchFieldsDesc: 15,
   SmartSearchFields: 16
 }
+
+export const usersListFields: AddonDataScheme = {
+  Name: USERS_LISTS_TABLE_NAME,
+  Type: 'meta_data',
+  Fields: {
+      ListName: {
+          Type: 'String'
+      },
+      ResourceName: {
+          Type: 'String'
+      },
+      TitleField: {
+          Type: 'String'
+      },
+      MappingResourceName: {
+          Type: 'String'
+      },
+      UserReferenceField: {
+          Type: 'String'
+      },
+      ResourceReferenceField: {
+          Type: 'String'
+      },
+      SelectionDisplayFields: {
+          Type: "MultipleStringValues"
+      },
+      SmartSearchFields: {
+          Type: "MultipleStringValues"
+      }
+  }
+
+};
 
 export const defaultFormViewForListSetup: FormDataView = {
     Type: "Form",
