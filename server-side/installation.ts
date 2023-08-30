@@ -16,10 +16,13 @@ import NotificationsService from './notifications.service';
 import UsersListsService from './users-list.service'
 import { NOTIFICATION_SETUP_ELEMENT } from 'shared';
 import semver from 'semver';
+import { Default } from 'aws-sdk/clients/elbv2';
+import { DefaultPageCreator } from './default-page.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
     const usersListsService = new UsersListsService(client)
+    const defaultPageService= new DefaultPageCreator(client);
     const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -39,8 +42,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     const defaultListRes = await usersListsService.createDefaultLists()
 
-    const slugRes = await service.createNotificationsSlug();
-    const pageRes = await service.createNotificationsPage();
+    await defaultPageService.createDefaultPage();
 
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -50,8 +52,6 @@ export async function install(client: Client, request: Request): Promise<any> {
     return {
         success: notificationsResourceRes.success &&
         defaultListRes.success &&
-        slugRes.success &&
-        pageRes.success &&
         userDeviceResourceRes.success &&
         relationsRes.success &&
         settingsRelationsRes.success &&
@@ -97,6 +97,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
+    const defaultPageService= new DefaultPageCreator(client);
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
@@ -109,19 +110,18 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         });
         // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
+        // due to addition of source column, recreating scheme otherwise it will fail on usage monitor
+        const notificationsResourceRes = await createNotificationsResource(papiClient)
         const migrateUpLogRes = await migrateUpNotificationsLog(client)
         const usersListsService = new UsersListsService(client)
         const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
         const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
 
-        const slugRes = await service.createNotificationsSlug();
-        const pageRes = await service.createNotificationsPage();
+        await defaultPageService.createDefaultPage();
 
         return { success: 
             notificationsUsersListsRes.success &&
-            slugRes.success &&
-            pageRes.success &&
             migrateUpLogRes.success &&
             defaultListRes.success &&
             notificationsLogViewRes.success &&
@@ -296,6 +296,9 @@ async function createNotificationsResource(papiClient: PapiClient) {
                 Type: 'Bool'
             },
             NavigationPath: {
+                Type: 'String'
+            },
+            Source: {
                 Type: 'String'
             }
         }

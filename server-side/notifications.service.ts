@@ -293,6 +293,7 @@ class NotificationsService {
             body.CreatorName = await this.getUserName(this.currentUserUUID);
             body.Read = false;
             body.ExpirationDateTime = this.getExpirationDateTime(lifetimeSoftLimit[DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION.key]);
+            body.Source = 'API'
             return this.papiClient.addons.data.uuid(this.addonUUID).table(NOTIFICATIONS_TABLE_NAME).upsert(body);
         }
         else {
@@ -731,7 +732,8 @@ class NotificationsService {
                     "Title": notificationToSend.Title,
                     "Body": notificationToSend.Body,
                     "CreatorName": creatorName,
-                    "Read": notificationToSend.Read ?? false
+                    "Read": notificationToSend.Read ?? false,
+                    "Source": "Webapp"
                 }
                 notifications.push(notification);
             }
@@ -927,7 +929,7 @@ class NotificationsService {
         const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         const firstDate = new Date(Date.now() - daysToSubtract)
 
-        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
+        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}' And Source='Webapp'` });
         return {
             Title: "Usage",
             "Resources": [
@@ -994,35 +996,21 @@ class NotificationsService {
 
     // create notifications slug if not exists already
     async createNotificationsSlug(){
-        try {
-            const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
-            const slugBody = DefaultNotificationsSlug
-            const existingSlugs = await this.papiClient.get(slugsUrl)
-            if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
-                await this.papiClient.post(slugsUrl, slugBody)
-            }
-            return {success: true, errorMessage: ''}
+        const slugsUrl = `/addons/api/4ba5d6f9-6642-4817-af67-c79b68c96977/api/slugs`
+        const slugBody = DefaultNotificationsSlug
+        const existingSlugs = await this.papiClient.get(slugsUrl)
+        if(!existingSlugs.find(slug => slug.Slug === slugBody.slug.Slug)){
+            await this.papiClient.post(slugsUrl, slugBody)
         }
-        catch (error){
-            return {success: false, errorMessage: error}
-        }
-
     }
 
     // create notifications page if not exists already
     async createNotificationsPage(){
-        try {
-            const pages = await this.papiClient.pages.iter().toArray()
-            const pageBody = DefaultNotificationsPage
-            if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
-                await this.papiClient.pages.upsert(pageBody)
-            }
-            return {success: true, errorMessage: ''}
+        const pages = await this.papiClient.pages.iter().toArray()
+        const pageBody = DefaultNotificationsPage
+        if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
+            await this.papiClient.pages.upsert(pageBody)
         }
-        catch (error){
-            return {success: false, errorMessage: error}
-        }
-
     }
 
 }

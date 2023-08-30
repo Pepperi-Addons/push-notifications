@@ -22,7 +22,8 @@ export interface Notification {
     CreatorUserUUID?: string,
     CreatorName?: string,
     Read: boolean,
-    NavigationPath?: string
+    NavigationPath?: string,
+    Source?: "API" | "Webapp";
 }
 
 export interface BulkMessageObject {
