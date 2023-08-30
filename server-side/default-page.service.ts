@@ -2,7 +2,7 @@ import { Client } from "@pepperi-addons/debug-server/dist";
 import { PapiClient } from "@pepperi-addons/papi-sdk";
 import { DefaultNotificationsPage, DefaultNotificationsSlug } from "shared"
 
-export class DefaultPageService{
+export class DefaultPageCreator{
     private papiClient: PapiClient;
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
