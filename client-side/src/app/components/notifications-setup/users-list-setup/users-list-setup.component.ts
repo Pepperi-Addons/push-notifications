@@ -41,8 +41,10 @@ export class UsersListSetupComponent implements OnInit {
 
   ngOnInit(): void {
     this.dataView = defaultFormViewForListSetup
+    this.formDataSource = defaultDataSourceForListSetup
     this.loadAvailableResources().then( () =>{
       this.loadDataSource();
+      this.refreshFormData()
     })
   }
 
@@ -56,6 +58,10 @@ export class UsersListSetupComponent implements OnInit {
 
   cancel(){
      this.dialogRef.close();
+     this.editMode = false;
+     this.editingListKey = ""
+     this.formDataSource = defaultDataSourceForListSetup
+     this.dataView = defaultFormViewForListSetup
   }
 
   done() {
@@ -149,18 +155,22 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   validateListName(listNameSelected: string){
-    // saving the list name 
-    this.formDataSource.ListName = listNameSelected
-    // updating data in resource selection
-    this.dataView.Fields[setupListViewIndexes.ResourceName]["OptionalValues"] = this.getSelectionResources()
-    // enabling resource selection
-    this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = false
+    if(listNameSelected.length > 0){
+      // saving the list name 
+      this.formDataSource.ListName = listNameSelected
+      // updating data in resource selection
+      this.dataView.Fields[setupListViewIndexes.ResourceName]["OptionalValues"] = this.getSelectionResources()
+      // enabling resource selection
+      this.dataView.Fields[setupListViewIndexes.ResourceName].ReadOnly = false
+    }
   }
 
   validateResources(resourceSelected: string){
     // validating that next fields are not selected, if resource is changed it affects
     // the rest of the fields
     this.formDataSource.TitleField = ""
+    // resetting resource fields when resource is changed
+    this.resourceFields = []
     // not setting display title to read only because it need to be selected next
     this.formDataSource.MappingResourceName = ""
     this.dataView.Fields[setupListViewIndexes.MappingResourceName].ReadOnly = true
@@ -174,6 +184,7 @@ export class UsersListSetupComponent implements OnInit {
     this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = true
     // saving data from the form selection
     this.formDataSource.ResourceName = resourceSelected
+    console.log(`selected resource is ${resourceSelected}`)
     // enabling selection of the next field and updating options to select
     this.dataView.Fields[setupListViewIndexes.TitleField]["OptionalValues"] = this.getResourceFields(resourceSelected)
     this.dataView.Fields[setupListViewIndexes.TitleField].ReadOnly = false

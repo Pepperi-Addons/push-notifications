@@ -3,5 +3,26 @@
         .mat-form-field-suffix{
             visibility: hidden;
         }
+        pep-field-title {
+            display: none;
+        }
+    }
+    ::ng-deep .body-md{
+        font-weight: normal !important;
+        font-size: 14px !important;
+    }
+    ::ng-deep .pep-separator-field{
+        height: 80% !important;
+         
+    }
+    ::ng-deep .pep-border-bottom{
+        display: none;
+        border-bottom: none;
+    }
+    ::ng-deep :not(:first-child) pep-separator{
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        border-top-color: rgb(150, 150, 150) !important;
+        border-top: 1px solid;
     }
 }

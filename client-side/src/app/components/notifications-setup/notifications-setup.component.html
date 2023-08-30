@@ -1,6 +1,6 @@
 <pep-page-layout addPadding="true">
     <ng-container pep-top-area>
-        <pep-top-bar [title]="('Notifications_Setup_Title' | translate)">
+        <pep-top-bar class="pep-spacing-element" [title]="('Notifications_Setup_Title' | translate)">
         </pep-top-bar>
         <p>{{('Notifications_Setup_Description' | translate)}}</p>
     </ng-container>
@@ -10,7 +10,7 @@
         [uuidMapping]="'Key'"
         [dataSource]="dataSource"
         [actions]="actions"
-        [title]="'Send To'"
+        [title]="('Notifications_Setup_Subtitle' | translate)"
         [disabled]="false"
         [addPadding]="true"
         [showSearch]="false"

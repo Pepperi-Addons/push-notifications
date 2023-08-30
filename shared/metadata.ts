@@ -44,23 +44,22 @@ export const DefaultNotificationsPage: any = {
 }
 
 export const setupListViewIndexes = {
-  AddGroupList: 0,
-  ListNameDesc: 1,
-  ListName: 2,
-  ResourceNameDesc: 3,
-  ResourceName: 4,
-  TitleFieldDesc: 5,
-  TitleField: 6,
-  MappingResourceNameDesc: 7,
-  MappingResourceName: 8,
-  UserReferenceFieldDesc: 9,
-  UserReferenceField: 10,
-  ResourceReferenceFieldDesc: 11,
-  ResourceReferenceField: 12,
-  DisplayFieldsSelectorDesc: 13,
-  DisplayFieldsSelector: 14,
-  SmartSearchFieldsDesc: 15,
-  SmartSearchFields: 16
+  ListNameDesc: 0,
+  ListName: 1,
+  ResourceNameDesc: 2,
+  ResourceName: 3,
+  TitleFieldDesc: 4,
+  TitleField: 5,
+  MappingResourceNameDesc: 6,
+  MappingResourceName: 7,
+  UserReferenceFieldDesc: 8,
+  UserReferenceField: 9,
+  ResourceReferenceFieldDesc: 10,
+  ResourceReferenceField: 11,
+  DisplayFieldsSelectorDesc: 12,
+  DisplayFieldsSelector: 13,
+  SmartSearchFieldsDesc: 14,
+  SmartSearchFields: 15
 }
 
 export const usersListFields: AddonDataScheme = {
@@ -111,32 +110,9 @@ export const defaultFormViewForListSetup: FormDataView = {
     },
     Fields: [
       {
-        FieldID: "AddGroupList",
-        Type: "Separator",
-        Title: "Add Group List",
-        Mandatory: true,
-        ReadOnly: true,
-        Layout: {
-          Origin: {
-            X: 0,
-            Y: setupListViewIndexes.AddGroupList
-          },
-          Size: {
-            Width: 1,
-            Height: 0
-          }
-        },
-        Style: {
-          Alignment: {
-            Horizontal: "Stretch",
-            Vertical: "Stretch"
-          }
-        }
-      },
-      {
         FieldID: "ListNameDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Enter a name for the list, The name will appear in the 'New Message' screen",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -169,7 +145,7 @@ export const defaultFormViewForListSetup: FormDataView = {
           },
           Size: {
             Width: 1,
-            Height: 0
+            Height: 0.1
           }
         },
         Style: {
@@ -181,8 +157,8 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "ResourceNameDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Select a Resource for group selection",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -227,8 +203,9 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "TitleFieldDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Please select the field that will use as the display title in the 'To'"
+        +" element of the message composer",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -273,8 +250,10 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "MappingResourceNameDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Mapping resource is a resource that maps the selected resource to User resource"
+        +" Therefor it contains a reference fields to both (Selection & Users). These options are"
+        +"filtered in the dropdown",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -319,8 +298,9 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "UserReferenceFieldDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: " Please select the field that references user resource in the mapping."
+        +" if there is only one field available it will be selected automatically",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -365,8 +345,9 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "ResourceReferenceFieldDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Please select the field that references the selected resource in the mapping."
+        +" if there is only one field available it will be selected automatically",
         Mandatory: false,
         ReadOnly: true,
         Layout: {
@@ -411,8 +392,9 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "DisplayFieldsSelectorDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Configure the columns to be shown when the selection list is opened. This columns"
+        +" will be used to search by",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -435,7 +417,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "DisplayFieldsSelector",
         Type: "Button",
-        Title: "Select Fields To Display When Selecting Groups For Sending Notifications",
+        Title: "Configure List Columns",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -457,8 +439,8 @@ export const defaultFormViewForListSetup: FormDataView = {
       },
       {
         FieldID: "SmartSearchFieldsDesc",
-        Type: "RichTextHTML",
-        Title: "",
+        Type: "Separator",
+        Title: "Configure the fields to filter by when the selection list is opened",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -481,7 +463,7 @@ export const defaultFormViewForListSetup: FormDataView = {
       {
         FieldID: "SmartSearchFields",
         Type: "Button",
-        Title: "Select Fields To Search By When Selecting Groups For Sending Notifications",
+        Title: "Configure List Smart Filter",
         Mandatory: true,
         ReadOnly: true,
         Layout: {
@@ -506,25 +488,13 @@ export const defaultFormViewForListSetup: FormDataView = {
 }
 
 export const defaultDataSourceForListSetup = {
-    ListNameDesc:"<p>Please insert list name</p>",
     ListName:"",
-    ResourceNameDesc:"<p>Select A Resource for group selection</p>",
     ResourceName:"",
-    TitleFieldDesc:"<p>Please select the field that will use as the display title in the 'To'"
-    +" element of the message composer</p>",
     TitleField:"",
-    MappingResourceNameDesc:"<p> Collections that contain a reference field to a User resource and a reference field"
-    +" to <br> the selection list chosen above are available in this dropdown</p>",
     MappingResourceName:"",
-    UserReferenceFieldDesc:"<p> Please select the field that references user resource in the mapping"
-    +" resource <br> if there is only one field available it will be selected automatically </p>",
     UserReferenceField:'',
-    ResourceReferenceFieldDesc:"<p> Please select the field that references the selected resource in the mapping"
-    +" resource <br> if there is only one field available it will be selected automatically </p>",
     ResourceReferenceField:'',
-    DisplayFieldsSelectorDesc: '<p> Display Fields Selection in Notifications Sending </p>',
     DisplayFieldsSelector: 'Press To Select Fields To Display',
-    SmartSearchFieldsDesc: '<p> Fields to search by in Notifications Sending </p>',
     SmartSearchFields: 'Press To Select Fields To Search By'
 }
 
@@ -593,7 +563,7 @@ export const UsersListDataView = {
 
 export const DefaultAccountBuyersList: UsersLists = {
   Key: 'account_buyers',
-  ListName: 'Account Buyers',
+  ListName: 'Accounts (Buyers)',
   ResourceName: 'accounts', 
   TitleField: 'Name',
   MappingResourceName: 'account_buyers',
