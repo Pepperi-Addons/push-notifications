@@ -30,8 +30,20 @@
                 align-items: center;
             }
         }
+
+        .header-buttons{
+            display: flex;
+            gap: .5rem;
+            ::ng-deep .circle-btn{
+                border-radius: 50%;
+            }
+        }
     }
 
+    pep-skeleton-loader{
+        margin-top: 1rem;
+        display: block;
+    }
     .notifications-items {
         overflow: auto;
         margin: 0;
