@@ -16,10 +16,13 @@ import NotificationsService from './notifications.service';
 import UsersListsService from './users-list.service'
 import { NOTIFICATION_SETUP_ELEMENT } from 'shared';
 import semver from 'semver';
+import { Default } from 'aws-sdk/clients/elbv2';
+import { DefaultPageService } from './default-page.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
     const usersListsService = new UsersListsService(client)
+    const defaultPageService= new DefaultPageService(client);
     const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
@@ -39,8 +42,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     const notificationsUsersListsRes = await usersListsService.createUsersListsResource(papiClient);
     const defaultListRes = await usersListsService.createDefaultLists()
 
-    await service.createNotificationsSlug();
-    await service.createNotificationsPage();
+    await defaultPageService.createDefaultPage();
 
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
@@ -95,6 +97,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
     const relationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
+    const defaultPageService= new DefaultPageService(client);
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
@@ -113,8 +116,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         const defaultListRes = await usersListsService.createDefaultLists()
         const userDeviceResourceRes = await createUserDeviceResource(papiClient);
 
-        await service.createNotificationsSlug();
-        await service.createNotificationsPage();
+        await defaultPageService.createDefaultPage();
 
         return { success: 
             notificationsUsersListsRes.success &&
