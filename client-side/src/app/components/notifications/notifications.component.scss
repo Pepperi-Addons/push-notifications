@@ -42,6 +42,17 @@
 
     pep-skeleton-loader{
         margin-top: 1rem;
+        // add padding to the skeleton loader and for neasted skeleton loader
+        //padding: 0 var(--pep-spacing-lg, 1rem);
+        ::ng-deep {
+            .skeleton-loader{
+                padding: 0 var(--pep-spacing-lg, 1rem);
+                .row{
+                    margin-right: 0;
+                    margin-left: 0;
+                }
+            }
+        }
         display: block;
     }
     .notifications-items {
@@ -67,6 +78,7 @@
             gap: variables.$spacing-xs;
             
             .msg-wrapper {
+                overflow: hidden;
                 width: 100%;
                 display: flex;
                 flex-flow: column;
@@ -77,17 +89,20 @@
                 label,span,p{
                     white-space: normal;
                 }
-                .body-md{
+                
+                .body-md{                
                     width: 100%;
                     
                     margin-bottom: variables.$spacing-sm;
                     font-family: variables.$font-family-body !important;
-                    font-weight: variables.$font-weight-bold;
+                    font-weight: variables.$font-weight-bold !important;
+                    
                 }
                 .notification-body {
                     margin-block-start: 0 !important;
                     font-family: variables.$font-family-body !important;
                     margin-bottom: variables.$spacing-sm;
+                    
                 }
     
                 // .notification-item-footer {

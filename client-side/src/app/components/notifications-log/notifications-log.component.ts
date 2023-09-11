@@ -79,14 +79,7 @@ export class NotificationsLogComponent implements OnInit {
               {
                 FieldID: 'SentToUsers',
                 Type: 'TextBox',
-                Title: this.translate.instant("Sent_To_Users"),
-                Mandatory: false,
-                ReadOnly: true
-              },
-              {
-                FieldID: 'SentToGroups',
-                Type: 'TextBox',
-                Title: this.translate.instant("Sent_To_Groups"),
+                Title: this.translate.instant("Sent_To"),
                 Mandatory: false,
                 ReadOnly: true
               },
@@ -99,9 +92,6 @@ export class NotificationsLogComponent implements OnInit {
               }
             ],
             Columns: [
-              {
-                Width: 20
-              },
               {
                 Width: 20
               },

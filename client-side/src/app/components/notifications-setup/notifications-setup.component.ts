@@ -38,6 +38,12 @@ export class NotificationsSetupComponent implements OnInit {
       return {
         init: async (params: any) => {
           let notificationsUsersLists = await this.notificationsSetupService.getUsersLists();
+          // add spacing between the values in the the SelectionDisplayFields field https://pepperi.atlassian.net/browse/DI-25047
+          notificationsUsersLists.forEach(list => {
+            if(list.SelectionDisplayFields){
+              list.SelectionDisplayFields = list.SelectionDisplayFields.join(', ');
+            }
+          });
           if (params.searchString) {
             notificationsUsersLists = notificationsUsersLists.filter(usersList => {
               return (usersList.Title.toLowerCase().includes(params.searchString.toLowerCase()) || usersList.Body?.toLowerCase().includes(params.searchString.toLowerCase()))  

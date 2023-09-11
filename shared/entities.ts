@@ -63,8 +63,7 @@ export interface UsersGroup{
 }
 
 export interface NotificationLogView extends NotificationLog {
-    SentToUsers: string[] // the users uuids
-    SentToGroups: string[],  // groups display titles
+    SentToUsers: string;
 }
 
 export interface UserDevice {

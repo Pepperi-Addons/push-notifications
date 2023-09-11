@@ -495,7 +495,7 @@ export const defaultDataSourceForListSetup = {
     UserReferenceField:'',
     ResourceReferenceField:'',
     DisplayFieldsSelector: 'Press To Select Fields To Display',
-    SmartSearchFields: 'Press To Select Fields To Search By'
+    SmartSearchFields: 'Press To Select Fields To Filter By'
 }
 
 export const UsersListDataView = {

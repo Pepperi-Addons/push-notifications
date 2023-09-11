@@ -43,8 +43,8 @@
 <ng-template #notificationItemTemplate let-item="item">
     <div *ngIf="((showOnlyUnRead && !item.read) || !showOnlyUnRead)" class="notification-item pep-border-bottom">
         <div class="msg-wrapper">
-            <label class="body-md">{{ item.title }}</label>
-            <p *ngIf="item.body" class="notification-body body-sm">{{ item.body }}</p>
+            <label class="body-md ellipsis">{{ item.title }}</label>
+            <p *ngIf="item.body" class="notification-body body-sm ellipsis">{{ item.body }}</p>
             <div class="notification-item-footer body-xs color-dimmed">
                 <span *ngIf="item.from" class="user-details">{{ item.from }}</span>
                 <span *ngIf="item.from">&nbsp;&#8226;&nbsp;</span><!--•-->
