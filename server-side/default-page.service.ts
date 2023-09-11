@@ -35,7 +35,11 @@ export class DefaultPageCreator{
 
 
         async createDefaultPage(){
-            await this.createNotificationsSlug()
-            await this.createNotificationsPage()
+            try{
+                await this.createNotificationsSlug()
+                await this.createNotificationsPage()
+            } catch (err){
+                console.log(`Error creating default page: ${err.message}`)
+            }
         }
 }
