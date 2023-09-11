@@ -27,8 +27,9 @@ export class DefaultPageCreator{
         async createNotificationsPage(){
             const pages = await this.papiClient.pages.iter().toArray()
             const pageBody = DefaultNotificationsPage
-            if(!pages.find(page => page.Blocks[0].Key === pageBody.Blocks[0].Key)){
-                await this.papiClient.pages.upsert(pageBody)
+            // page.Blocks[0] can be undefined if the page is empty
+            if(!pages.find(page => page.Blocks[0]?.Key === pageBody.Blocks[0].Key)){
+                await this.papiClient.pages.upsert(pageBody);
             }
         }
 
