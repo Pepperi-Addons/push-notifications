@@ -8,6 +8,7 @@ import { NotificationsDialogService } from 'src/app/services/dialog-service.serv
 import { FieldSelectorComponent } from '../field-selector/field-selector.component';
 import { defaultFormViewForListSetup, defaultDataSourceForListSetup, setupListViewIndexes, UsersLists } from 'shared'
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
+import { FieldWithType } from 'shared';
 
 @Component({
   selector: 'addon-users-list-setup',
@@ -26,6 +27,7 @@ export class UsersListSetupComponent implements OnInit {
   selectedDisplayFields: string[]
   editMode: boolean = false
   existingList: UsersLists
+  fieldsWithType: [] = []
 
   constructor(
     private dialogRef: MatDialogRef<any>,
@@ -266,8 +268,19 @@ export class UsersListSetupComponent implements OnInit {
     }
     else{
       // saving selected fields
-      this.userListData.SmartSearchFields = selectedSearchFields
+      const fieldsSelected = selectedSearchFields.map(field => {
+        return this.getFieldType(field)
+      })
+       
+      this.userListData.SmartSearchFields = fieldsSelected
     }
+  }
+
+  getFieldType(fieldSelected: string): FieldWithType {
+    console.log(`field selected is ${fieldSelected}`)
+    console.log(`fields with type is ${JSON.stringify(this.fieldsWithType)}`)
+    const field: FieldWithType = {FieldName: fieldSelected, Type: this.fieldsWithType[fieldSelected].Type}
+    return field
   }
 
   refreshFormData(){
@@ -303,6 +316,8 @@ export class UsersListSetupComponent implements OnInit {
 
   loadResourceFields(selectedResourceName: string){
     const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
+    debugger
+    this.fieldsWithType = resourceToSelect["Fields"]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
   }

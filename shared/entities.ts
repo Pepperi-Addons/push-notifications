@@ -66,6 +66,11 @@ export interface NotificationLogView extends NotificationLog {
     SentToUsers: string;
 }
 
+export interface FieldWithType {
+    FieldName: string,
+    Type: string
+}
+
 export interface UserDevice {
     UserUUID: string,
     Username: string,
@@ -91,7 +96,7 @@ export interface UsersLists{
     UserReferenceField: string;
     ResourceReferenceField: string;
     SelectionDisplayFields: string[];
-    SmartSearchFields: string[];
+    SmartSearchFields: FieldWithType[];
 }
 export interface notificationReadStatus{
     Read: boolean,

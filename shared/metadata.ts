@@ -570,5 +570,5 @@ export const DefaultAccountBuyersList: UsersLists = {
   UserReferenceField: 'User',
   ResourceReferenceField: 'Account',
   SelectionDisplayFields: ["Email", "Name", "Key"],
-  SmartSearchFields: ["Email", "Name"]
+  SmartSearchFields: [{ FieldName: "Email", Type: "String" }, { FieldName: "Name", Type: "String" }]
 }
