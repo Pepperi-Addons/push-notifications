@@ -277,8 +277,6 @@ export class UsersListSetupComponent implements OnInit {
   }
 
   getFieldType(fieldSelected: string): FieldWithType {
-    console.log(`field selected is ${fieldSelected}`)
-    console.log(`fields with type is ${JSON.stringify(this.fieldsWithType)}`)
     const field: FieldWithType = {FieldName: fieldSelected, Type: this.fieldsWithType[fieldSelected].Type}
     return field
   }
@@ -316,7 +314,6 @@ export class UsersListSetupComponent implements OnInit {
 
   loadResourceFields(selectedResourceName: string){
     const resourceToSelect = this.availableResources.filter(resource => resource.Name === selectedResourceName)[0]
-    debugger
     this.fieldsWithType = resourceToSelect["Fields"]
     const fields = [...Object.keys(resourceToSelect["Fields"])]
     this.resourceFields = fields
