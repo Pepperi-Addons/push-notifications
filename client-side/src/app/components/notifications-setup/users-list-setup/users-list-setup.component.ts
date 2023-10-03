@@ -303,7 +303,7 @@ export class UsersListSetupComponent implements OnInit {
           this.validateSmartSearchFields(res)
         }
       },
-      this.userListData.SelectionDisplayFields)
+      this.resourceFields)
     }
   }
       
