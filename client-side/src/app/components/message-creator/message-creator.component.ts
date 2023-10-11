@@ -268,9 +268,9 @@ export class MessageCreatorComponent implements OnInit {
     return UsersListDataView;
   }
 
-  getSearchFields(fields: FieldWithType[]){
+  getSearchFields(fields: string[]){
     return fields.map(field => {
-      return { FieldID: field.FieldName }
+      return { FieldID: field }
     })
   }
 
@@ -294,7 +294,7 @@ export class MessageCreatorComponent implements OnInit {
         }],
         SelectionType: "Multi",
         Search: {
-          Fields: this.getSearchFields(list.SmartSearchFields),
+          Fields: this.getSearchFields(list.SelectionDisplayFields),
         },
         SmartSearch: {
           Fields: this.getSmartSearchFields(list.SmartSearchFields),
