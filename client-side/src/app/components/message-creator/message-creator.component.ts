@@ -15,6 +15,7 @@ import { NotificationsSetupService } from 'src/app/services/notifications-setup.
 import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup, NotificationLogView } from 'shared';
 import { AddonData } from '@pepperi-addons/papi-sdk';
 import { NotificationsLogService } from 'src/app/services/notifications-log.services';
+import { FieldWithType } from 'shared';
 
 
 @Component({
@@ -273,6 +274,12 @@ export class MessageCreatorComponent implements OnInit {
     })
   }
 
+  getSmartSearchFields(fields: FieldWithType[]){
+    return fields.map(field => {
+      return { FieldID: field.FieldName, Title: field.FieldName, Type: field.Type }
+    })
+  }
+
   getGenericPickerList(list: UsersLists){
     return {
       List: {
@@ -287,7 +294,10 @@ export class MessageCreatorComponent implements OnInit {
         }],
         SelectionType: "Multi",
         Search: {
-          Fields: this.getSearchFields(list.SmartSearchFields),
+          Fields: this.getSearchFields(list.SelectionDisplayFields),
+        },
+        SmartSearch: {
+          Fields: this.getSmartSearchFields(list.SmartSearchFields),
         }
       },
       State: {
