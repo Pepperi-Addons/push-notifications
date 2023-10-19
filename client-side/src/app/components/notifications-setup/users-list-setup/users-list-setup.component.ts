@@ -256,7 +256,13 @@ export class UsersListSetupComponent implements OnInit {
     }
     else{
       // saving selected fields
-      this.userListData.SelectionDisplayFields = selectedDisplayFields
+      const fieldsSelected = selectedDisplayFields.map(field => {
+        return this.getFieldType(field)
+      })
+        
+      this.userListData.SelectionDisplayFields = fieldsSelected
+      
+      // enabling smart search fields selection in drag and drop
       this.dataView.Fields[setupListViewIndexes.SmartSearchFields].ReadOnly = false
       this.refreshFormData()
     }
