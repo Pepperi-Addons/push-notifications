@@ -95,7 +95,7 @@ export interface UsersLists{
     MappingResourceName: string;
     UserReferenceField: string;
     ResourceReferenceField: string;
-    SelectionDisplayFields: string[];
+    SelectionDisplayFields: FieldWithType[];
     SmartSearchFields: FieldWithType[];
 }
 export interface notificationReadStatus{

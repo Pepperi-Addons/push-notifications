@@ -41,6 +41,10 @@ export class NotificationsSetupComponent implements OnInit {
           // add spacing between the values in the the SelectionDisplayFields field https://pepperi.atlassian.net/browse/DI-25047
           notificationsUsersLists.forEach(list => {
             if(list.SelectionDisplayFields){
+              // selection display fields contain types which we don't want to display, so filtering out the types
+              list.SelectionDisplayFields = list.SelectionDisplayFields.map(field => {
+                return field.FieldName
+              })
               list.SelectionDisplayFields = list.SelectionDisplayFields.join(', ');
             }
           });

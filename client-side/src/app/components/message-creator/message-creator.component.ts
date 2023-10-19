@@ -268,10 +268,16 @@ export class MessageCreatorComponent implements OnInit {
     return UsersListDataView;
   }
 
-  getSearchFields(fields: string[]){
-    return fields.map(field => {
-      return { FieldID: field }
+  getSearchFields(fields: FieldWithType[]){
+    const stringFields = this.getOnlyStringFields(fields)
+    return stringFields.map(field => {
+        return { FieldID: field.FieldName }
     })
+  }
+
+  getOnlyStringFields(fields: FieldWithType[]){
+    const stringFields = fields.filter(field => field.Type === 'String')
+    return stringFields
   }
 
   getSmartSearchFields(fields: FieldWithType[]){
@@ -306,12 +312,12 @@ export class MessageCreatorComponent implements OnInit {
     }
   }
 
-  getSingleGenericField(field: string){
+  getSingleGenericField(field: FieldWithType){
     return {
-      Title: field,
+      Title: field.FieldName,
       Configuration: {
           Type: "TextBox",
-          FieldID: field,
+          FieldID: field.FieldName,
           Width: 10
       }
   }

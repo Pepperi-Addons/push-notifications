@@ -569,6 +569,6 @@ export const DefaultAccountBuyersList: UsersLists = {
   MappingResourceName: 'account_buyers',
   UserReferenceField: 'User',
   ResourceReferenceField: 'Account',
-  SelectionDisplayFields: ["Email", "Name", "Key"],
+  SelectionDisplayFields: [{ FieldName: "Email", Type: "String" }, { FieldName: "Name", Type: "String" }, { FieldName: "Key", Type: "String" }],
   SmartSearchFields: [{ FieldName: "Email", Type: "String" }, { FieldName: "Name", Type: "String" }]
 }
