@@ -929,7 +929,7 @@ class NotificationsService {
         const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
         const firstDate = new Date(Date.now() - daysToSubtract)
 
-        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}' And Source='Webapp'` });
+        const totalNotifications = await this.getNotifications({ where: `CreationDateTime>'${firstDate}'` });
         return {
             Title: "Usage",
             "Resources": [
@@ -937,6 +937,24 @@ class NotificationsService {
                     "Data": "Total Notifications",
                     "Description": "Total Notifications Sent in The Last 7 Days",
                     "Size": totalNotifications.length
+                },
+            ],
+            "ReportingPeriod": "Weekly",
+            "AggregationFunction": "LAST"
+        }
+    }
+    async getTotalMessagesSentInTheLastWeekUsageData() {
+        const daysToSubtract = 7 * 24 * 60 * 60 * 1000 // ms * 1000 => sec. sec * 60 => min. min * 60 => hr. hr * 24 => day.
+        const firstDate = new Date(Date.now() - daysToSubtract)
+
+        const totalMessages = await this.getNotifications({ where: `CreationDateTime>'${firstDate}' And Source='Webapp'` });
+        return {
+            Title: "Usage",
+            "Resources": [
+                {
+                    "Data": "Total Messages",
+                    "Description": "Total Messages Sent in The Last 7 Days",
+                    "Size": totalMessages.length
                 },
             ],
             "ReportingPeriod": "Weekly",
