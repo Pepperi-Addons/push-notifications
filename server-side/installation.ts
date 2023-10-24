@@ -47,7 +47,7 @@ export async function install(client: Client, request: Request): Promise<any> {
     await service.createPNSSubscriptionForUserDeviceRemoval();
     await service.createPNSSubscriptionForNotificationInsert();
     await service.createPNSSubscriptionForPlatformApplicationRemoval();
-    await createRelations(papiClient);
+    await createRelations(client);
 
     return {
         success: notificationsResourceRes.success &&
@@ -95,19 +95,21 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
     const service = new NotificationsService(client)
-    const relationsRes = await createPageBlockRelation(client);
+    const relationsRes = await createRelations(client);
+    const pageBlockRelationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
     const defaultPageService= new DefaultPageCreator(client);
 
-    // Creating new scheme of users lists only if the current version is older than 1.2.0
-    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
-        const papiClient = new PapiClient({
+    const papiClient = new PapiClient({
         baseURL: client.BaseURL,
         token: client.OAuthAccessToken,
         addonUUID: client.AddonUUID,
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
-        });
+    });
+
+    // Creating new scheme of users lists only if the current version is older than 1.2.0
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
         // recreate the notifications log view scheme due to migration from UsersList to SentTo
         const notificationsLogViewRes = await createNotificationsLogViewResource(papiClient);
         // due to addition of source column, recreating scheme otherwise it will fail on usage monitor
@@ -125,14 +127,16 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             migrateUpLogRes.success &&
             defaultListRes.success &&
             notificationsLogViewRes.success &&
-            relationsRes.success &&
+            pageBlockRelationsRes.success &&
             settingsRelationsRes.success &&
-            userDeviceResourceRes.success,
+            userDeviceResourceRes.success &&
+            relationsRes.success,
             resultObject: {} }
     }
     else {
         return {success: 
             relationsRes.success && 
+            pageBlockRelationsRes.success && 
             settingsRelationsRes.success, 
             resultObject: {} }
     }
@@ -495,7 +499,7 @@ async function createPFSResource(papiClient: PapiClient) {
     }
 }
 
-async function createRelations(papiClient: PapiClient) {
+async function createRelations(client: Client) {
     const relations: Relation[] = [
         //DIMX import
         {
@@ -534,14 +538,24 @@ async function createRelations(papiClient: PapiClient) {
             Description: 'relation for "usage" tab in usage monitor to display total notifications sent in the last 7 days',
             Type: "AddonAPI",
             AddonRelativeURL: "/api/total_notifications_in_last_week"
+        },
+        {
+            RelationName: "UsageMonitor",
+            AddonUUID: "95025423-9096-4a4f-a8cd-d0a17548e42e",
+            Name: "WeeklyMessagesUsageMonitor",
+            Description: 'relation for "usage" tab in usage monitor to display total messages sent by API in the last 7 days',
+            Type: "AddonAPI",
+            AddonRelativeURL: "/api/total_messages_in_last_week"
         }
     ]
     try {
-        relations.forEach(async (singleRelation) => {
-            await papiClient.post('/addons/data/relations', singleRelation);
-        });
+        const service = new NotificationsService(client);
+        const res = await Promise.allSettled(relations.map(async (singleRelation) => {
+            await service.upsertRelation(singleRelation);
+        }));
+       
         return {
-            success: true,
+            success: res.every((relation) => relation.status === 'fulfilled'),
             errorMessage: ""
         }
     }
