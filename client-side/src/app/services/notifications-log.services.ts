@@ -31,16 +31,21 @@ export class NotificationsLogService {
         const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         const logs = await this.addonService.pepGet(encodeURI(url)).toPromise() as NotificationLogView[]
         logs.forEach(log => {
-            const sentToUsers = log.SentTo.Users
-            const sentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
+            const sentToUsers = log.SentTo.Users || []
+            const cleanSentToUsers = this.cleanNullsFromUsers(sentToUsers)
+            const sentToGroups = log.SentTo?.Groups?.map(groupData => {return groupData.Title}) || []
             // concat the users and groups to one array, sentToUsers or sentToGroups may be undefined or empty
-            const sentTo = sentToUsers ? sentToUsers.concat(sentToGroups) : sentToGroups
+            const sentTo = cleanSentToUsers ? cleanSentToUsers.concat(sentToGroups) : sentToGroups
             // create from the array a string with comma separated values
             log.SentToUsers = sentTo.join(', ')
             // delete the log.SentToGroups property
             delete log.SentTo.Groups
         }) 
         return logs
+    }
+
+    cleanNullsFromUsers(sentToUsers: any[]){
+        return sentToUsers.filter(user => user != null)
     }
 
     deleteNotificationsLog(notifications) {
