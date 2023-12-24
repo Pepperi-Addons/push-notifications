@@ -96,8 +96,11 @@ export class MessageCreatorComponent implements OnInit {
     // users list is a string of users emails separated by comma
     if (usersList != undefined) {
       Promise.all(usersList.map(async user => {
-        const userUUID = await this.addonService.getUUIDByEmail(user);
-        this.chips.push({ key: userUUID, value: user });       
+        const userUUID = await this.addonService.getUUIDByEmail(user)
+        // DI-26094 - user may be null
+        if (userUUID != undefined){
+          this.chips.push({ key: userUUID, value: user });  
+        }
 
       })).then(() => {
         // this.chipsComp.chips = this.chips;
@@ -111,7 +114,10 @@ export class MessageCreatorComponent implements OnInit {
     if (groupsList.length > 0 ) {
       await Promise.all(groupsList.map(async group => {
         const chipIndex = this.usersLists.findIndex(list => list.Key == group.ListKey)
-        await this.handleListSetupSelection([group.SelectedGroupKey],this.usersLists[chipIndex], chipIndex)      
+        // DI-26094 - user may be null
+        if( chipIndex !== -1){
+          await this.handleListSetupSelection([group.SelectedGroupKey],this.usersLists[chipIndex], chipIndex)      
+        }
       }))
     }
   }
