@@ -197,7 +197,7 @@ class NotificationsService {
     }
 
     async getEmailByUserUUID(userUUID: string): Promise<string>{
-        const userData = await this.papiClient.users.uuid(userUUID).get()
+        const userData = await this.papiClient.resources.resource('users').key(userUUID).get();
         if (userData.Email !== undefined){
             return userData.Email
         }
@@ -390,7 +390,7 @@ class NotificationsService {
 
     async upsertUserDevice(body: UserDevice) { // body -> userDevice
         // Schema validation
-
+        console.log(`about to upsert user device: ${JSON.stringify(body)}`)
         const validation = this.validateSchema(body, userDeviceSchema);
         if (validation.valid) {
             let deviceData = await this.populateUserDevice(body)
