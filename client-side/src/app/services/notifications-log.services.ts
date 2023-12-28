@@ -31,9 +31,9 @@ export class NotificationsLogService {
         const url = `/addons/api/${this.addonService.addonUUID}/api/notifications_log`
         const logs = await this.addonService.pepGet(encodeURI(url)).toPromise() as NotificationLogView[]
         logs.forEach(log => {
-            let sentToUsers = log.SentTo.Users || []
+            let sentToUsers = log.SentTo?.Users || []
             sentToUsers = this.cleanNullsFromUsers(sentToUsers)
-            const sentToGroups = log.SentTo.Groups?.map(groupData => {return groupData.Title}) || []
+            const sentToGroups = log.SentTo?.Groups?.map(groupData => {return groupData.Title}) || []
             // concat the users and groups to one array, sentToUsers or sentToGroups may be undefined or empty
             const sentTo = sentToUsers ? sentToUsers.concat(sentToGroups) : sentToGroups
             // create from the array a string with comma separated values
