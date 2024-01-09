@@ -45,7 +45,7 @@
                             "src/styles.scss"
                         ],
                         "scripts": [],
-                        "commonChunk": false,
+                        "commonChunk": true,
                         "extraWebpackConfig": "./webpack.config.js"
                     },
                     "configurations": {
