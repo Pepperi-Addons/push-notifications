@@ -94,7 +94,6 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    const service = new NotificationsService(client)
     const relationsRes = await createRelations(client);
     const pageBlockRelationsRes = await createPageBlockRelation(client);
     const settingsRelationsRes = await createSettingsRelation(client);
@@ -107,6 +106,13 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         addonSecretKey: client.AddonSecretKey,
         actionUUID: client["ActionUUID"]
     });
+
+    // if upgrading from version 1.2 to 1.2.51, need to fix migration issue, where the SentTo column was not created
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.51')! < 0
+    && request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! > 0){
+        const migrateUpLogRes = await migrateUpNotificationsLog(client)
+        return { success: migrateUpLogRes.success, resultObject: {} }
+    }
 
     // Creating new scheme of users lists only if the current version is older than 1.2.0
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '1.2.0')! < 0){
@@ -124,6 +130,7 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
 
         return { success: 
             notificationsUsersListsRes.success &&
+            notificationsResourceRes.success &&
             migrateUpLogRes.success &&
             defaultListRes.success &&
             notificationsLogViewRes.success &&
@@ -154,11 +161,11 @@ async function migrateUpNotificationsLog(client: Client){
     try {
         const service = new NotificationsService(client)
         const logs = await service.getNotificationsLog()
-        logs.forEach(async (log) => {
+        await Promise.all(logs.map(log => {
             log.SentTo = {Users: log.UsersList};
             delete log.UsersList
-            await service.upsertNotificationLog(log);
-        })
+            service.upsertNotificationLog(log);
+        }))
         return { success: true, resultObject: '' };
     }
     catch (err) {
@@ -171,10 +178,10 @@ async function migrateDownNotificationsLog(client: Client){
     try {
         const service = new NotificationsService(client)
         const logs = await service.getNotificationsLog()
-        logs.forEach(async (log) => {
+        await Promise.all(logs.map(log => {
             log.UsersList = log.SentTo.Users
-            await service.upsertNotificationLog(log);
-        })
+            service.upsertNotificationLog(log);
+        }))
         return { success: true, resultObject: '' };
     }
     catch (err) {
