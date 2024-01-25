@@ -4,6 +4,8 @@ import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, UsersGroup, DefaultNotificationsSlug, DefaultNotificationsPage
 } from 'shared'
+
+import { NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -16,7 +18,6 @@ import { UserDeviceHandlingFactory } from './register-device.service'
 import * as encryption from 'shared'
 import { PayloadData } from 'shared'
 import UsersListsService from './users-list.service';
-const NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT = 500
 abstract class PlatformBase {
     protected notificationsSnsService: NotifiactionsSnsService
     constructor(protected papiClient) {
