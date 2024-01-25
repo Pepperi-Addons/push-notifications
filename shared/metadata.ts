@@ -572,3 +572,6 @@ export const DefaultAccountBuyersList: UsersLists = {
   SelectionDisplayFields: [{ FieldName: "Email", Type: "String" }, { FieldName: "Name", Type: "String" }, { FieldName: "Key", Type: "String" }],
   SmartSearchFields: [{ FieldName: "Email", Type: "String" }, { FieldName: "Name", Type: "String" }]
 }
+
+export const NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT = 500
+

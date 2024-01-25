@@ -50,5 +50,6 @@
     "Go_To_Activity_Name": "Notification",
     "Drop_Fields_Message": "Drop here Selected Fields To Display",
     "Messages_Sent_Successfully": "Messages sent successfully",
-    "Add_List": "Add List"
+    "Add_List": "Add List",
+    "ERROR_MESSAGE_LIST_SELECTION_LIMIT": "The maximum number of records that can be selected is "
 }

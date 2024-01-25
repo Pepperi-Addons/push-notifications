@@ -37,7 +37,7 @@ export class AddonService {
         this.parsedToken = jwt(accessToken);
         this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
         this.userUUID = this.parsedToken.sub;
-        this.users = this.papiClient.users.find()
+        this.users = this.papiClient.users.iter().toArray();
     }
 
     // Dialog service 
@@ -68,6 +68,11 @@ export class AddonService {
         return (await this.users).find(u => u.UUID == this.userUUID)?.Email
     }
 
+    // returns all users emails and UUIDs except the current user
+    async getAllUsers(excludeUUIDs: string[]): Promise<{ UUID: string, Email: string }[]> {
+        const users = await this.users;
+        return users.filter(u => !excludeUUIDs.includes(u.UUID)).map(u => ({ UUID: u.UUID, Email: u.Email }));
+    }
     async getUserEmailByUUID(UUID: string){
         const user:User = (await this.users).find(u => u.UUID ==UUID);
         if (user != undefined) {

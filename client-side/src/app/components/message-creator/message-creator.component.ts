@@ -12,10 +12,11 @@ import { IPepChip, PepChipsComponent } from '@pepperi-addons/ngx-lib/chips';
 import { PepAddonBlockLoaderService } from '@pepperi-addons/ngx-lib/remote-loader';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NotificationsSetupService } from 'src/app/services/notifications-setup.services';
-import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup, NotificationLogView } from 'shared';
+import { UsersListDataView, UsersLists, BulkMessageObject, UsersGroup, NotificationLogView, NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT } from 'shared';
 import { AddonData } from '@pepperi-addons/papi-sdk';
 import { NotificationsLogService } from 'src/app/services/notifications-log.services';
 import { FieldWithType } from 'shared';
+import { ListsChipsGenerator, ResourceListOutputData, UsersChipsGenerator } from './chips-generator';
 
 
 @Component({
@@ -116,7 +117,8 @@ export class MessageCreatorComponent implements OnInit {
         const chipIndex = this.usersLists.findIndex(list => list.Key == group.ListKey)
         // DI-26094 - user may be null
         if( chipIndex !== -1){
-          await this.handleListSetupSelection([group.SelectedGroupKey],this.usersLists[chipIndex], chipIndex)      
+          const listParam = {selectedObjects: [group.SelectedGroupKey]} as ResourceListOutputData
+          await this.handleListSetupSelection(listParam ,this.usersLists[chipIndex], chipIndex)      
         }
       }))
     }
@@ -231,8 +233,9 @@ export class MessageCreatorComponent implements OnInit {
         name: 'List',
         hostObject: this.getGenericHostObject(list),
         hostEventsCallback: async ($event) => {
+          debugger
           if($event.action == 'on-done'){
-            await this.handleListSetupSelection($event.data.selectedObjects, list, chipsSelectorIndex)
+            await this.handleListSetupSelection($event.data, list, chipsSelectorIndex)
             this.dialogRef.close();
           }
           if($event.action == 'on-cancel'){
@@ -243,17 +246,14 @@ export class MessageCreatorComponent implements OnInit {
     }
   }
 
-  async handleListSetupSelection(selectedKeys: string[], list: UsersLists, chipsSelectorIndex: number) {
+  async handleListSetupSelection(resourceListData: ResourceListOutputData, list: UsersLists, chipsSelectorIndex: number) {
     // prepare the chips to add
-    const chipsToAdd: IPepChip[] = await Promise.all(selectedKeys.map( async selectedKey => {
-      const title = await this.notificationsSetupService.getDisplayTitleFromResource(list.TitleField, list.ResourceName, selectedKey)
-      const chipObj: IPepChip = {
-        value: title,
-        key: selectedKey
-      }
-      return chipObj;
-    }));
-
+    const listsChipsGenerator = new ListsChipsGenerator(this.notificationsSetupService, this.addonService)
+    const chipsToAdd: IPepChip[] = await listsChipsGenerator.prepareChipsForListSelection(resourceListData, list);
+    if (chipsToAdd.length >= NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT) {
+      this.showDialog(this.translate.instant(`ERROR_MESSAGE_LIST_SELECTION_LIMIT${NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT}`), () => { });
+      return;
+    }
     // add the chips to the chips selector
     this.addChipsToList(chipsToAdd, chipsSelectorIndex);    
   }
@@ -353,16 +353,11 @@ getGenericHostObject(list){
       hostObject: this.getUsersHostObject(),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          let newChips: any[]  = [];
-          await Promise.all($event.data.selectedObjects.map( async chip => {
-            let chipObj = { 
-              value: await this.addonService.getUserEmailByUUID(chip),
-              key: chip
-            }
-            if(!this.chipsComp.chips.includes(chipObj))
-            newChips.push(chipObj)
-          }))
+          const chipsGenerator = new UsersChipsGenerator(this.addonService, this.chipsComp)
+          let newChips = await chipsGenerator.prepareChipsForUsersSelection($event.data);
+          
           this.chipsComp.addChipsToList(newChips);  
+          
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -371,4 +366,15 @@ getGenericHostObject(list){
       }
     })
   }
+  showDialog(message: string, callback: () => void) {
+    let dialogData = {
+      "Message": message,
+      "Title": "",
+      "ButtonText": this.translate.instant("OK")
+    }
+    this.addonService.openDialog("", PopupDialogComponent, [], { data: dialogData }, () => {
+      callback();
+    });
+  }
 }
+

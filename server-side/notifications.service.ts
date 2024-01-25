@@ -4,6 +4,8 @@ import {
     NOTIFICATIONS_TABLE_NAME, USER_DEVICE_TABLE_NAME, PLATFORM_APPLICATION_TABLE_NAME, NOTIFICATIONS_LOGS_TABLE_NAME, NOTIFICATIONS_VARS_TABLE_NAME, notificationOnCreateSchema, notificationOnUpdateSchema, userDeviceSchema, platformApplicationsSchema, platformApplicationsIOSSchema, UserDevice,
     DEFAULT_NOTIFICATIONS_NUMBER_LIMITATION, DEFAULT_NOTIFICATIONS_LIFETIME_LIMITATION, NotificationLog, Notification, notificationReadStatus, BulkMessageObject, UsersGroup, DefaultNotificationsSlug, DefaultNotificationsPage
 } from 'shared'
+
+import { NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT } from 'shared'
 import { Validator } from 'jsonschema';
 import { v4 as uuid } from 'uuid';
 import jwt from 'jwt-decode';
@@ -16,7 +18,6 @@ import { UserDeviceHandlingFactory } from './register-device.service'
 import * as encryption from 'shared'
 import { PayloadData } from 'shared'
 import UsersListsService from './users-list.service';
-
 abstract class PlatformBase {
     protected notificationsSnsService: NotifiactionsSnsService
     constructor(protected papiClient) {
@@ -687,9 +688,9 @@ class NotificationsService {
     }
 
     validateRecipientLimit(users: string[], groups: UsersGroup[]) {
-        // validating that there are no more than 100 hard coded users and groups
-        if (users.length + groups.length> 100) {
-            throw new Error('Max 100 hard coded users and groups');
+        // validating that there are no more than NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT hard coded users and groups
+        if (users.length + groups.length> NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT) {
+            throw new Error(`Max ${NOTIFICATIONS_SEND_TO_COUNT_SOFT_LIMIT} hard coded users and groups`);
         }
 
     }
