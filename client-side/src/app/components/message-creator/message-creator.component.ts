@@ -353,16 +353,10 @@ getGenericHostObject(list){
       hostObject: this.getUsersHostObject(),
       hostEventsCallback: async ($event) => {
         if($event.action == 'on-done'){
-          let newChips: any[]  = [];
-          await Promise.all($event.data.selectedObjects.map( async chip => {
-            let chipObj = { 
-              value: await this.addonService.getUserEmailByUUID(chip),
-              key: chip
-            }
-            if(!this.chipsComp.chips.includes(chipObj))
-            newChips.push(chipObj)
-          }))
+          let newChips = await this.prepareChipsForUsersSelection($event.data);
+          
           this.chipsComp.addChipsToList(newChips);  
+          
           this.dialogRef.close();
         }
         if($event.action == 'on-cancel'){
@@ -371,4 +365,57 @@ getGenericHostObject(list){
       }
     })
   }
+
+  async prepareChipsForUsersSelection(rlSelectionData: ResourceListOutputData): Promise<Chip[]> {
+    let chips: Chip[] = [];
+
+    // when isAllSelected is true, and the selectedObjects array is empty need to select all users
+    // when the selectedObjects array is not empty, need to exclude the selected users from all users
+
+    if(rlSelectionData.isAllSelected) {
+      chips = await this.getAllUsersChips(rlSelectionData.selectedObjects);
+    } else {
+      chips = await this.getSelectedUsersChips(rlSelectionData.selectedObjects);
+    }
+    return chips;
+  }
+
+  async getAllUsersChips(excludedUsersUUIDs: string[]): Promise<Chip[]> {
+    const emails = await this.addonService.getAllUsers(excludedUsersUUIDs);
+    let newChips: Chip[] = [];
+    emails.forEach(email => {
+      let chipObj = { 
+        value: email.Email,
+        key: email.UUID
+      }
+      if(!this.chipsComp.chips.includes(chipObj)) {
+        newChips.push(chipObj)
+      }
+    })
+    return newChips;
+  }
+
+  async getSelectedUsersChips(selectedUsersUUIDs: string[]): Promise<Chip[]> {
+    let newChips: Chip[] = [];
+    await Promise.all(selectedUsersUUIDs.map( async chip => {
+      let chipObj = { 
+        value: await this.addonService.getUserEmailByUUID(chip),
+        key: chip
+      }
+      if(!this.chipsComp.chips.includes(chipObj)) {
+        newChips.push(chipObj)
+      }
+    }))
+    return newChips;
+  }
+}
+
+interface ResourceListOutputData {
+  selectedObjects: string[];
+  isAllSelected: boolean;
+}
+
+interface Chip {
+  key: string,
+  value: string
 }
